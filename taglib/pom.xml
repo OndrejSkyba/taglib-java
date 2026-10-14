@@ -8,8 +8,8 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>taglib</artifactId>
-  <name>TagLib Java library</name>
-  <description>Independent pure Java adaptation of TagLib.</description>
+  <name>TagLib Audio Metadata Library</name>
+  <description>Java adaptation of TagLib, an established C++ library for reading and editing metadata in popular audio formats.</description>
   <url>https://github.com/ondrej-skyba/taglib-java</url>
   <licenses>
     <license>
