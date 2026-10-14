@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def main():
 
     corpus = Path(os.environ.get('CORPUS', str(ROOT / 'work/write-corpus'))).absolute()
-    sizes = [int(value) for value in os.environ.get('SIZES_MIB', '1,10,50').split(',')]
+    sizes = [int(value) for value in os.environ.get('SIZES_MIB', '4,40').split(',')]
     if not sizes or any(value < 1 or value > 512 for value in sizes):
         raise SystemExit('SIZES_MIB must contain positive sizes no larger than 512 MiB.')
     if corpus.exists() or corpus.is_symlink():

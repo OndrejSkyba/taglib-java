@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and run the serial Java / C++ metadata benchmark."""
+"""Build and run the serial TagLib Java / C++ / jaudiotagger metadata benchmark."""
 import argparse
 import collections
 import fcntl
@@ -35,10 +35,31 @@ FIXTURES = {
     "IT": "test.it", "XM": "test.xm", "MATROSKA": "no-tags.mka",
     "SHORTEN": "2sec-silence.shn",
 }
+FORMAT_LABELS = {
+    "MPEG": "MP3", "FLAC": "FLAC",
+    "OGG_VORBIS": "Ogg Vorbis", "OGG_OPUS": "Ogg Opus",
+    "OGG_SPEEX": "Ogg Speex", "OGG_FLAC": "Ogg FLAC",
+    "MP4": "M4A (MP4 audio)", "ASF": "WMA (ASF)", "WAV": "WAV",
+    "AIFF": "AIFF", "APE": "Monkey's Audio (APE)", "WAVPACK": "WavPack",
+    "MPC": "Musepack (MPC)", "TRUEAUDIO": "True Audio (TTA)", "DSF": "DSF (DSD audio)",
+    "DSDIFF": "DSDIFF (DFF)", "MOD": "Tracker module (MOD)", "S3M": "Tracker module (S3M)",
+    "IT": "Tracker module (IT)", "XM": "Tracker module (XM)", "MATROSKA": "Matroska audio (MKA)",
+    "SHORTEN": "Shorten (SHN)",
+}
 EXTENSIONS = {"mp3": "MPEG", "flac": "FLAC", "ogg": "OGG_VORBIS",
               "opus": "OGG_OPUS", "m4a": "MP4", "wav": "WAV", "aiff": "AIFF"}
 TRACKERS = {"MOD", "S3M", "IT", "XM"}
 WORKLOADS = ("read", "title", "growth")
+ENGINES = ("native", "java", "jaudiotagger")
+ENGINE_LABELS = {"native": "C++ TagLib", "java": "TagLib Java", "jaudiotagger": "jaudiotagger"}
+LARGE_SUITES = {"4MiB": 4, "40MiB": 40}
+SUITE_LABELS = {"fixtures": "Small samples", "4MiB": "4 MiB", "40MiB": "40 MiB"}
+JAUDIOTAGGER = {
+    "version": "3.0.1",
+    "url": "https://repo.maven.apache.org/maven2/net/jthink/jaudiotagger/3.0.1/jaudiotagger-3.0.1.jar",
+    "sha256": "68aa0fe601b05df683a843acf6f8d4793ab476f47da1ac3dab57e0b1886b0aee",
+}
+JAUDIOTAGGER_FORMATS = {"MPEG", "FLAC", "OGG_VORBIS", "MP4", "ASF", "WAV", "AIFF", "DSF"}
 PRIMARY = {"readWarmup": 20, "readSamples": 31, "readIterations": 200,
            "writeWarmup": 100, "writeSamples": 101}
 LARGE = {"readWarmup": 10, "readSamples": 31, "readIterations": 5,
@@ -142,6 +163,12 @@ def manifest(path, cases):
     path.write_text("".join(f"{c['id']}\t{c['path']}\t{c['iterations']}\t{c['writes']}\n" for c in cases))
 
 
+def case_label(identity, fmt):
+    size = re.fullmatch(rf"{fmt}-(\d+)MiB", identity)
+    label = FORMAT_LABELS[fmt]
+    return f"{label} ({int(size[1])} MiB)" if size else label
+
+
 def statistics_for_runs(runs):
     """Equal weight per process: median of run medians, mean of run means."""
     by_run = []
@@ -157,6 +184,20 @@ def statistics_for_runs(runs):
 
 def supported(fmt, workload):
     return fmt != "SHORTEN" and not (fmt in TRACKERS and workload == "growth")
+
+
+def jaudiotagger_unsupported(fmt):
+    version = JAUDIOTAGGER["version"]
+    if fmt == "DSDIFF":
+        return (f"jaudiotagger {version} reads DSDIFF audio properties only, without tags or artwork; "
+                "it has no DSDIFF writer")
+    if fmt in {"OGG_OPUS", "OGG_SPEEX", "OGG_FLAC"}:
+        return (f"jaudiotagger {version}'s Ogg reader/writer supports Vorbis only, "
+                f"without {FORMAT_LABELS[fmt]} metadata support")
+    if fmt not in JAUDIOTAGGER_FORMATS:
+        extension = Path(FIXTURES[fmt]).suffix
+        return f"jaudiotagger {version} has no registered reader/writer for {FORMAT_LABELS[fmt]} ({extension})"
+    return None
 
 
 def prepare(work, args):
@@ -204,6 +245,10 @@ def prepare(work, args):
     taglib = ROOT / "taglib/target" / f"{artifact_name}.jar"
     if not taglib.is_file():
         raise RuntimeError("Missing Java library; run without --skip-build")
+    jaudiotagger = work / f"jaudiotagger-{JAUDIOTAGGER['version']}.jar"
+    download(JAUDIOTAGGER["url"], jaudiotagger)
+    if sha(jaudiotagger) != JAUDIOTAGGER["sha256"]:
+        raise RuntimeError("jaudiotagger archive checksum mismatch")
     classes = work / "java"
     classes.mkdir()
     classpath = os.pathsep.join(map(str, [classes, taglib]))
@@ -211,12 +256,20 @@ def prepare(work, args):
     java = str(Path(os.environ["JAVA_HOME"]) / "bin/java") if os.environ.get("JAVA_HOME") else "java"
     invoke([javac, "-cp", classpath, "-d", str(classes),
             str(ROOT / "benchmark/java/AllFormatsBenchmark.java")], work, "javac")
+    jaudiotagger_classpath = os.pathsep.join(map(str, [classes, jaudiotagger]))
+    invoke([javac, "-cp", jaudiotagger_classpath, "-d", str(classes),
+            str(ROOT / "benchmark/java/JaudiotaggerBenchmark.java")], work, "javac-jaudiotagger")
     return {"java": [java, "-Xms512m", "-Xmx512m", "-cp", classpath,
                       "AllFormatsBenchmark"],
             "native": [str(build / "taglib-benchmark")],
+            "jaudiotagger": [java, "-Xms512m", "-Xmx512m",
+                             f"-Djaudiotagger.version={JAUDIOTAGGER['version']}",
+                             "-cp", jaudiotagger_classpath, "JaudiotaggerBenchmark"],
             "upstream": upstream, "pin": pin,
             "artifacts": {"javaLibrarySha256": sha(taglib),
                           "javaWorkerSha256": sha(classes / "AllFormatsBenchmark.class"),
+                          "jaudiotaggerLibrarySha256": sha(jaudiotagger),
+                          "jaudiotaggerWorkerSha256": sha(classes / "JaudiotaggerBenchmark.class"),
                           "nativeWorkerSha256": sha(build / "taglib-benchmark")}}
 
 
@@ -230,19 +283,25 @@ def source_cases(suite, tools, work, args):
         inputs = [(fmt, fmt, tools["upstream"] / "tests/data" / name) for fmt, name in FIXTURES.items()]
     else:
         corpus = args.large_corpus.resolve() if args.large_corpus else work / "synthetic"
-        if not args.large_corpus:
-            print("Generating 1/10/50 MiB synthetic corpus", flush=True)
-            env = dict(os.environ, CORPUS=str(corpus), SIZES_MIB="1,10,50", FORMATS=",".join(EXTENSIONS))
+        if not args.large_corpus and not corpus.exists():
+            print("Generating 4 MiB / 40 MiB synthetic corpus", flush=True)
+            env = dict(os.environ, CORPUS=str(corpus), SIZES_MIB=",".join(map(str, LARGE_SUITES.values())),
+                       FORMATS=",".join(EXTENSIONS))
             invoke([sys.executable, str(ROOT / "benchmark/helpers/generate_corpus.py")], work, "generate", env=env)
+        size = LARGE_SUITES[suite]
         inputs = [(f"{fmt}-{size:03d}MiB", fmt, corpus / f"pink-{size:03d}mib.{ext}")
-                  for size in (1, 10, 50) for ext, fmt in EXTENSIONS.items()]
+                  for ext, fmt in EXTENSIONS.items()]
     target = work / suite / "corpus"
     target.mkdir(parents=True)
     cases = []
     for identity, fmt, source in inputs:
+        source_bytes = source.stat().st_size
+        if suite != "fixtures" and not size * 1_048_576 * 0.85 <= source_bytes <= size * 1_048_576 * 1.15:
+            raise RuntimeError(f"{source.name} is outside the {size} MiB category's size range")
         path = target / (identity + source.suffix)
         shutil.copyfile(source, path)
-        cases.append({"id": identity, "format": fmt, "path": str(path), "sourceName": source.name, "bytes": source.stat().st_size,
+        cases.append({"id": identity, "label": case_label(identity, fmt), "format": fmt,
+                      "path": str(path), "sourceName": source.name, "bytes": source_bytes,
                       "iterations": profile["readIterations"],
                       "writes": 0 if fmt == "SHORTEN" else 1 if fmt in TRACKERS else 3})
     return cases, profile
@@ -253,16 +312,25 @@ def run_suite(suite, tools, work, args):
     area = work / suite
     files = area / "cases.tsv"
     manifest(files, cases)
+    jaudiotagger_files = area / "jaudiotagger-cases.tsv"
+    jaudiotagger_cases = [case for case in cases if not jaudiotagger_unsupported(case["format"])]
+    manifest(jaudiotagger_files, jaudiotagger_cases)
     timings = collections.defaultdict(dict)
     environments = {}
     for run in range(args.runs):
-        engines = ("native", "java") if run % 2 == 0 else ("java", "native")
+        offset = run % len(ENGINES)
+        engines = ENGINES[offset:] + ENGINES[:offset]
         for mode in ("read", "write"):
             for engine in engines:
+                if engine == "jaudiotagger" and not jaudiotagger_cases:
+                    continue
                 output = area / f"{engine}-{mode}"
                 output.mkdir(exist_ok=True)
-                print(f"{suite}: run {run + 1}/{args.runs}, {engine} {mode}", flush=True)
-                records = rows(tools[engine] + [mode, str(files), str(output),
+                suite_label = SUITE_LABELS[suite]
+                mode_label = "read metadata" if mode == "read" else "update metadata"
+                print(f"{suite_label}: run {run + 1}/{args.runs}, {ENGINE_LABELS[engine]} — {mode_label}", flush=True)
+                engine_files = jaudiotagger_files if engine == "jaudiotagger" else files
+                records = rows(tools[engine] + [mode, str(engine_files), str(output),
                                str(profile[f"{mode}Warmup"]), str(profile[f"{mode}Samples"])],
                                work, f"{suite}-{engine}-{mode}-{run}")
                 environments[engine] = records[0]
@@ -275,16 +343,28 @@ def run_suite(suite, tools, work, args):
     results = []
     for case in cases:
         for workload in WORKLOADS:
-            record = {"id": case["id"], "format": case["format"], "bytes": case["bytes"], "workload": workload,
+            record = {"id": case["id"], "label": case_label(case["id"], case["format"]),
+                      "format": case["format"], "bytes": case["bytes"], "workload": workload,
                       "supported": workload == "read" or supported(case["format"], workload)}
             if record["supported"]:
                 for engine in ("native", "java"):
                     runs = timings[(engine, case["id"], workload)]
-                    record[engine] = statistics_for_runs([runs[index] for index in range(args.runs)])
+                    record[engine] = statistics_for_runs([runs.get(index, []) for index in range(args.runs)])
                 record["medianJavaOverNative"] = record["java"]["medianUs"] / record["native"]["medianUs"]
                 record["meanJavaOverNative"] = record["java"]["meanUs"] / record["native"]["meanUs"]
+            reason = jaudiotagger_unsupported(case["format"])
+            record["jaudiotagger"] = {"supported": reason is None}
+            if reason:
+                record["jaudiotagger"]["reason"] = reason
+            else:
+                runs = timings[("jaudiotagger", case["id"], workload)]
+                record["jaudiotagger"].update(statistics_for_runs([runs.get(index, []) for index in range(args.runs)]))
+                for reference in ("java", "native"):
+                    for metric in ("median", "mean"):
+                        record[f"{metric}JaudiotaggerOver{reference.title()}"] = (
+                            record["jaudiotagger"][f"{metric}Us"] / record[reference][f"{metric}Us"])
             results.append(record)
-    return {"name": suite, "settings": dict(profile, runs=args.runs), "results": results,
+    return {"name": suite, "label": SUITE_LABELS[suite], "settings": dict(profile, runs=args.runs), "results": results,
             "cases": [{k: v for k, v in case.items() if k != "path"} for case in cases], "workers": environments}
 
 
@@ -319,13 +399,15 @@ def execute(args, output_directory=RESULTS):
         tools = prepare(work, args)
         suites = [run_suite("fixtures", tools, work, args)]
         if args.large:
-            suites.append(run_suite("large", tools, work, args))
+            for suite in LARGE_SUITES:
+                suites.append(run_suite(suite, tools, work, args))
         cpu = next(line.split(":", 1)[1].strip() for line in Path("/proc/cpuinfo").read_text().splitlines()
                    if line.startswith("model name"))
         operating_system = os.uname()
         machine = {"cpu": cpu, "os": f"{operating_system.sysname} {operating_system.release} {operating_system.machine}",
                    "storage": storage_type(work)}
-        result = {"schemaVersion": 1, "status": "complete", "machine": machine,
+        result = {"schemaVersion": 2, "status": "complete", "machine": machine,
+                  "jaudiotagger": JAUDIOTAGGER,
                   "upstream": tools["pin"], "artifacts": tools["artifacts"], "suites": suites}
         publish(result, work, output=output_directory / "result.json")
         print(f"Complete: {output_directory / 'result.json'}", flush=True)
@@ -334,8 +416,8 @@ def execute(args, output_directory=RESULTS):
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=4, help="Fresh processes per engine (default: 4, minimum: 2)")
-    parser.add_argument("--large", action="store_true", help="Also measure synthetic 1/10/50 MiB files")
-    parser.add_argument("--large-corpus", type=Path, help="Reuse an existing pink-{001,010,050}mib corpus")
+    parser.add_argument("--large", action="store_true", help="Also measure the 4 MiB and 40 MiB categories")
+    parser.add_argument("--large-corpus", type=Path, help="Reuse an existing pink-{004,040}mib corpus")
     parser.add_argument("--skip-build", action="store_true", help="Reuse already-built Java artifacts")
     parser.add_argument("--native-tools", type=Path, help="Use a directory containing a prebuilt taglib-benchmark")
     args = parser.parse_args(argv)
