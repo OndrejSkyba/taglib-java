@@ -1393,6 +1393,9 @@ public final class PayloadHash {
           header = 16;
         }
         if (len == 0) len = b.length - p;
+        // A terminal free atom can declare padding beyond EOF; its physical bytes are
+        // still padding. Keep truncated media and all other atom types unverified.
+        if (len > b.length - p && eq(b, p + 4, "free")) len = b.length - p;
         if (len < header || len > Integer.MAX_VALUE) return null;
         require(b, p, (int) len);
         if (eq(b, p + 4, "mdat")) {

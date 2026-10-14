@@ -303,6 +303,34 @@ final class EncodedAudioAndContainerPreservationRulesTest {
   }
 
   @Test
+  void truncatedTerminalMp4PaddingProvesMediaAbsenceWithoutDecoding() throws Exception {
+    var file = directory.resolve("padding.m4a");
+    byte[] padding = HexFormat.of().parseHex("0000002066726565010203");
+    Files.write(file, joined(HexFormat.of().parseHex("000000086d6f6f76"), padding));
+    var empty = PayloadHash.of(file);
+    assertNotNull(empty);
+    assertEquals(0, empty.bytes());
+
+    byte[] media = HexFormat.of().parseHex("0000000b6d646174040506");
+    Files.write(file, joined(media, padding));
+    var original = PayloadHash.of(file);
+    assertNotNull(original);
+    assertEquals(3, original.bytes());
+    media[10] ^= 1;
+    Files.write(file, joined(media, padding));
+    assertNotEquals(original.sha256(), PayloadHash.of(file).sha256());
+
+    for (String type : new String[]{"mdat", "moov"}) {
+      byte[] truncated = padding.clone();
+      System.arraycopy(type.getBytes(java.nio.charset.StandardCharsets.US_ASCII), 0, truncated, 4, 4);
+      Files.write(file, truncated);
+      assertNull(PayloadHash.of(file), "Only free padding may extend beyond EOF: " + type);
+    }
+    Files.write(file, Arrays.copyOf(padding, 7));
+    assertNull(PayloadHash.of(file), "An incomplete atom header cannot prove media absence");
+  }
+
+  @Test
   void truncatedChunkIsNotDeclaredVerified() throws Exception {
     var file = directory.resolve("a.mp4");
     Files.write(file, new byte[]{0, 0, 1, 0, 'm', 'd', 'a', 't', 1});
