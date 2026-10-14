@@ -20,6 +20,7 @@ import java.util.Objects;
  */
 public class FileStream extends IOStream {
   private static final int BUFFER_SIZE = 1024;
+  private static final int COPY_BUFFER_SIZE = 64 * 1024;
   private final Path path;
   private FileChannel channel;
   private boolean readOnly = true;
@@ -27,7 +28,7 @@ public class FileStream extends IOStream {
   private boolean eof;
 
   /**
-   * Returns the block size used for file insertion and removal.
+   * Returns the native-compatible block size. Internal file shifts may use larger batches.
    *
    * @return the buffer size in bytes
    */
@@ -267,7 +268,9 @@ public class FileStream extends IOStream {
       return;
     }
     long difference = data.size() - replace;
-    long bufferLength = ((difference + BUFFER_SIZE - 1) / BUFFER_SIZE) * BUFFER_SIZE;
+    // Keep enough lookahead to avoid overwriting unread bytes, but batch small shifts
+    // so moving an audio payload does not require a read/write pair per kilobyte.
+    long bufferLength = Math.max(COPY_BUFFER_SIZE, ((difference + BUFFER_SIZE - 1) / BUFFER_SIZE) * BUFFER_SIZE);
     long readPosition = Math.addExact(start, replace), writePosition = start;
     ByteVector buffer = new ByteVector(data);
     while (true) {
@@ -309,8 +312,8 @@ public class FileStream extends IOStream {
     long readPosition = Math.addExact(start, count), writePosition = start;
     while (true) {
       seek(readPosition);
-      var next = readRaw(BUFFER_SIZE);
-      if (next.size() < BUFFER_SIZE) {
+      var next = readRaw(COPY_BUFFER_SIZE);
+      if (next.size() < COPY_BUFFER_SIZE) {
         clear();
       }
       readPosition += next.size();

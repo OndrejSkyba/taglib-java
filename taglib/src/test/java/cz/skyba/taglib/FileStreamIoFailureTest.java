@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,6 +88,26 @@ class FileStreamIoFailureTest {
       stream.writeBlock(new ByteVector("1234"));
       assertEquals(4, stream.tell());
       assertEquals("1234", Files.readString(path));
+    }
+  }
+
+  @Test
+  void fileShiftsCompleteShortTransfersWithoutCorruptingTheTail() throws Exception {
+    byte[] original = new byte[150_000];
+    new Random(42).nextBytes(original);
+    Path path = Files.write(directory.resolve("short-shift"), original);
+    try (var channel = new FaultChannel(path); var stream = new FileStream(channel)) {
+      channel.maxTransfer = 997;
+      stream.insert(new ByteVector("xyz"), 3, 1);
+      byte[] expected = new byte[original.length + 2];
+      System.arraycopy(original, 0, expected, 0, 3);
+      System.arraycopy(new byte[]{'x', 'y', 'z'}, 0, expected, 3, 3);
+      System.arraycopy(original, 4, expected, 6, original.length - 4);
+      assertArrayEquals(expected, Files.readAllBytes(path));
+      assertEquals(expected.length, stream.tell());
+      stream.insert(new ByteVector(new byte[]{original[3]}), 3, 3);
+      assertArrayEquals(original, Files.readAllBytes(path));
+      assertEquals(original.length, stream.tell());
     }
   }
 

@@ -5,7 +5,7 @@
   <parent>
     <groupId>cz.skyba</groupId>
     <artifactId>taglib-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>taglib</artifactId>
   <name>TagLib Audio Metadata Library</name>

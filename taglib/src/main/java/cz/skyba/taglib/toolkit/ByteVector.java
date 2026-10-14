@@ -288,7 +288,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
       return -1;
     }
     for (long i = offset; i <= (long) size() - pattern.size(); i += byteAlign) {
-      if (containsAt(pattern, (int) i)) {
+      if (data[(int) i] == pattern.data[0] && containsAt(pattern, (int) i)) {
         return (int) i;
       }
     }
@@ -425,7 +425,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
       reversedOffset = 0;
     }
     for (long i = (long) size() - pattern.size() - reversedOffset; i >= 0; i -= byteAlign) {
-      if (containsAt(pattern, (int) i)) {
+      if (data[(int) i] == pattern.data[0] && containsAt(pattern, (int) i)) {
         return (int) i;
       }
     }
