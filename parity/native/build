@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Build every C++ reference probe once; CMake reuses unchanged objects.
+set -euo pipefail
+project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
+cd "$project_root"
+for option in "$@"; do
+  case "$option" in
+    --source=*) value=${option#*=}; if [[ -n "$value" ]]; then export UPSTREAM_SOURCE=$value; fi ;;
+    --version=*) value=${option#*=}; if [[ -n "$value" ]]; then export UPSTREAM_VERSION=$value; fi ;;
+    --ref=*) value=${option#*=}; if [[ -n "$value" ]]; then export UPSTREAM_REF=$value; fi ;;
+    *) printf 'Unknown upstream build option: %s\n' "$option" >&2; exit 2 ;;
+  esac
+done
+source parity/native/select-upstream
+./parity/native/prepare-upstream
+source parity/native/select-upstream
+build="$project_root/parity/target/native-build"
+source_hash=$(cd "$TAGLIB_SOURCE_DIR" && { rg --files --no-ignore -0 taglib 3rdparty cmake | sort -z | xargs -0 sha256sum; sha256sum CMakeLists.txt; } | sha256sum | cut -d' ' -f1)
+if [[ -f "$build/CMakeCache.txt" ]] && {
+  ! rg -q -F "CMAKE_HOME_DIRECTORY:INTERNAL=$project_root/parity/native" "$build/CMakeCache.txt" ||
+  ! rg -q -F "TAGLIB_SOURCE:PATH=$TAGLIB_SOURCE_DIR" "$build/CMakeCache.txt" ||
+  [[ ! -f "$build/source.sha256" || $(<"$build/source.sha256") != "$source_hash" ]];
+}; then
+  rm -r -- "$build"
+fi
+cmake -S parity/native -B "$build" -DCMAKE_BUILD_TYPE=Release -DTAGLIB_SOURCE="$TAGLIB_SOURCE_DIR" -DBUILD_TESTING=OFF
+cmake --build "$build" --parallel "${BUILD_JOBS:-4}"
+printf '%s\n' "$source_hash" > "$build/source.sha256"
+corpus_hash=$(cd "$TAGLIB_SOURCE_DIR/tests/data" && rg --files --hidden --no-ignore -0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+commit=""
+dirty=false
+if [[ "$TAGLIB_SELECTION" != default ]] && command -v git >/dev/null && git -C "$TAGLIB_SOURCE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  commit=$(git -C "$TAGLIB_SOURCE_DIR" rev-parse HEAD)
+  if [[ -n $(git -C "$TAGLIB_SOURCE_DIR" status --porcelain) ]]; then dirty=true; fi
+fi
+printf 'source=%s\nversion=%s\nselection=%s\nrequested=%s\ncommit=%s\ndirty=%s\nsourceSha256=%s\ncorpusSha256=%s\n' \
+  "$TAGLIB_SOURCE_DIR" "$TAGLIB_VERSION" "$TAGLIB_SELECTION" "$TAGLIB_REQUESTED" "$commit" "$dirty" "$source_hash" "$corpus_hash" > "$build/upstream.properties"

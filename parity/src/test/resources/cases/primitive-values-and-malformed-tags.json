@@ -1,0 +1,388 @@
+[
+  {
+    "id": "file-resolver-one-argument-release",
+    "operation": "resolver-defaults",
+    "input": "file:1",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "file-resolver-two-arguments-release",
+    "operation": "resolver-defaults",
+    "input": "file:2",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "stream-resolver-one-argument-release",
+    "operation": "resolver-defaults",
+    "input": "stream:1",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "stream-resolver-two-arguments-release",
+    "operation": "resolver-defaults",
+    "input": "stream:2",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "flac-picture-unnamed-type-release",
+    "operation": "picture-type",
+    "input": "flac:31",
+    "adaptation": "Java enums expose only declared metadata values; raw C++ casts to unnamed representation values are not modeled.",
+    "javaExpected": "present=30\n",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "flac-picture-named-type-release",
+    "operation": "picture-type",
+    "input": "flac:20",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "apic-unnamed-type-release",
+    "operation": "picture-type",
+    "input": "apic:31",
+    "adaptation": "Java enums expose only declared metadata values; raw C++ casts to unnamed representation values are not modeled.",
+    "javaExpected": "present=30\n",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "asf-unnamed-type-release",
+    "operation": "picture-type",
+    "input": "asf:31",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "rva-unnamed-channel-nine-release",
+    "operation": "rva-channel",
+    "input": "9",
+    "adaptation": "Java enums expose only declared metadata values; raw C++ casts to unnamed representation values are not modeled.",
+    "javaExpected": "present=30\n",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "rva-unnamed-channel-fifteen-release",
+    "operation": "rva-channel",
+    "input": "15",
+    "adaptation": "Java enums expose only declared metadata values; raw C++ casts to unnamed representation values are not modeled.",
+    "javaExpected": "present=30\n",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "rva-named-channel-release",
+    "operation": "rva-channel",
+    "input": "1",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "rva-parsed-unknown-channel-release",
+    "operation": "id3-frame",
+    "input": "4:52564132000000060000780009010000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "integer-empty-release",
+    "operation": "byte-numbers",
+    "input": "0:",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "integer-short-release",
+    "operation": "byte-numbers",
+    "input": "0:0102",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "integer-outside-release",
+    "operation": "byte-numbers",
+    "input": "8:01020304",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "base64-canonical-release",
+    "operation": "base64",
+    "input": "51554a44",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "base64-noncanonical-padding-release",
+    "operation": "base64",
+    "input": "515a3d3d",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "base64-ignored-fourth-byte-release",
+    "operation": "base64",
+    "input": "51513d21",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "base64-trailing-data-release",
+    "operation": "base64",
+    "input": "51513d3d51554a44",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "base64-whitespace-release",
+    "operation": "base64",
+    "input": "51513d0a",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "stream-buffer-size-release",
+    "operation": "stream-buffer-size",
+    "input": "",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-round-down-release",
+    "operation": "variant-double",
+    "input": "1.234565",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-round-down-other-release",
+    "operation": "variant-double",
+    "input": "2.345675",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-small-round-down-release",
+    "operation": "variant-double",
+    "input": "0.00001234565",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-negative-round-release",
+    "operation": "variant-double",
+    "input": "-1.234565",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-round-up-release",
+    "operation": "variant-double",
+    "input": "1.234555",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-exponent-release",
+    "operation": "variant-double",
+    "input": "999999.5",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-positive-infinity-release",
+    "operation": "variant-double",
+    "input": "bits:7ff0000000000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-negative-infinity-release",
+    "operation": "variant-double",
+    "input": "bits:fff0000000000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-positive-nan-release",
+    "operation": "variant-double",
+    "input": "bits:7ff8000000000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-negative-nan-release",
+    "operation": "variant-double",
+    "input": "bits:fff8000000000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-min-subnormal-release",
+    "operation": "variant-double",
+    "input": "bits:0000000000000001",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-max-finite-release",
+    "operation": "variant-double",
+    "input": "bits:7fefffffffffffff",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-zero-release",
+    "operation": "variant-double",
+    "input": "0.0",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "double-negative-zero-release",
+    "operation": "variant-double",
+    "input": "-0.0",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "variant-embedded-nul-release",
+    "operation": "variant-bytes",
+    "input": "410042",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "utf8-valid-release",
+    "operation": "string",
+    "input": "3:e59bbe",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "utf8-invalid-release",
+    "operation": "string",
+    "input": "3:c328",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "utf8-incomplete-release",
+    "operation": "string",
+    "input": "3:c3",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "utf16-invalid-bom-release",
+    "operation": "string",
+    "input": "1:1234",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "utf16-valid-release",
+    "operation": "string",
+    "input": "1:fffe4100",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "ape-short-item-release",
+    "operation": "ape-item",
+    "input": "00000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "ape-text-item-release",
+    "operation": "ape-item",
+    "input": "03000000000000005449544c4500410042",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "flac-short-picture-release",
+    "operation": "flac-picture",
+    "input": "00000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "ogg-invalid-header-release",
+    "operation": "ogg-header",
+    "input": "000000000000000000000000000000000000000000000000000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "ogg-empty-packet-header-release",
+    "operation": "ogg-header",
+    "input": "4f676753000000000000000000000000000000000000000000000100",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-invalid-size-release",
+    "operation": "id3-header",
+    "input": "494433040000000000ff",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-invalid-version-release",
+    "operation": "id3-header",
+    "input": "494433ff000000000001",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-valid-header-release",
+    "operation": "id3-header",
+    "input": "49443304000000000001",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-encrypted-frame-release",
+    "operation": "id3-frame",
+    "input": "4:54495432000000030004090078",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-corrupt-zlib-release",
+    "operation": "id3-frame",
+    "input": "4:5449543200000007000900000003010203",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-comment-release",
+    "operation": "id3-frame",
+    "input": "4:434f4d4d00000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-picture-release",
+    "operation": "id3-frame",
+    "input": "4:4150494300000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-private-release",
+    "operation": "id3-frame",
+    "input": "4:5052495600000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-object-release",
+    "operation": "id3-frame",
+    "input": "4:47454f4200000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-lyrics-release",
+    "operation": "id3-frame",
+    "input": "4:55534c5400000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-synchronized-lyrics-release",
+    "operation": "id3-frame",
+    "input": "4:53594c5400000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-user-url-release",
+    "operation": "id3-frame",
+    "input": "4:5758585800000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-chapter-release",
+    "operation": "id3-frame",
+    "input": "4:4348415000000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-short-toc-release",
+    "operation": "id3-frame",
+    "input": "4:43544f4300000001000000",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-encoding-v4-release",
+    "operation": "id3-encoding",
+    "input": "4",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-encoding-v3-release",
+    "operation": "id3-encoding",
+    "input": "3",
+    "mode": "RELEASE"
+  },
+  {
+    "id": "id3-text-frame-release",
+    "operation": "id3-frame",
+    "input": "4:544954320000000200000078",
+    "mode": "RELEASE"
+  }
+]

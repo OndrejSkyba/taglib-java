@@ -1,0 +1,31 @@
+# Sourced by preparation/build scripts. Keep the default release pin in upstream.env.
+TAGLIB_GIT_URL=https://github.com/taglib/taglib.git
+selection_count=0
+for selection in "${UPSTREAM_SOURCE:-}" "${UPSTREAM_VERSION:-}" "${UPSTREAM_REF:-}"; do
+  if [[ -n "$selection" ]]; then selection_count=$((selection_count + 1)); fi
+done
+if ((selection_count > 1)); then
+  printf 'Select only one upstream source, version, or Git ref.\n' >&2
+  return 2
+fi
+source "$(dirname -- "${BASH_SOURCE[0]}")/upstream.env"
+TAGLIB_SELECTION=default
+TAGLIB_REQUESTED=$TAGLIB_VERSION
+if [[ -n "${UPSTREAM_SOURCE:-}" ]]; then
+  TAGLIB_SELECTION=source
+  TAGLIB_REQUESTED=$TAGLIB_SOURCE_DIR
+elif [[ -n "${UPSTREAM_VERSION:-}${UPSTREAM_REF:-}" ]]; then
+  TAGLIB_SELECTION=git
+  if [[ -n "${UPSTREAM_VERSION:-}" ]]; then
+    [[ "$UPSTREAM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { printf 'Use a semantic release version.\n' >&2; return 2; }
+    TAGLIB_REQUESTED="v$UPSTREAM_VERSION"
+  else
+    TAGLIB_REQUESTED=$UPSTREAM_REF
+  fi
+  [[ "$TAGLIB_REQUESTED" =~ ^[a-zA-Z0-9][a-zA-Z0-9._/-]*$ ]] || { printf 'Invalid upstream Git ref.\n' >&2; return 2; }
+  TAGLIB_SOURCE_DIR="$taglib_project_root/work/upstream/git/taglib"
+  if [[ -f "$TAGLIB_SOURCE_DIR/taglib/toolkit/taglib.h" ]]; then
+    TAGLIB_VERSION=$(awk '/^#define TAGLIB_MAJOR_VERSION / {major=$3} /^#define TAGLIB_MINOR_VERSION / {minor=$3} /^#define TAGLIB_PATCH_VERSION / {patch=$3} END {if(major=="" || minor=="" || patch=="") exit 1; print major "." minor "." patch}' "$TAGLIB_SOURCE_DIR/taglib/toolkit/taglib.h")
+  fi
+fi
+export TAGLIB_VERSION TAGLIB_SOURCE_DIR TAGLIB_SELECTION TAGLIB_REQUESTED

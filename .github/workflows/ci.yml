@@ -1,0 +1,43 @@
+name: Java and upstream parity
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: ./parity/run fixtures
+      - run: ./mvnw -B clean verify
+      - run: ./mvnw -B -pl taglib -Prelease verify
+      - name: Verify native-image consumer on the JVM
+        run: |
+          classes=integration/native-image/target/classes
+          mkdir -p "$classes"
+          artifact=$(./mvnw -q -pl taglib help:evaluate -Dexpression=project.build.finalName -DforceStdout)
+          classpath="taglib/target/$artifact.jar:$classes"
+          javac --release 25 -cp "$classpath" -d "$classes" integration/native-image/NativeImageSmoke.java parity/src/test/java/cz/skyba/taglib/parity/PayloadHash.java
+          source parity/native/upstream.env
+          java -cp "$classpath" cz.skyba.taglib.parity.NativeImageSmoke "$TAGLIB_SOURCE_DIR/tests/data" integration/native-image/target/copies --require-all-formats
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: sudo apt-get update && sudo apt-get install -y zlib1g-dev ffmpeg
+      - name: Verify comparison harness and fixtures
+        run: ./mvnw -B -Pparity '-Dparity.groups=!parity' verify
+      - name: Compare Java and C++ results
+        run: ./mvnw -B -Pparity verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-report
+          path: parity/target/results.json

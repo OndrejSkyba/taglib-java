@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Prepare the pinned release, a Git revision, or a local source without compiling C++.
+set -euo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
+source "$ROOT/parity/native/select-upstream"
+if [[ "$TAGLIB_SELECTION" == source ]]; then
+  # A supplied checkout is used directly and is never extracted over or modified.
+  test -f "$TAGLIB_SOURCE_DIR/CMakeLists.txt"
+  test -d "$TAGLIB_SOURCE_DIR/tests/data"
+  test -f "$TAGLIB_SOURCE_DIR/taglib/toolkit/taglib.h"
+  exit 0
+fi
+if [[ "$TAGLIB_SELECTION" == git ]]; then
+  command -v git >/dev/null || { printf 'Git is required for an upstream version/ref override.\n' >&2; exit 1; }
+  mkdir -p "$ROOT/work/upstream/git"
+  exec 8>"$ROOT/work/upstream/git/.lock"
+  flock 8
+  if [[ ! -d "$TAGLIB_SOURCE_DIR/.git" ]]; then
+    git init --quiet "$TAGLIB_SOURCE_DIR"
+    git -C "$TAGLIB_SOURCE_DIR" remote add origin "$TAGLIB_GIT_URL"
+  fi
+  # SHA selections can reuse an object already fetched. Named refs are resolved anew.
+  if [[ "$TAGLIB_REQUESTED" =~ ^[a-fA-F0-9]{40}$ ]] && git -C "$TAGLIB_SOURCE_DIR" cat-file -e "$TAGLIB_REQUESTED^{commit}" 2>/dev/null; then
+    commit=$TAGLIB_REQUESTED
+  else
+    git -C "$TAGLIB_SOURCE_DIR" fetch --depth=1 --no-tags origin "$TAGLIB_REQUESTED"
+    commit=$(git -C "$TAGLIB_SOURCE_DIR" rev-parse 'FETCH_HEAD^{commit}')
+  fi
+  # This is our generated cache; caller-supplied checkouts take the separate branch above.
+  git -C "$TAGLIB_SOURCE_DIR" checkout --detach --force "$commit"
+  git -C "$TAGLIB_SOURCE_DIR" clean -ffd
+  git -C "$TAGLIB_SOURCE_DIR" submodule update --init --recursive --force --depth=1
+  test -d "$TAGLIB_SOURCE_DIR/tests/data"
+  exit 0
+fi
+UPSTREAM="$ROOT/work/upstream"
+ARCHIVE="$UPSTREAM/taglib-$TAGLIB_VERSION.tar.gz"
+mkdir -p "$UPSTREAM"
+if [[ ! -f "$ARCHIVE" ]]; then
+  curl --fail --location --retry 3 "$TAGLIB_URL" --output "$ARCHIVE.part"
+  mv "$ARCHIVE.part" "$ARCHIVE"
+fi
+verify_upstream_archive
+# Extract into a new tree so added files and pre-existing symlinks cannot contaminate the oracle.
+# The replaced directory is a generated cache, never the user's library source.
+mkdir -p "$UPSTREAM/verified"
+EXTRACT_DIR=$(mktemp -d "$UPSTREAM/.verified-extract.XXXXXX")
+trap 'rm -r -- "$EXTRACT_DIR"' EXIT
+tar -xzf "$ARCHIVE" -C "$EXTRACT_DIR"
+test -d "$EXTRACT_DIR/taglib-$TAGLIB_VERSION"
+if [[ -d "$TAGLIB_SOURCE_DIR" ]]; then rm -r -- "$TAGLIB_SOURCE_DIR"; fi
+mv -- "$EXTRACT_DIR/taglib-$TAGLIB_VERSION" "$UPSTREAM/verified/taglib-$TAGLIB_VERSION"

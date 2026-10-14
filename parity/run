@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$project_root"
+group=parity
+build="$project_root/parity/target"
+output="$build/results.json"
+source=""
+version=""
+ref=""
+prepare_only=false
+test=""
+while (($#)); do
+  case "$1" in
+    all) group=parity; shift ;;
+    list) printf '%s\n' core toolkit id3v1 id3v2 mpeg flac mp4 ogg riff aiff ape asf matroska dsd trueaudio wavpack mpc trackers shorten; exit 0 ;;
+    fixtures) prepare_only=true; shift ;;
+    --test) test=$2; shift 2 ;;
+    --output) output=$2; shift 2 ;;
+    --upstream-source) source=$2; export UPSTREAM_SOURCE=$source; shift 2 ;;
+    --upstream-version) version=$2; export UPSTREAM_VERSION=$version; shift 2 ;;
+    --upstream-ref) ref=$2; export UPSTREAM_REF=$ref; shift 2 ;;
+    --help|-h) printf '%s\n' './parity/run [component] [--output results.json]' '[--upstream-version VERSION | --upstream-ref tag-or-commit | --upstream-source directory]' './mvnw -Pparity verify'; exit 0 ;;
+    --*) echo "Unknown option: $1" >&2; exit 2 ;;
+    *) group=$1; shift ;;
+  esac
+done
+if [[ "$prepare_only" == true ]]; then exec ./parity/native/prepare-upstream; fi
+[[ "$output" = /* ]] || output="$project_root/$output"
+[[ "$output" = *.json ]] || { echo '--output must name a JSON file' >&2; exit 2; }
+mkdir -p "$build" "$(dirname -- "$output")"
+exec 9>"$build/parity.lock"
+flock 9
+marker=$(mktemp "$build/parity-start.XXXXXX")
+trap 'rm -f -- "$marker"' EXIT
+extra=()
+[[ -z "$test" ]] || extra+=("-Dtest=$test")
+status=0
+./mvnw -B -Pparity -pl parity -am verify "-Dparity.groups=$group" "-Dparity.output=$output" "-Dupstream.source=$source" "-Dupstream.version=$version" "-Dupstream.ref=$ref" "${extra[@]}" || status=$?
+# Native/Java compilation failures occur before JUnit can publish a report.
+if [[ ! -f "$output" || ! "$output" -nt "$marker" ]]; then
+  temporary=$(mktemp "$(dirname -- "$output")/.parity-results.XXXXXX")
+  printf '{"schemaVersion":2,"status":"error","message":"Build did not reach the comparison tests","exitCode":%d}\n' "$status" > "$temporary"
+  mv -- "$temporary" "$output"
+fi
+exit "$status"

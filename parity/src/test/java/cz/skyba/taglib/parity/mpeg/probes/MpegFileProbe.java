@@ -1,0 +1,877 @@
+package cz.skyba.taglib.parity.mpeg.probes;
+
+import cz.skyba.taglib.parity.support.TagSelections;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
+
+import cz.skyba.taglib.ReadOptions;
+
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+
+import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadStyle;
+import cz.skyba.taglib.id3.v2.*;
+import cz.skyba.taglib.mpeg.MpegFile;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.ByteVectorStream;
+import cz.skyba.taglib.toolkit.FileStream;
+import cz.skyba.taglib.toolkit.TagString;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+// Independent Java side of the pinned TrueAudio File/shared ID3 owner protocol.
+
+public class MpegFileProbe {
+  static String hex(ByteVector b) {
+    return b.toHex().toString();
+  }
+
+  static String hex(String s) {
+    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+  }
+
+  static String list(List<String> v) {
+    StringBuilder s = new StringBuilder(v.size() + ":");
+    v.forEach(a -> s.append(hex(a)).append(','));
+    return s.toString();
+  }
+
+  static String props(PropertyMap p) {
+    StringBuilder s = new StringBuilder();
+    p.asMap().forEach((k, v) -> s.append(hex(k)).append('=').append(list(v)).append(';'));
+    return s + "/" + list(p.unsupportedData());
+  }
+
+  static int b(boolean v) {
+    return v ? 1 : 0;
+  }
+
+  static class Factory extends FrameFactory {
+    int raw, typed, aggregate, mode;
+
+    Factory(int m) {
+      mode = m;
+      setDefaultTextEncoding(TagString.Type.UTF8);
+    }
+
+    public Frame createFrame(ByteVector d, Header h) {
+      raw++;
+      return mode == 2 ? null : super.createFrame(d, h);
+    }
+
+    protected Frame createFrame(ByteVector d, Frame.Header h, Header t) {
+      typed++;
+      var f = super.createFrame(d, h, t);
+      if (mode == 3 && f instanceof TextIdentificationFrame s) s.setText("factory text");
+      return f;
+    }
+
+    public void rebuildAggregateFrames(Tag t) {
+      aggregate++;
+      super.rebuildAggregateFrames(t);
+    }
+  }
+
+  static class Utf8 extends Latin1StringHandler {
+    int calls;
+
+    public String parse(ByteVector d) {
+      calls++;
+      return new TagString(d, TagString.Type.UTF8).toString();
+    }
+  }
+
+  static void state(String id, MpegFile f) {
+    var t = f.tag();
+    var p = f.detailedProperties();
+    var v2 = f.id3v2Tag();
+    var v1 = f.id3v1Tag();
+    System.out.println(
+      id
+        + "/handles\t"
+        + b(f.isOpen())
+        + "\t"
+        + b(f.isValid())
+        + "\t"
+        + b(t != null)
+        + "\t"
+        + b(p != null)
+        + "\t"
+        + b(v2 != null)
+        + ":"
+        + b(v1 != null)
+        + ":"
+        + b(f.hasId3v2Tag())
+        + ":"
+        + b(f.hasId3v1Tag()));
+    System.out.println(
+      id
+        + "/union\t"
+        + b(t.isEmpty())
+        + "\t"
+        + hex(t.title())
+        + "\t"
+        + hex(t.artist())
+        + "\t"
+        + hex(t.album())
+        + "\t"
+        + hex(t.comment())
+        + "\t"
+        + hex(t.genre())
+        + "\t"
+        + t.year()
+        + "\t"
+        + t.track()
+        + "\t"
+        + props(f.properties()));
+    if (v2 != null) {
+      var h = v2.header();
+      StringBuilder line =
+        new StringBuilder(
+          id
+            + "/modern\t"
+            + b(v2.isEmpty())
+            + "\t"
+            + hex(v2.title())
+            + "\t"
+            + props(v2.properties())
+            + "\t"
+            + h.majorVersion()
+            + ":"
+            + h.tagSize()
+            + ":"
+            + h.completeTagSize()
+            + "\t");
+      for (var frame : v2.frameList())
+        line.append(hex(frame.frameID()))
+          .append(':')
+          .append(hex(frame.toString()))
+          .append(':')
+          .append(frame.header().version())
+          .append(':')
+          .append(frame.size())
+          .append(',');
+      System.out.println(line);
+    }
+    if (v1 != null)
+      System.out.println(
+        id
+          + "/legacy\t"
+          + b(v1.isEmpty())
+          + "\t"
+          + hex(v1.title())
+          + "\t"
+          + props(v1.properties()));
+    if (f.apeTag() != null)
+      System.out.println(
+        id
+          + "/ape\t"
+          + b(f.apeTag().isEmpty())
+          + "\t"
+          + hex(f.apeTag().title())
+          + "\t"
+          + props(f.apeTag().properties()));
+    if (p != null) {
+      var x = p.xingHeader();
+      System.out.println(
+        id
+          + "/vbr\t"
+          + b(x != null)
+          + (x == null
+          ? ""
+          : "\t" + x.type().ordinal() + ":" + x.totalFrames() + ":" + x.totalSize()));
+    }
+    if (p != null)
+      System.out.println(
+        id
+          + "/audio\t"
+          + p.lengthInMilliseconds()
+          + "\t"
+          + p.lengthInSeconds()
+          + "\t"
+          + p.bitrate()
+          + "\t"
+          + p.sampleRate()
+          + "\t"
+          + p.channels()
+          + "\t"
+          + p.version().ordinal()
+          + "\t"
+          + p.layer()
+          + "\t"
+          + b(p.protectionEnabled())
+          + "\t"
+          + p.channelMode().ordinal()
+          + "\t"
+          + p.channelConfiguration().ordinal()
+          + "\t"
+          + b(p.isADTS())
+          + "\t"
+          + b(p.isCopyrighted())
+          + "\t"
+          + b(p.isOriginal()));
+  }
+
+  static class Named extends ByteVectorStream {
+    String n;
+    StringBuilder trace = new StringBuilder();
+    boolean ro;
+
+    Named(byte[] d, String n) {
+      super(d);
+      this.n = n;
+    }
+
+    public String name() {
+      return n;
+    }
+
+    public boolean readOnly() {
+      return ro;
+    }
+
+    public ByteVector readBlock(long count) {
+      long at = tell();
+      var data = super.readBlock(count);
+      trace.append(at).append(',').append(count).append(',').append(data.size()).append(';');
+      return data;
+    }
+  }
+
+  static void edit(MpegFile f, int mode) {
+    if (mode == 0) return;
+    if (mode == 1) {
+      f.tag().setArtist("edited artist");
+      f.tag().setYear(0xffffffffL);
+      f.tag().setTrack(0x80000000L);
+      return;
+    }
+    if (mode == 2) {
+      f.getOrCreateId3v2Tag().setTitle("modern edited");
+      f.getOrCreateId3v1Tag().setTitle("legacy edited");
+      return;
+    }
+    if (mode == 3) {
+      f.replaceProperties(
+        PropertyMap.builder()
+          .put("TITLE", List.of("one", "two"))
+          .put("DATE", "2026-10-05T12:34")
+          .put("ARRANGER", List.of("a", "b"))
+          .put("PERFORMER:GUITAR", "g")
+          .put("ALBUMARTIST", "other")
+          .build());
+      return;
+    }
+    if (mode == 4) {
+      var t = f.getOrCreateId3v2Tag();
+      t.addFrame(
+        new UnknownFrame(new ByteVector(new byte[]{'Z', 'Z', 'Z', 'Z', 0, 0, 0, 1, 0, 0, 'x'})));
+      var picture = new AttachedPictureFrame();
+      picture.setPicture(new ByteVector("opaque picture"));
+      picture.setMimeType("image/test");
+      t.addFrame(picture);
+      return;
+    }
+    if (mode >= 5 && mode <= 7) {
+      f.strip(TagSelections.mpeg(mode == 5 ? 2 : mode == 6 ? 1 : 65535));
+      return;
+    }
+    if (mode == 8) {
+      f.getOrCreateId3v2Tag().setTitle("x".repeat(5000));
+      return;
+    }
+    if (mode == 9) {
+      f.getOrCreateId3v1Tag().setTitle("legacy only");
+      f.strip(TagSelections.mpeg(2));
+      return;
+    }
+    if (mode == 10) {
+      if (f.id3v2Tag() != null)
+        for (var x : new ArrayList<>(f.id3v2Tag().frameList())) f.id3v2Tag().removeFrame(x);
+      if (f.id3v1Tag() != null) f.id3v1Tag().replaceProperties(PropertyMap.EMPTY);
+      return;
+    }
+    f.removeUnsupportedProperties(f.properties().unsupportedData());
+  }
+
+  static void mutations(String base, MpegFile f, int mode, Supplier<ByteVector> bytes, boolean memory) {
+    long original = f.hasId3v2Tag() ? f.id3v2Tag().header().completeTagSize() : 0;
+    edit(f, mode);
+    var t = f.tag();
+    var p = f.detailedProperties();
+    var v2 = f.id3v2Tag();
+    var v1 = f.id3v1Tag();
+    var h = v2 != null ? v2.header() : null;
+    var first = v2 != null && !v2.frameList().isEmpty() ? v2.frameList().getFirst() : null;
+    state(base + "/edited", f);
+    for (int n = 0; n < 3; n++) {
+      if (memory && original > bytes.get().size() && v2 != null && !v2.isEmpty()) {
+        var candidate = v2.render();
+        if (candidate.size() > original) {
+          System.out.println(
+            base
+              + "/undefined-memory-growth/"
+              + n
+              + "\t"
+              + original
+              + "\t"
+              + bytes.get().size()
+              + "\t"
+              + candidate.size());
+          var before = new ByteVector(bytes.get());
+          if (SaveOutcome.save(f) || !before.equals(bytes.get()))
+            throw new AssertionError("unsafe native memory plan was not rejected before write");
+          break;
+        }
+      }
+      boolean saved = SaveOutcome.save(f);
+      f.seek(f.tell());
+      System.out.println(
+        base
+          + "/save/"
+          + n
+          + "\t"
+          + b(saved)
+          + "\t"
+          + f.tell()
+          + "\t"
+          + hex(bytes.get())
+          + "\t"
+          + b(t == f.tag())
+          + ":"
+          + b(p == f.detailedProperties())
+          + ":"
+          + b(v2 == f.id3v2Tag())
+          + ":"
+          + b(v1 == f.id3v1Tag())
+          + ":"
+          + b(h != null && h == v2.header())
+          + ":"
+          + b(first != null && v2.frameList().contains(first)));
+      state(base + "/after/" + n, f);
+      original = f.hasId3v2Tag() ? f.id3v2Tag().header().completeTagSize() : 0;
+      if (n == 1) f.tag().setTitle("short");
+    }
+  }
+
+  static class CustomFrame extends Frame {
+    long value;
+
+    CustomFrame(long v) {
+      super(new ByteVector("CUST"));
+      value = v;
+    }
+
+    CustomFrame(ByteVector d, Frame.Header h) {
+      super(h);
+      value = fieldData(d).toUnsignedInt();
+    }
+
+    public String toString() {
+      return Long.toString(value);
+    }
+
+    protected PropertyMap asProperties() {
+      return PropertyMap.builder().put("CUSTOM", toString()).build();
+    }
+
+    protected void parseFields(ByteVector d) {
+      value = d.toUnsignedInt();
+    }
+
+    protected ByteVector renderFields() {
+      return ByteVector.fromUnsignedInt(value);
+    }
+  }
+
+  static class CustomFactory extends FrameFactory {
+    protected Frame createFrame(ByteVector d, Frame.Header h, Header t) {
+      return h.frameID().equals(new ByteVector("CUST"))
+        ? new CustomFrame(d, h)
+        : super.createFrame(d, h, t);
+    }
+
+    public Frame createFrameForProperty(String k, List<String> v) {
+      return k.equals("CUSTOM")
+        ? new CustomFrame(v.isEmpty() ? 0 : Long.parseLong(v.getFirst()))
+        : super.createFrameForProperty(k, v);
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+    // Native mask values assumed by TagSelections; Java exposes enum sets instead.
+    System.out.println(
+      "enums\t"
+        + 0
+        + ":"
+        + 1
+        + ":"
+        + 2
+        + ":"
+        + 4
+        + ":"
+        + 65535
+        + ":"
+        + MpegFile.StripTags.STRIP_NONE.ordinal()
+        + ":"
+        + MpegFile.StripTags.STRIP_OTHERS.ordinal()
+        + ":"
+        + MpegFile.DuplicateTags.DUPLICATE.ordinal()
+        + ":"
+        + MpegFile.DuplicateTags.DO_NOT_DUPLICATE.ordinal());
+    Path root = Path.of(args[0]);
+    Files.createDirectories(root.resolve("outputs"));
+    try (var paths = Files.list(root.resolve("inputs"))) {
+      for (var input : paths.sorted().toList()) {
+        String id = input.getFileName().toString();
+        byte[] data = Files.readAllBytes(input);
+        for (var style : ReadStyle.values())
+          for (boolean enabled : new boolean[]{false, true}) {
+            String base = id + "/controls/" + style.ordinal() + "/" + b(enabled);
+            try (var f = new MpegFile(input, new ReadOptions(enabled, style, ReadOptions.DEFAULT.maxMetadataBytes()))) {
+              state(base + "/path", f);
+            }
+            for (int origin : new int[]{0, 7}) {
+              var s = new ByteVectorStream(data);
+              s.seek(origin);
+              try (var f = new MpegFile(s, new ReadOptions(enabled, style, ReadOptions.DEFAULT.maxMetadataBytes()))) {
+                state(base + "/io/" + origin, f);
+              }
+            }
+          }
+        {
+          var s = new Named(data, "sample.mp3");
+          try (var f = new MpegFile(s, ReadOptions.TAGS_ONLY)) {
+            s.trace.setLength(0);
+            long first = f.firstFrameOffset();
+            System.out.println(id + "/walk/first\t" + first + "\t" + f.tell() + "\t" + s.trace);
+            s.trace.setLength(0);
+            long last = f.lastFrameOffset();
+            System.out.println(id + "/walk/last\t" + last + "\t" + f.tell() + "\t" + s.trace);
+            for (long offset : new long[]{0, 1, 1023, 1024, 2047, 2048, 99999}) {
+              s.trace.setLength(0);
+              long next = f.nextFrameOffset(offset);
+              System.out.println(
+                id + "/walk/next/" + offset + "\t" + next + "\t" + f.tell() + "\t" + s.trace);
+              s.trace.setLength(0);
+              long prev = f.previousFrameOffset(offset);
+              System.out.println(
+                id + "/walk/previous/" + offset + "\t" + prev + "\t" + f.tell() + "\t" + s.trace);
+            }
+            if (first >= 0) {
+              s.trace.setLength(0);
+              long previous = f.previousFrameOffset(first + 834);
+              System.out.println(
+                id
+                  + "/walk/previous-second-boundary\t"
+                  + previous
+                  + "\t"
+                  + f.tell()
+                  + "\t"
+                  + s.trace);
+            }
+            for (var style : ReadStyle.values()) {
+              s.trace.setLength(0);
+              var direct = new cz.skyba.taglib.mpeg.Properties(f, style);
+              System.out.println(
+                id
+                  + "/direct/"
+                  + style.ordinal()
+                  + "\t"
+                  + direct.lengthInMilliseconds()
+                  + ":"
+                  + direct.bitrate()
+                  + ":"
+                  + direct.sampleRate()
+                  + ":"
+                  + direct.channels()
+                  + "\t"
+                  + f.tell()
+                  + "\t"
+                  + s.trace);
+            }
+          }
+        }
+        for (int origin : new int[]{0, 7}) {
+          var s = new ByteVectorStream(data);
+          s.seek(origin);
+          boolean supported = MpegFile.isSupported(s);
+          System.out.println(id + "/support/" + origin + "\t" + b(supported) + "\t" + s.tell());
+        }
+        for (int mode = 0; mode < 4; mode++)
+          for (int decode = 0; decode < 2; decode++) {
+            var c = new Factory(mode);
+            var u = new Utf8();
+            Tag.setLatin1StringHandler(decode != 0 ? u : null);
+            var s = new Named(data, "sample.mp3");
+            try (var f = new MpegFile(s, new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), mode != 0 ? c : null)) {
+              String base = id + "/factory/" + mode + "/" + decode;
+              state(base, f);
+              System.out.println(
+                base
+                  + "/hooks\t"
+                  + c.raw
+                  + ":"
+                  + c.typed
+                  + ":"
+                  + c.aggregate
+                  + ":"
+                  + u.calls);
+              if (f.tag() != null) {
+                f.tag().setComment("factory setter");
+                System.out.println(base + "/render\t" + hex(f.getOrCreateId3v2Tag().render()));
+              }
+            }
+            Tag.setLatin1StringHandler(null);
+          }
+        for (String name : List.of("sample.mp3", "sample.unknown"))
+          for (int origin : new int[]{0, 7})
+            for (boolean enabled : new boolean[]{false, true}) {
+              var s = new Named(data, name);
+              s.seek(origin);
+              try (var ref = new cz.skyba.taglib.parity.support.FileRefAdapter(s, enabled)) {
+                var f = ref.file() instanceof MpegFile actual ? actual : null;
+                String base = id + "/ref/" + name + "/" + origin + "/" + b(enabled);
+                System.out.println(
+                  base + "\t" + b(ref.isNull()) + "\t" + b(f != null));
+                if (f != null) {
+                  state(base, f);
+                  System.out.println(base + "/identity\t" + b(ref.tag() == f.tag()));
+                }
+              }
+            }
+        if (!id.startsWith("read-"))
+          for (int mode = 0; mode < 12; mode++) {
+            String base = id + "/edit/" + mode;
+            var s = new ByteVectorStream(data);
+            try (var f = new MpegFile(s)) {
+              mutations(base + "/io", f, mode, s::data, true);
+            }
+            Path copy = root.resolve("outputs").resolve(id + "." + mode + ".java");
+            Files.copy(input, copy, StandardCopyOption.REPLACE_EXISTING);
+            try (var f = new MpegFile(copy)) {
+              mutations(
+                base + "/path",
+                f,
+                mode,
+                () -> {
+                  try {
+                    return new ByteVector(Files.readAllBytes(copy));
+                  } catch (Exception e) {
+                    throw new RuntimeException(e);
+                  }
+                },
+                false);
+            }
+          }
+        for (int mask : new int[]{0, 1, 2, 3, 4, 65535, -1, 0x80000000}) {
+          var stream = new ByteVectorStream(data);
+          try (var f = new MpegFile(stream, ReadOptions.TAGS_ONLY)) {
+            f.strip(TagSelections.mpeg(mask));
+            state(id + "/strip/" + mask, f);
+          }
+        }
+        if (id.equals("plain.mp3") || id.equals("both-4-20.mp3"))
+          for (int mask : new int[]{0, 1, 2, 3, 4, 5, 6, 7, 65535, -1, 0x80000000})
+            for (var strip : MpegFile.StripTags.values())
+              for (var version : Tag.Version.values())
+                for (var duplicate : MpegFile.DuplicateTags.values()) {
+                  var s = new ByteVectorStream(data);
+                  try (var f = new MpegFile(s, ReadOptions.TAGS_ONLY)) {
+                    f.getOrCreateId3v2Tag().setTitle("modern");
+                    f.getOrCreateId3v1Tag().setArtist("legacy");
+                    f.getOrCreateApeTag().setAlbum("ape");
+                    String base =
+                      id
+                        + "/flags/"
+                        + mask
+                        + "/"
+                        + strip.ordinal()
+                        + "/"
+                        + version.code()
+                        + "/"
+                        + duplicate.ordinal();
+                    for (int n = 0; n < 3; n++) {
+                      boolean saved = SaveOutcome.save(f, mask, strip, version, duplicate);
+                      System.out.println(
+                        base
+                          + "/save/"
+                          + n
+                          + "\t"
+                          + b(saved)
+                          + "\t"
+                          + f.tell()
+                          + "\t"
+                          + hex(s.data()));
+                      state(base + "/state/" + n, f);
+                    }
+                  }
+                }
+        for (int mask : new int[]{0, 1, 2, 3, 4, 5, 6, 7, 65535, -1, 0x80000000})
+          for (boolean free : new boolean[]{false, true}) {
+            var s = new ByteVectorStream(data);
+            try (var f = new MpegFile(s, ReadOptions.TAGS_ONLY)) {
+              f.seek(0);
+              var t = f.tag();
+              var v2 = f.id3v2Tag();
+              var v1 = f.id3v1Tag();
+              var ape = f.apeTag();
+              boolean result = cz.skyba.taglib.parity.support.SaveOutcome.save(() -> f.strip(TagSelections.mpeg(mask), free));
+              String base = id + "/physical-strip/" + mask + "/" + b(free);
+              System.out.println(
+                base
+                  + "/result\t"
+                  + b(result)
+                  + "\t"
+                  + f.tell()
+                  + "\t"
+                  + hex(s.data())
+                  + "\t"
+                  + b(t == f.tag())
+                  + ":"
+                  + b(v2 == f.id3v2Tag())
+                  + ":"
+                  + b(v1 == f.id3v1Tag())
+                  + ":"
+                  + b(ape == f.apeTag()));
+              state(base, f);
+            }
+          }
+        var custom = new Factory(1);
+        var stream = new ByteVectorStream(data);
+        try (var f = new MpegFile(stream, ReadOptions.TAGS_ONLY, custom)) {
+          state(id + "/custom-factory", f);
+          System.out.println(
+            id
+              + "/custom-factory/hooks\t"
+              + custom.raw
+              + ":"
+              + custom.typed
+              + ":"
+              + custom.aggregate);
+        }
+        var ro = new Named(data, "readonly.mp3");
+        try (var f = new MpegFile(ro)) {
+          f.seek(0);
+          ro.ro = true;
+          boolean saved = SaveOutcome.save(f);
+          System.out.println(
+            id + "/readonly\t" + b(saved) + "\t" + f.tell() + "\t" + hex(ro.data()));
+        }
+      }
+    }
+    System.out.println("support/null\t" + b(MpegFile.isSupported(null)));
+    System.out.println("open-stream/rejected\t" + b(OpenOutcome.rejected(
+      () -> new FileStream(root.resolve("missing.mp3")))));
+    System.out.println("open-file/rejected\t" + b(OpenOutcome.rejected(
+      () -> new MpegFile(root.resolve("missing.mp3")))));
+    class ThrowFrame extends Frame {
+      ThrowFrame() {
+        super(new ByteVector("X001"));
+      }
+
+      public String toString() {
+        return "";
+      }
+
+      protected void parseFields(ByteVector d) {
+      }
+
+      protected ByteVector renderFields() {
+        throw new IllegalStateException("render hook");
+      }
+    }
+    var original = new ByteVector(Files.readAllBytes(root.resolve("inputs/plain.mp3")));
+    var stream = new ByteVectorStream(original);
+    try (var f = new MpegFile(stream)) {
+      var frame = new ThrowFrame();
+      f.getOrCreateId3v2Tag().addFrame(frame);
+      boolean threw = false;
+      try {
+        SaveOutcome.save(f);
+      } catch (IllegalStateException expected) {
+        threw = true;
+      }
+      System.out.println(
+        "helper/render-throw\t"
+          + b(threw)
+          + "\t"
+          + b(stream.data().equals(original))
+          + "\t"
+          + f.id3v2Tag().header().majorVersion()
+          + "\t"
+          + frame.header().version()
+          + "\t"
+          + b(f.hasId3v2Tag()));
+    }
+
+    for (int mode = 0; mode < 3; mode++) {
+      var streamNull = new ByteVectorStream(Files.readAllBytes(root.resolve("inputs/plain.mp3")));
+      try (var f = new MpegFile(streamNull, ReadOptions.TAGS_ONLY, null)) {
+        var t = f.id3v2Tag();
+        t.setTitle("");
+        t.setComment("");
+        if (mode == 1) {
+          var title = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+          title.setText("existing");
+          t.addFrame(title);
+          t.setTitle("changed");
+        }
+        if (mode == 2) f.replaceProperties(PropertyMap.builder().put("ARRANGER", "a").build());
+        state("helper/null-factory/" + mode, f);
+        boolean saved = SaveOutcome.save(f);
+        System.out.println(
+          "helper/null-factory/"
+            + mode
+            + "/save\t"
+            + b(saved)
+            + "\t"
+            + f.tell()
+            + "\t"
+            + hex(streamNull.data()));
+      }
+    }
+
+    class Trace extends ByteVectorStream {
+      StringBuilder ops = new StringBuilder();
+      MpegFile file;
+      boolean callback;
+
+      Trace(byte[] d) {
+        super(d);
+      }
+
+      public void insert(ByteVector d, long start, long replace) {
+        ops.append("insert:")
+          .append(start)
+          .append(':')
+          .append(replace)
+          .append(':')
+          .append(d.size())
+          .append(';');
+        super.insert(d, start, replace);
+        if (callback) file.getOrCreateId3v1Tag().setTitle("from IO callback");
+      }
+
+      public void removeBlock(long start, long size) {
+        ops.append("remove:").append(start).append(':').append(size).append(';');
+        super.removeBlock(start, size);
+      }
+
+      public void writeBlock(ByteVector d) {
+        ops.append("write:").append(tell()).append(':').append(d.size()).append(';');
+        super.writeBlock(d);
+      }
+
+      public void truncate(long size) {
+        ops.append("truncate:").append(size).append(';');
+        super.truncate(size);
+      }
+    }
+    for (int mode = 0; mode < 2; mode++) {
+      var traced = new Trace(Files.readAllBytes(root.resolve("inputs/plain.mp3")));
+      try (var f = new MpegFile(traced, ReadOptions.TAGS_ONLY)) {
+        traced.file = f;
+        traced.callback = mode == 1;
+        f.id3v2Tag().setTitle("modern");
+        if (mode == 0) f.getOrCreateId3v1Tag().setTitle("legacy");
+        for (int n = 0; n < 3; n++) {
+          traced.ops.setLength(0);
+          boolean saved = SaveOutcome.save(f);
+          System.out.println(
+            "helper/io-order/"
+              + mode
+              + "/"
+              + n
+              + "\t"
+              + b(saved)
+              + "\t"
+              + traced.ops
+              + "\t"
+              + hex(traced.data()));
+          state("helper/io-order/" + mode + "/" + n, f);
+          if (n == 0) f.id3v2Tag().setTitle("x".repeat(5000));
+          if (n == 1) f.strip();
+        }
+      }
+    }
+    for (int mode = 0; mode < 4; mode++) {
+      var c = new Factory(1);
+      var path = root.resolve("inputs/plain.mp3");
+      try (var f =
+             switch (mode) {
+               case 0 -> new MpegFile(path, new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), c);
+               case 1 -> new MpegFile(path, ReadOptions.TAGS_ONLY, c);
+               case 2 -> new MpegFile(path, ReadOptions.TAGS_ONLY, null);
+               default -> new MpegFile(path, new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), null);
+             }) {
+        state("helper/path-factory/" + mode, f);
+      }
+    }
+
+    class Failing extends ByteVectorStream {
+      Failing(byte[] d) {
+        super(d);
+      }
+
+      public void truncate(long size) {
+        throw new IllegalStateException("growth hook");
+      }
+    }
+    var failedStream = new Failing(Files.readAllBytes(root.resolve("inputs/plain.mp3")));
+    try (var f = new MpegFile(failedStream, ReadOptions.TAGS_ONLY)) {
+      f.getOrCreateId3v1Tag().setTitle("legacy");
+      boolean failed = false;
+      try {
+        SaveOutcome.save(f);
+      } catch (IllegalStateException expected) {
+        failed = true;
+      }
+      System.out.println(
+        "helper/io-failure\t"
+          + b(failed)
+          + "\t"
+          + b(f.hasId3v1Tag())
+          + "\t"
+          + b(f.hasId3v2Tag())
+          + "\t"
+          + hex(failedStream.data()));
+    }
+
+    var customPath = root.resolve("outputs/helper-custom-factory.java");
+    Files.copy(root.resolve("inputs/plain.mp3"), customPath, StandardCopyOption.REPLACE_EXISTING);
+    var customFactory = new CustomFactory();
+    for (int n = 0; n < 6; n++) {
+      try (var f = new MpegFile(customPath, ReadOptions.DEFAULT, n >= 3 ? customFactory : null)) {
+        var t = f.getOrCreateId3v2Tag();
+        if (n == 0) {
+          for (var x : new ArrayList<>(t.frameList())) t.removeFrame(x);
+          t.setArtist("An artist");
+          t.setTitle("A title");
+        }
+        if (n == 1) t.addFrame(new CustomFrame(1234567890));
+        if (n == 3) f.strip();
+        if (n == 4) t.replaceProperties(PropertyMap.builder().put("CUSTOM", "305419896").build());
+        state("helper/custom-factory/" + n, f);
+        if (n == 0 || n == 1 || n == 3 || n == 4) {
+          boolean saved = SaveOutcome.save(f);
+          f.seek(f.tell());
+          System.out.println(
+            "helper/custom-factory/save/"
+              + n
+              + "\t"
+              + b(saved)
+              + "\t"
+              + f.tell()
+              + "\t"
+              + hex(new ByteVector(Files.readAllBytes(customPath))));
+        }
+      }
+    }
+  }
+}

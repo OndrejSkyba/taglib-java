@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
+source "$ROOT/parity/native/upstream.env"
+GRAALVM_HOME=${GRAALVM_HOME:-${JAVA_HOME:-}}
+if [[ -z "$GRAALVM_HOME" || ! -x "$GRAALVM_HOME/bin/native-image" ]]; then
+  echo 'Set GRAALVM_HOME to a GraalVM for JDK 25 installation containing native-image.' >&2
+  exit 2
+fi
+GRAALVM_HOME=$(cd -- "$GRAALVM_HOME" && pwd)
+export JAVA_HOME="$GRAALVM_HOME"
+export PATH="$JAVA_HOME/bin:$PATH"
+if ! java -version 2>&1 | head -1 | grep -Eq 'version "25([.+"-])'; then
+  echo 'The native smoke gate requires GraalVM for JDK 25.' >&2
+  exit 2
+fi
+CORPUS=${CORPUS:-$TAGLIB_SOURCE_DIR/tests/data}
+REPORT_DIR=${REPORT_DIR:-$ROOT/parity/target/native-image}
+mkdir -p "$REPORT_DIR"
+REPORT_DIR=$(cd -- "$REPORT_DIR" && pwd)
+if [[ ! -d "$CORPUS" ]]; then
+  "$ROOT/parity/native/prepare-upstream"
+fi
+CORPUS=$(cd -- "$CORPUS" && pwd)
+if [[ "$REPORT_DIR/" == "$CORPUS/"* ]]; then
+  echo 'REPORT_DIR must be outside CORPUS.' >&2
+  exit 2
+fi
+rm -f -- "$REPORT_DIR/jvm.tsv" "$REPORT_DIR/native.tsv" "$REPORT_DIR/parity.diff"
+cd "$ROOT"
+./mvnw -B verify > "$REPORT_DIR/maven.log" 2>&1
+# The smoke consumer deliberately has no Jackson (or other runtime dependency) on its classpath.
+mkdir -p "$REPORT_DIR/classes"
+ARTIFACT_NAME=$(./mvnw -q -pl taglib help:evaluate -Dexpression=project.build.finalName -DforceStdout)
+LIBRARY_JAR="$ROOT/taglib/target/$ARTIFACT_NAME.jar"
+javac --release 25 -cp "$LIBRARY_JAR" -d "$REPORT_DIR/classes" "$ROOT/integration/native-image/NativeImageSmoke.java" "$ROOT/parity/src/test/java/cz/skyba/taglib/parity/PayloadHash.java"
+CLASSPATH="$LIBRARY_JAR:$REPORT_DIR/classes"
+sha256sum "$LIBRARY_JAR" > "$REPORT_DIR/artifacts.sha256"
+{
+  java -version
+  native-image --version
+  uname -a
+} > "$REPORT_DIR/environment.txt" 2>&1
+native-image --no-fallback --exact-reachability-metadata -O2 --parallelism="${NATIVE_IMAGE_PARALLELISM:-4}" \
+  -cp "$CLASSPATH" cz.skyba.taglib.parity.NativeImageSmoke \
+  "$REPORT_DIR/taglib-native-smoke" > "$REPORT_DIR/native-image-build.log" 2>&1
+sha256sum "$REPORT_DIR/taglib-native-smoke" >> "$REPORT_DIR/artifacts.sha256"
+coverage=()
+if [[ "$CORPUS" == "$TAGLIB_SOURCE_DIR/tests/data" ]]; then
+  coverage+=(--require-all-formats)
+fi
+java -cp "$CLASSPATH" cz.skyba.taglib.parity.NativeImageSmoke "$CORPUS" \
+  "$REPORT_DIR/jvm-copies" "${coverage[@]}" > "$REPORT_DIR/jvm.tsv"
+"$REPORT_DIR/taglib-native-smoke" -XX:MissingRegistrationReportingMode=Exit "$CORPUS" "$REPORT_DIR/native-copies" \
+  "${coverage[@]}" > "$REPORT_DIR/native.tsv"
+diff -u "$REPORT_DIR/jvm.tsv" "$REPORT_DIR/native.tsv" > "$REPORT_DIR/parity.diff"
+tail -1 "$REPORT_DIR/native.tsv"
+printf 'JVM and Native Image outcomes match. Reports: %s\n' "$REPORT_DIR"

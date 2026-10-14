@@ -1,0 +1,19 @@
+target/
+.flattened-pom.xml
+work/
+.idea/
+*.iml
+.DS_Store
+__pycache__/
+
+# Generated comparisons, fixtures, transcripts and raw historical evidence.
+/parity/results/
+/parity/results.json
+/benchmark/results/
+
+# Loose build output and process crash dumps; curated documentation stays tracked.
+*.class
+hs_err_pid*.log
+replay_pid*.log
+/core
+/core.[0-9]*
