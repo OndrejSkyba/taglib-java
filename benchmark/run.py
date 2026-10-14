@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and run the serial TagLib Java / C++ / jaudiotagger metadata benchmark."""
+"""Build and run the serial TagLib Java / C++ / GraalVM / jaudiotagger metadata benchmark."""
 import argparse
 import collections
 import fcntl
@@ -50,8 +50,10 @@ EXTENSIONS = {"mp3": "MPEG", "flac": "FLAC", "ogg": "OGG_VORBIS",
               "opus": "OGG_OPUS", "m4a": "MP4", "wav": "WAV", "aiff": "AIFF"}
 TRACKERS = {"MOD", "S3M", "IT", "XM"}
 WORKLOADS = ("read", "title", "growth")
-ENGINES = ("native", "java", "jaudiotagger")
-ENGINE_LABELS = {"native": "C++ TagLib", "java": "TagLib Java", "jaudiotagger": "jaudiotagger"}
+ENGINES = ("native", "java", "graalvm", "jaudiotagger")
+ENGINE_LABELS = {"native": "C++ TagLib", "java": "TagLib Java", "graalvm": "TagLib Java (Native Image)",
+                 "jaudiotagger": "jaudiotagger"}
+NATIVE_IMAGE_OPTIONS = ["-O3", "-march=compatibility", "--gc=serial"]
 LARGE_SUITES = {"4MiB": 4, "40MiB": 40}
 SUITE_LABELS = {"fixtures": "Small samples", "4MiB": "4 MiB", "40MiB": "40 MiB"}
 JAUDIOTAGGER = {
@@ -62,8 +64,8 @@ JAUDIOTAGGER = {
 JAUDIOTAGGER_FORMATS = {"MPEG", "FLAC", "OGG_VORBIS", "MP4", "ASF", "WAV", "AIFF", "DSF"}
 PRIMARY = {"readWarmup": 20, "readSamples": 31, "readIterations": 200,
            "writeWarmup": 100, "writeSamples": 101}
-LARGE = {"readWarmup": 10, "readSamples": 31, "readIterations": 5,
-         "writeWarmup": 10, "writeSamples": 31}
+LARGE = {"readWarmup": 100, "readSamples": 31, "readIterations": 5,
+         "writeWarmup": 30, "writeSamples": 31}
 LOG_SEQUENCE = itertools.count()
 
 
@@ -210,6 +212,10 @@ def prepare(work, args):
         executable = args.native_tools / "taglib-benchmark"
         if not executable.is_file() or not os.access(executable, os.X_OK):
             raise RuntimeError("--native-tools must contain executable taglib-benchmark")
+    if args.graalvm_home:
+        native_image = args.graalvm_home.resolve() / "bin/native-image"
+        if not native_image.is_file() or not os.access(native_image, os.X_OK):
+            raise RuntimeError("--graalvm-home must contain executable bin/native-image")
     for tool in required:
         if not shutil.which(tool) and not (tool in ("java", "javac") and os.environ.get("JAVA_HOME")):
             raise RuntimeError(f"Required tool is unavailable: {tool}")
@@ -259,7 +265,7 @@ def prepare(work, args):
     jaudiotagger_classpath = os.pathsep.join(map(str, [classes, jaudiotagger]))
     invoke([javac, "-cp", jaudiotagger_classpath, "-d", str(classes),
             str(ROOT / "benchmark/java/JaudiotaggerBenchmark.java")], work, "javac-jaudiotagger")
-    return {"java": [java, "-Xms512m", "-Xmx512m", "-cp", classpath,
+    tools = {"java": [java, "-Xms512m", "-Xmx512m", "-cp", classpath,
                       "AllFormatsBenchmark"],
             "native": [str(build / "taglib-benchmark")],
             "jaudiotagger": [java, "-Xms512m", "-Xmx512m",
@@ -271,6 +277,18 @@ def prepare(work, args):
                           "jaudiotaggerLibrarySha256": sha(jaudiotagger),
                           "jaudiotaggerWorkerSha256": sha(classes / "JaudiotaggerBenchmark.class"),
                           "nativeWorkerSha256": sha(build / "taglib-benchmark")}}
+    if args.graalvm_home:
+        print("Building TagLib Java benchmark with GraalVM Native Image (-O3)", flush=True)
+        executable = work / "taglib-graalvm-benchmark"
+        invoke([str(native_image), *NATIVE_IMAGE_OPTIONS, "--parallelism=4", "-J-Xmx4g",
+                "-cp", classpath, "-o", str(executable), "AllFormatsBenchmark"], work, "native-image")
+        tools["graalvm"] = [str(executable), "-Xms512m", "-Xmx512m"]
+        tools["graalvmBuild"] = {
+            "version": invoke([str(native_image), "--version"], work, "native-image-version").strip(),
+            "options": NATIVE_IMAGE_OPTIONS,
+        }
+        tools["artifacts"]["graalvmWorkerSha256"] = sha(executable)
+    return tools
 
 
 def source_cases(suite, tools, work, args):
@@ -317,9 +335,10 @@ def run_suite(suite, tools, work, args):
     manifest(jaudiotagger_files, jaudiotagger_cases)
     timings = collections.defaultdict(dict)
     environments = {}
+    available_engines = tuple(engine for engine in ENGINES if engine in tools)
     for run in range(args.runs):
-        offset = run % len(ENGINES)
-        engines = ENGINES[offset:] + ENGINES[:offset]
+        offset = run % len(available_engines)
+        engines = available_engines[offset:] + available_engines[:offset]
         for mode in ("read", "write"):
             for engine in engines:
                 if engine == "jaudiotagger" and not jaudiotagger_cases:
@@ -347,7 +366,9 @@ def run_suite(suite, tools, work, args):
                       "format": case["format"], "bytes": case["bytes"], "workload": workload,
                       "supported": workload == "read" or supported(case["format"], workload)}
             if record["supported"]:
-                for engine in ("native", "java"):
+                for engine in available_engines:
+                    if engine == "jaudiotagger":
+                        continue
                     runs = timings[(engine, case["id"], workload)]
                     record[engine] = statistics_for_runs([runs.get(index, []) for index in range(args.runs)])
                 record["medianJavaOverNative"] = record["java"]["medianUs"] / record["native"]["medianUs"]
@@ -363,6 +384,13 @@ def run_suite(suite, tools, work, args):
                     for metric in ("median", "mean"):
                         record[f"{metric}JaudiotaggerOver{reference.title()}"] = (
                             record["jaudiotagger"][f"{metric}Us"] / record[reference][f"{metric}Us"])
+            if "graalvm" in tools and record["supported"]:
+                for reference in ("native", "java", "jaudiotagger"):
+                    if reference == "jaudiotagger" and not record["jaudiotagger"]["supported"]:
+                        continue
+                    for metric in ("median", "mean"):
+                        record[f"{metric}GraalvmOver{reference.title()}"] = (
+                            record["graalvm"][f"{metric}Us"] / record[reference][f"{metric}Us"])
             results.append(record)
     return {"name": suite, "label": SUITE_LABELS[suite], "settings": dict(profile, runs=args.runs), "results": results,
             "cases": [{k: v for k, v in case.items() if k != "path"} for case in cases], "workers": environments}
@@ -409,6 +437,8 @@ def execute(args, output_directory=RESULTS):
         result = {"schemaVersion": 2, "status": "complete", "machine": machine,
                   "jaudiotagger": JAUDIOTAGGER,
                   "upstream": tools["pin"], "artifacts": tools["artifacts"], "suites": suites}
+        if "graalvmBuild" in tools:
+            result["graalvm"] = tools["graalvmBuild"]
         publish(result, work, output=output_directory / "result.json")
         print(f"Complete: {output_directory / 'result.json'}", flush=True)
 
@@ -420,6 +450,7 @@ def parse_args(argv=None):
     parser.add_argument("--large-corpus", type=Path, help="Reuse an existing pink-{004,040}mib corpus")
     parser.add_argument("--skip-build", action="store_true", help="Reuse already-built Java artifacts")
     parser.add_argument("--native-tools", type=Path, help="Use a directory containing a prebuilt taglib-benchmark")
+    parser.add_argument("--graalvm-home", type=Path, help="Also build and measure Native Image using this GraalVM JDK")
     args = parser.parse_args(argv)
     if args.runs < 2:
         parser.error("--runs must be at least 2")

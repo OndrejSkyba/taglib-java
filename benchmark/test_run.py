@@ -37,19 +37,20 @@ class ComparisonTest(unittest.TestCase):
             for workload in workloads:
                 operations = int(iterations) if mode == "read" else 1
                 records.append({"kind": "timing", "id": identity, "workload": workload, "sample": 0,
-                                "nanos": (runner.ENGINES.index(engine) + 1) * 1000 * operations,
+                                "nanos": (self.engines.index(engine) + 1) * 1000 * operations,
                                 "iterations": operations})
         return records
 
-    def run_suite(self, worker):
+    def run_suite(self, worker, engines=("native", "java", "jaudiotagger"), runs=3):
+        self.engines = engines
         with patch.object(runner, "source_cases", return_value=(self.cases, self.profile)), \
              patch.object(runner, "rows", side_effect=worker), patch("builtins.print"):
-            return runner.run_suite("fixtures", {engine: [engine] for engine in runner.ENGINES},
-                                    self.work, SimpleNamespace(runs=3))
+            return runner.run_suite("fixtures", {engine: [engine] for engine in engines},
+                                    self.work, SimpleNamespace(runs=runs))
 
     def test_three_engines_with_partial_format_coverage(self):
         suite = self.run_suite(self.worker_rows)
-        self.assertEqual(set(suite["workers"]), set(runner.ENGINES))
+        self.assertEqual(set(suite["workers"]), {"native", "java", "jaudiotagger"})
         self.assertEqual([engine for engine, mode in self.commands if mode == "read"],
                          ["native", "java", "jaudiotagger", "java", "jaudiotagger", "native",
                           "jaudiotagger", "native", "java"])
@@ -74,6 +75,36 @@ class ComparisonTest(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "Missing or invalid timing samples"):
             self.run_suite(missing)
+
+
+    def test_optional_native_image_comparison(self):
+        suite = self.run_suite(self.worker_rows, runner.ENGINES, runs=4)
+        self.assertEqual(set(suite["workers"]), set(runner.ENGINES))
+        self.assertEqual([engine for engine, mode in self.commands if mode == "read"],
+                         ["native", "java", "graalvm", "jaudiotagger",
+                          "java", "graalvm", "jaudiotagger", "native",
+                          "graalvm", "jaudiotagger", "native", "java",
+                          "jaudiotagger", "native", "java", "graalvm"])
+        for result in suite["results"]:
+            if result["supported"]:
+                self.assertEqual(result["graalvm"]["medianUs"], 3)
+                self.assertEqual(len(result["graalvm"]["runs"]), 4)
+                self.assertEqual(result["medianGraalvmOverJava"], 1.5)
+                self.assertEqual(result["meanGraalvmOverNative"], 3)
+                if result["jaudiotagger"]["supported"]:
+                    self.assertEqual(result["medianGraalvmOverJaudiotagger"], 0.75)
+                else:
+                    self.assertNotIn("medianGraalvmOverJaudiotagger", result)
+            else:
+                self.assertNotIn("graalvm", result)
+
+    def test_missing_native_image_timings_fail_the_run(self):
+        def missing(command, work, label):
+            records = self.worker_rows(command, work, label)
+            return records[:1] if command[0] == "graalvm" else records
+
+        with self.assertRaisesRegex(RuntimeError, "Missing or invalid timing samples"):
+            self.run_suite(missing, runner.ENGINES, runs=4)
 
 
 class CorpusCategoryTest(unittest.TestCase):
