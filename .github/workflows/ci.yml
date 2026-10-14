@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-      - run: sudo apt-get update && sudo apt-get install -y zlib1g-dev ffmpeg
+      - run: sudo apt-get update && sudo apt-get install -y zlib1g-dev ffmpeg ripgrep
       - name: Verify comparison harness and fixtures
         run: ./mvnw -B -Pparity '-Dparity.groups=!parity' verify
       - name: Compare Java and C++ results
