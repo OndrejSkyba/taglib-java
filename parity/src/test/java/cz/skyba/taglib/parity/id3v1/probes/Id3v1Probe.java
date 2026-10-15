@@ -1,20 +1,22 @@
 package cz.skyba.taglib.parity.id3v1.probes;
 
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.*;
 import cz.skyba.taglib.id3.v1.Genres;
 import cz.skyba.taglib.id3.v1.StringHandler;
 import cz.skyba.taglib.id3.v1.Tag;
+import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 class Id3v1Probe {
   static String hex(ByteVector v) {
@@ -22,7 +24,7 @@ class Id3v1Probe {
   }
 
   static String text(String v) {
-    return hex(new TagString(v).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(v, UTF_8));
   }
 
   static String props(PropertyMap p) {
@@ -81,13 +83,13 @@ class Id3v1Probe {
     new StringHandler() {
       public String parse(ByteVector v) {
         parsed++;
-        String result = new TagString(v, TagString.Type.UTF8).stripWhiteSpace().toString();
+        String result = Ascii.stripWhiteSpace(TextBytes.decodeTerminated(v.data(), UTF_8));
         return counting ? result + "!" + parsed : result;
       }
 
       public ByteVector render(String s) {
         rendered++;
-        return new TagString(counting ? s + "~" + rendered : s).data(TagString.Type.UTF8);
+        return ByteVector.fromText(counting ? s + "~" + rendered : s, UTF_8);
       }
     };
 

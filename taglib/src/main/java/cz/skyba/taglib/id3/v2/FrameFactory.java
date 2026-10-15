@@ -2,12 +2,17 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.id3.v1.Genres;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Decodes and constructs ID3v2 frames, with protected hooks for custom frame types.
@@ -33,7 +38,7 @@ public class FrameFactory {
     Set.of("EQUA", "RVAD", "TIME", "TRDA", "TSIZ", "TDAT");
   private static final Map<String, String> V3_CONVERSIONS =
     Map.of("TORY", "TDOR", "TYER", "TDRC", "IPLS", "TIPL");
-  private TagString.Type defaultEncoding = TagString.Type.LATIN1;
+  private Charset defaultEncoding = ISO_8859_1;
   private boolean useDefaultEncoding;
 
   protected FrameFactory() {
@@ -43,13 +48,16 @@ public class FrameFactory {
     return INSTANCE;
   }
 
-  public final TagString.Type defaultTextEncoding() {
+  public final Charset defaultTextEncoding() {
     return defaultEncoding;
   }
 
-  public final void setDefaultTextEncoding(TagString.Type encoding) {
+  /**
+   * Sets the default text encoding, using the charsets supported by {@link Frame}.
+   */
+  public final void setDefaultTextEncoding(Charset encoding) {
+    defaultEncoding = Id3Text.requireEncoding(encoding);
     useDefaultEncoding = true;
-    defaultEncoding = Objects.requireNonNull(encoding);
   }
 
   public final boolean isUsingDefaultTextEncoding() {
@@ -96,7 +104,7 @@ public class FrameFactory {
     }
     // The pure Java runtime has the same available-zlib branch through java.util.zip.
     if (header.encryption()) {
-      Debug.debug(new TagString("Encrypted frames are currently not supported."));
+      Debug.debug("Encrypted frames are currently not supported.");
       return new Preparation(header, false);
     }
     if (!updateFrame(header)) {
@@ -147,7 +155,7 @@ public class FrameFactory {
   static Frame createEmbeddedFrame(ByteVector data, int offset, Header tagHeader) {
     int depth = EMBEDDED_DEPTH.get();
     if (depth >= 64) {
-      Debug.debug(new TagString("ID3v2: Maximum embedded frame nesting depth exceeded"));
+      Debug.debug("ID3v2: Maximum embedded frame nesting depth exceeded");
       return null;
     }
     EMBEDDED_DEPTH.set(depth + 1);
@@ -246,7 +254,7 @@ public class FrameFactory {
     Frame.Header header, String id, Set<String> discarded, Map<String, String> conversions
   ) {
     if (discarded.contains(id)) {
-      Debug.debug(new TagString("ID3v2.4 no longer supports the frame type " + id + ".  It will be discarded from the tag."));
+      Debug.debug("ID3v2.4 no longer supports the frame type " + id + ".  It will be discarded from the tag.");
       return false;
     }
     String converted = conversions.get(id);
@@ -266,7 +274,7 @@ public class FrameFactory {
     String id = Id3Text.fixedLatin1(frameID);
     if (!id.isEmpty()) {
       if (id.startsWith("T") || TEXT_FRAME_IDS.contains(id)) {
-        var frame = new TextIdentificationFrame(frameID, TagString.Type.UTF8);
+        var frame = new TextIdentificationFrame(frameID, UTF_8);
         frame.setText(values);
         return frame;
       }
@@ -281,22 +289,22 @@ public class FrameFactory {
     }
     if (values.size() == 1) {
       if (key.equals("MUSICBRAINZ_TRACKID")) {
-        return new UniqueFileIdentifierFrame("http://musicbrainz.org", Id3Text.encode(values.getFirst(), TagString.Type.UTF8));
+        return new UniqueFileIdentifierFrame("http://musicbrainz.org", ByteVector.fromText(values.getFirst(), UTF_8));
       }
       if (key.equals("LYRICS") || key.startsWith(Frame.lyricsPrefix)) {
-        var frame = new UnsynchronizedLyricsFrame(TagString.Type.UTF8);
+        var frame = new UnsynchronizedLyricsFrame(UTF_8);
         frame.setDescription(key.equals("LYRICS") ? key : key.substring(Frame.lyricsPrefix.length()));
         frame.setText(values.getFirst());
         return frame;
       }
       if (key.equals("URL") || key.startsWith(Frame.urlPrefix)) {
-        var frame = new UserUrlLinkFrame(TagString.Type.UTF8);
+        var frame = new UserUrlLinkFrame(UTF_8);
         frame.setDescription(key.equals("URL") ? key : key.substring(Frame.urlPrefix.length()));
         frame.setUrl(values.getFirst());
         return frame;
       }
       if (key.equals("COMMENT") || key.startsWith(Frame.commentPrefix)) {
-        var frame = new CommentsFrame(TagString.Type.UTF8);
+        var frame = new CommentsFrame(UTF_8);
         if (!key.equals("COMMENT")) {
           frame.setDescription(key.substring(Frame.commentPrefix.length()));
         }
@@ -304,7 +312,7 @@ public class FrameFactory {
         return frame;
       }
     }
-    return new UserTextIdentificationFrame(UserTextIdentificationFrame.keyToTXXX(key), values, TagString.Type.UTF8);
+    return new UserTextIdentificationFrame(UserTextIdentificationFrame.keyToTXXX(key), values, UTF_8);
   }
 
   /**
@@ -372,7 +380,8 @@ public class FrameFactory {
   }
 
   private static String fixedText(ByteVector data) {
-    return new TagString(data.mid(1), Id3Text.encoding(data.at(0))).toString();
+    var charset = Id3Text.encoding(data.at(0));
+    return TextBytes.decodeTerminated(data.data(), 1, Math.max(0, data.size() - 1), charset);
   }
 
   private static void updateGenre(TextIdentificationFrame frame) {
@@ -382,7 +391,7 @@ public class FrameFactory {
       while (!field.isEmpty() && field.charAt(0) == '(' && (end = field.indexOf(')', 1)) > 0) {
         String code = field.substring(1, end);
         field = field.substring(end + 1);
-        var number = new TagString(code).extractInt();
+        var number = TextNumbers.extractInt(code);
         if ((number.ok() && number.value() >= 0 && number.value() <= 255 && !Genres.genre(number.value()).equals(field))
           || code.equals("RX") || code.equals("CR")) {
           values.add(code);

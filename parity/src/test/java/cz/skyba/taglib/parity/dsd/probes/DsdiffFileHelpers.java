@@ -1,22 +1,22 @@
 package cz.skyba.taglib.parity.dsd.probes;
 
 import cz.skyba.taglib.FileBase;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
 import cz.skyba.taglib.ReadOptions;
-
 import cz.skyba.taglib.dsdiff.DsdiffFile;
 import cz.skyba.taglib.id3.v2.Frame;
 import cz.skyba.taglib.id3.v2.Latin1StringHandler;
 import cz.skyba.taglib.id3.v2.Tag;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DsdiffFileHelpers {
   static class ThrowFrame extends Frame {
@@ -99,7 +99,7 @@ public class DsdiffFileHelpers {
 
     public String parse(ByteVector d) {
       calls++;
-      return new TagString(d, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(d.data(), UTF_8);
     }
   }
 

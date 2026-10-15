@@ -454,7 +454,7 @@ public class MatroskaFile extends FileBase {
       } else if (name.isEmpty() && key.contains(".")) {
         name = key;
       } else if (uid == 0) {
-        var parsed = new TagString(key).extractUnsignedLong(10);
+        var parsed = TextNumbers.extractUnsignedLong(key, 10);
         if (parsed.ok() && parsed.value() != 0) {
           uid = parsed.value();
         }

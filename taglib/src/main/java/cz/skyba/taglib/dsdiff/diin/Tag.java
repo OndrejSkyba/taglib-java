@@ -6,7 +6,6 @@ import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
 
@@ -87,7 +86,7 @@ public class Tag extends TagBase {
   }
 
   private static void ignored(String operation) {
-    Debug.debug(new TagString("DSDIFF::DIIN::Tag::" + operation + "() -- Ignoring unsupported tag."));
+    Debug.debug("DSDIFF::DIIN::Tag::" + operation + "() -- Ignoring unsupported tag.");
   }
 
   /**

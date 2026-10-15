@@ -5,7 +5,6 @@ import cz.skyba.taglib.*;
 import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +13,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static cz.skyba.taglib.internal.Binary.*;
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 /**
  * ASF header objects and multi-valued typed attributes; unknown objects survive writes verbatim.
@@ -630,8 +630,7 @@ public final class AsfCodec implements Codec {
 
   private static String codecText(ByteVector data, long offset, int units) {
     var bytes = offset >= data.size() ? new ByteVector() : data.mid((int) offset, units * 2);
-    return new TagString(bytes, TagString.Type.UTF16LE)
-      .stripWhiteSpace().toString();
+    return Ascii.stripWhiteSpace(bytes.decodeTerminatedText(UTF_16LE));
   }
 
   /**
@@ -662,14 +661,14 @@ public final class AsfCodec implements Codec {
     }
     long y =
       year != null && year.type() == 0
-        ? Integer.toUnsignedLong(new TagString(utf16(year.data())).toInt())
+        ? Integer.toUnsignedLong(TextNumbers.parseInt(utf16(year.data())))
         : 0;
     long t = 0;
     if (track != null) {
       if (track.type() == 3) {
         t = new ByteVector(track.data()).toUnsignedInt(false);
       } else if (track.type() == 0) {
-        t = Integer.toUnsignedLong(new TagString(utf16(track.data())).toInt());
+        t = Integer.toUnsignedLong(TextNumbers.parseInt(utf16(track.data())));
       }
     } else if (legacy != null && legacy.type() >= 2 && legacy.type() <= 5) {
       t = legacy.unsigned().longValue() & 0xffffffffL;
@@ -1119,15 +1118,11 @@ public final class AsfCodec implements Codec {
   }
 
   private static String utf16(byte[] b) {
-    return new TagString(
-      new ByteVector(b), TagString.Type.UTF16LE)
-      .toString();
+    return TextBytes.decodeTerminated(b, UTF_16LE);
   }
 
   private static byte[] utf16(String s) {
-    return new TagString(s + '\0')
-      .data(TagString.Type.UTF16LE)
-      .toByteArray();
+    return TextBytes.encode(s + '\0', UTF_16LE);
   }
 
   private static Picture picture(byte[] b) {
@@ -1424,7 +1419,7 @@ public final class AsfCodec implements Codec {
             yield hex.length() == 32 ? HexFormat.of().parseHex(hex) : new byte[0];
           }
           default -> {
-            long n = new TagString(value).toUnsignedLong();
+            long n = TextNumbers.parseUnsignedLong(value, 10);
             byte[] b = new byte[m.type == 4 ? 8 : m.type == 3 ? 4 : 2];
             for (int i = 0; i < b.length; i++) {
               b[i] = (byte) n;

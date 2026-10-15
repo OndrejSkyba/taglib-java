@@ -1,14 +1,16 @@
 package cz.skyba.taglib.parity.core.probes;
 
 import cz.skyba.taglib.parity.support.FileRefAdapter;
-import cz.skyba.taglib.toolkit.TagString;
+import cz.skyba.taglib.toolkit.ByteVector;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 class FileRefRemovalProbe {
   static String hex(String s) {
-    return new TagString(s).data(TagString.Type.UTF8).toHex().toString();
+    return ByteVector.fromText(s, UTF_8).toHex().toString();
   }
 
   static void dump(String label, FileRefAdapter file) {

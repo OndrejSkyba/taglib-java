@@ -2,14 +2,17 @@
 package cz.skyba.taglib.ape;
 
 import cz.skyba.taglib.internal.ByteVectorOutput;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable APE item with a key, type, read-only flag and independent text and binary fields.
@@ -65,7 +68,7 @@ public final class Item {
       type = ItemType.Binary;
       this.value = new ByteVector(value);
     } else {
-      text.add(new TagString(value).toString());
+      text.add(value.decodeTerminatedText(ISO_8859_1));
     }
   }
 
@@ -189,7 +192,7 @@ public final class Item {
     switch (type) {
       case Text -> {
         for (String part : text) {
-          result += 1 + new TagString(part).data(TagString.Type.UTF8).size();
+          result += 1 + TextBytes.encode(part, UTF_8).length;
         }
         if (!text.isEmpty()) {
           result--;
@@ -211,7 +214,7 @@ public final class Item {
 
   void parse(ByteVector data, int start) {
     if (data.size() - start < 11) {
-      Debug.debug(new TagString("APE::Item::parse() -- no data in item"));
+      Debug.debug("APE::Item::parse() -- no data in item");
       return;
     }
     long length = data.toUnsignedInt(start, false), flags = data.toUnsignedInt(start + 4, false);
@@ -224,7 +227,7 @@ public final class Item {
     if (type == ItemType.Text) {
       text = new ArrayList<>();
       for (var part : payload.split(new ByteVector((byte) 0))) {
-        text.add(new TagString(part, TagString.Type.UTF8).toString());
+        text.add(part.decodeTerminatedText(UTF_8));
       }
     } else {
       value = payload;
@@ -246,7 +249,7 @@ public final class Item {
           if (i > 0) {
             output.append((byte) 0);
           }
-          output.append(new TagString(text.get(i)).data(TagString.Type.UTF8));
+          output.append(TextBytes.encode(text.get(i), UTF_8));
         }
       } catch (RuntimeException failure) {
         value = output.toByteVector();
@@ -256,7 +259,7 @@ public final class Item {
     }
     return ByteVector.fromUnsignedInt(value.size(), false)
       .append(ByteVector.fromUnsignedInt((readOnly ? 1 : 0) | type.ordinal() << 1, false))
-      .append(new TagString(key).data(TagString.Type.LATIN1))
+      .append(ByteVector.fromText(key, ISO_8859_1))
       .append(new ByteVector(new byte[]{0}))
       .append(value);
   }

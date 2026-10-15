@@ -3,9 +3,10 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing URL-link text.
@@ -81,6 +82,6 @@ public class UrlLinkFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    return Id3Text.encode(url, TagString.Type.LATIN1);
+    return ByteVector.fromText(url, ISO_8859_1);
   }
 }

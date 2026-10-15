@@ -6,11 +6,13 @@ import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.mp4.ItemFactory.ItemHandlerType;
 import cz.skyba.taglib.mp4.ItemFactory.ParsedItem;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Atom payload parsing and rendering shared by the extensible item factory.
@@ -22,8 +24,12 @@ final class ItemAtomCodec {
   private ItemAtomCodec() {
   }
 
+  private static String utf8(ByteVector value) {
+    return value.decodeTerminatedText(UTF_8);
+  }
+
   private static String latin(ByteVector value) {
-    return new TagString(value).toString();
+    return value.decodeTerminatedText(ISO_8859_1);
   }
 
   private static ByteVector slice(ByteVector bytes, long at, long size) {
@@ -136,7 +142,7 @@ final class ItemAtomCodec {
     }
     var value = data.getFirst();
     return new ParsedItem(latin(atom.name()), value.type.equals(AtomDataType.TypeUTF8)
-      ? Item.textValues(List.of(new TagString(value.data, TagString.Type.UTF8).toString())) : new Item(value.data.toShort()));
+      ? Item.textValues(List.of(utf8(value.data))) : new Item(value.data.toShort()));
   }
 
   static ParsedItem parseText(Atom atom, ByteVector bytes) {
@@ -147,7 +153,7 @@ final class ItemAtomCodec {
     var data = parseData(bytes, flags);
     return new ParsedItem(latin(atom.name()), data.isEmpty() ? new Item()
       : Item.textValues(data.stream()
-      .map(value -> new TagString(value, TagString.Type.UTF8).toString()).toList()));
+      .map(ItemAtomCodec::utf8).toList()));
   }
 
   static ParsedItem parseGnre(ByteVector bytes) {
@@ -163,12 +169,12 @@ final class ItemAtomCodec {
       return new ParsedItem(latin(atom.name()), new Item());
     }
     String name =
-      "----:" + new TagString(data.get(0).data, TagString.Type.UTF8) + ":" + new TagString(data.get(1).data, TagString.Type.UTF8);
+      "----:" + utf8(data.get(0).data) + ":" + utf8(data.get(1).data);
     AtomDataType type = data.get(2).type;
     var values = data.subList(2, data.size()).stream().map(d -> d.data).toList();
     Item item = type.equals(AtomDataType.TypeUTF8)
       ? Item.textValues(values.stream()
-      .map(value -> new TagString(value, TagString.Type.UTF8).toString()).toList())
+      .map(ItemAtomCodec::utf8).toList())
       : new Item(values);
     item.setAtomDataType(type);
     return new ParsedItem(name, item);
@@ -293,7 +299,7 @@ final class ItemAtomCodec {
 
   static ByteVector renderText(ByteVector name, Item item, int flags) {
     var data = new ByteVectorOutput();
-    for (String value : item.textValues()) appendData(data, flags, new TagString(value).data(TagString.Type.UTF8));
+    for (String value : item.textValues()) appendData(data, flags, ByteVector.fromText(value, UTF_8));
     return renderAtom(name, data.toByteVector());
   }
 
@@ -314,15 +320,15 @@ final class ItemAtomCodec {
     if (parts.length != 3) {
       return new ByteVector();
     }
-    var data = new ByteVectorOutput().append(renderAtom(new ByteVector("mean"), ByteVector.fromUnsignedInt(0).append(new TagString(parts[1]).data(TagString.Type.UTF8))));
-    data.append(renderAtom(new ByteVector("name"), ByteVector.fromUnsignedInt(0).append(new TagString(parts[2]).data(TagString.Type.UTF8))));
+    var data = new ByteVectorOutput().append(renderAtom(new ByteVector("mean"), ByteVector.fromUnsignedInt(0).append(ByteVector.fromText(parts[1], UTF_8))));
+    data.append(renderAtom(new ByteVector("name"), ByteVector.fromUnsignedInt(0).append(ByteVector.fromText(parts[2], UTF_8))));
     AtomDataType type = item.atomDataType();
     if (type.equals(AtomDataType.TypeUndefined)) {
       type = item.textValues().isEmpty() ? AtomDataType.TypeImplicit : AtomDataType.TypeUTF8;
     }
     if (type.equals(AtomDataType.TypeUTF8)) {
       for (String text : item.textValues())
-        appendData(data, type.value(), new TagString(text).data(TagString.Type.UTF8));
+        appendData(data, type.value(), ByteVector.fromText(text, UTF_8));
     } else {
       for (ByteVector value : item.byteValues()) appendData(data, type.value(), value);
     }

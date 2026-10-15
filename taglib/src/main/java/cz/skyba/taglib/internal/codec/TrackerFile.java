@@ -9,12 +9,17 @@ import cz.skyba.taglib.mod.FileBase;
 import cz.skyba.taglib.mod.ModFile;
 import cz.skyba.taglib.mod.Tag;
 import cz.skyba.taglib.s3m.S3mFile;
-import cz.skyba.taglib.toolkit.*;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.ByteVectorStream;
+import cz.skyba.taglib.toolkit.FileStream;
+import cz.skyba.taglib.toolkit.IOStream;
 import cz.skyba.taglib.xm.XmFile;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Shared tracker parsing and saving for live file implementations. Read failures can leave parsed prefix fields available.
@@ -196,7 +201,7 @@ public abstract class TrackerFile extends FileBase {
         bytes.data()[i] = ' ';
       }
     }
-    return new TagString(bytes).toString();
+    return bytes.decodeTerminatedText(ISO_8859_1);
   }
 
   private int orders(int count) throws ReadFailure {
@@ -343,7 +348,7 @@ public abstract class TrackerFile extends FileBase {
           data.data()[i] = '\n';
         }
       }
-      message = new TagString(data).toString();
+      message = data.decodeTerminatedText(ISO_8859_1);
     }
     seek(64);
     var pannings = readBlock(64);
@@ -654,7 +659,7 @@ public abstract class TrackerFile extends FileBase {
       writeByte(0);
     }
     int start = Math.min(lines.size(), instruments + samples);
-    var message = new TagString(String.join("\r", lines.subList(start, lines.size()))).data(TagString.Type.LATIN1);
+    var message = ByteVector.fromText(String.join("\r", lines.subList(start, lines.size())), ISO_8859_1);
     if (message.size() > 7999) {
       message.resize(7999);
     }

@@ -1,26 +1,25 @@
 package cz.skyba.taglib.parity.dsd.probes;
 
-import cz.skyba.taglib.parity.support.TagSelections;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.dsdiff.DsdiffFile;
 import cz.skyba.taglib.id3.v2.*;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
+import cz.skyba.taglib.parity.support.TagSelections;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DsdiffFileProbe {
   static int b(boolean v) {
@@ -32,7 +31,7 @@ public class DsdiffFileProbe {
   }
 
   static String hex(String v) {
-    return hex(new TagString(v).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(v, UTF_16BE));
   }
 
   static String list(List<String> v) {
@@ -171,7 +170,7 @@ public class DsdiffFileProbe {
 
     Factory(int m) {
       mode = m;
-      setDefaultTextEncoding(TagString.Type.UTF8);
+      setDefaultTextEncoding(UTF_8);
     }
 
     public Frame createFrame(ByteVector d, Header h) {

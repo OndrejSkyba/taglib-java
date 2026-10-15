@@ -5,11 +5,13 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.internal.ByteVectorOutput;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Mutable RIFF INFO text fields keyed by four-byte identifiers.
@@ -152,12 +154,12 @@ public class Tag extends TagBase {
   @Override
   public long year() {
     String value = text("ICRD");
-    return Integer.toUnsignedLong(new TagString(value.substring(0, Math.min(4, value.length()))).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(value.substring(0, Math.min(4, value.length()))));
   }
 
   @Override
   public long track() {
-    return Integer.toUnsignedLong(new TagString(text("IPRT")).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(text("IPRT")));
   }
 
   @Override
@@ -218,7 +220,7 @@ public class Tag extends TagBase {
   public PropertyMap properties() {
     var result = PropertyMap.builder();
     fields.forEach((id, value) -> {
-      String key = PROPERTY_KEYS.get(new TagString(id).toString());
+      String key = PROPERTY_KEYS.get(id.decodeTerminatedText(ISO_8859_1));
       if (key == null) {
         result.addUnsupportedData("");
       } else {
@@ -251,7 +253,7 @@ public class Tag extends TagBase {
   @Override
   public void removeUnsupportedProperties(List<String> identifiers) {
     for (String identifier : identifiers) {
-      removeField(new TagString(identifier).data(TagString.Type.LATIN1));
+      removeField(ByteVector.fromText(identifier, ISO_8859_1));
     }
   }
 

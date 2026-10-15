@@ -1,21 +1,16 @@
 package cz.skyba.taglib.parity.trackers.probes;
 
-import cz.skyba.taglib.parity.support.OpenOutcome;
-
-
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
 import cz.skyba.taglib.AudioProperties;
-import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.TagBase;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.shorten.ShortenFile;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.xm.XmFile;
 
 import java.nio.file.Files;
@@ -24,9 +19,11 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class TrackerSupportProbe {
   static String hex(String s) {
-    return HexFormat.of().formatHex(new TagString(s).data(TagString.Type.UTF8).toByteArray());
+    return HexFormat.of().formatHex(ByteVector.fromText(s, UTF_8).toByteArray());
   }
 
   static String hex(ByteVector b) {

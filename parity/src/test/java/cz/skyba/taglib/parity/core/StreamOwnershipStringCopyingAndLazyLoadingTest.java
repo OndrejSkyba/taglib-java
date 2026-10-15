@@ -23,7 +23,7 @@ class StreamOwnershipStringCopyingAndLazyLoadingTest {
       cz.skyba.taglib.parity.support.Parity.corpus().toString(),
       "RELEASE");
     long rows = cz.skyba.taglib.parity.support.Parity.transcripts(n, j);
-    org.junit.jupiter.api.Assertions.assertEquals(90, rows);
+    org.junit.jupiter.api.Assertions.assertEquals(85, rows);
     cz.skyba.taglib.parity.support.Parity.metrics("operations", rows);
   }
 }

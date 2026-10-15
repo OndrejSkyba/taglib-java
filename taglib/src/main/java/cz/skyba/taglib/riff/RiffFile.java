@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+
 /**
  * A RIFF-family file base with cached chunk descriptors and configurable byte order.
  * Protected chunk edits write storage immediately and update cached offsets and sizes.
@@ -117,7 +119,7 @@ public abstract class RiffFile extends FileBase {
       String suffix = operation.equals("chunkOffset()") || operation.equals("chunkDataSize64()")
         || operation.equals("chunkPadding()") ? " Returning 0."
         : operation.equals("chunkName()") || operation.equals("chunkData()") ? " Returning an empty vector." : "";
-      Debug.debug(new TagString("RIFF::File::" + operation + " - Index out of range." + suffix));
+      Debug.debug("RIFF::File::" + operation + " - Index out of range." + suffix);
       return null;
     }
     return chunks.get(index);
@@ -246,11 +248,11 @@ public abstract class RiffFile extends FileBase {
     Objects.requireNonNull(name);
     Objects.requireNonNull(data);
     if (chunks.isEmpty()) {
-      Debug.debug(new TagString("RIFF::File::setChunkData - No valid chunks found."));
+      Debug.debug("RIFF::File::setChunkData - No valid chunks found.");
       return;
     }
     if (alwaysCreate && !name.equals(new ByteVector("LIST"))) {
-      Debug.debug(new TagString("RIFF::File::setChunkData - alwaysCreate should be used for only \"LIST\" chunks."));
+      Debug.debug("RIFF::File::setChunkData - alwaysCreate should be used for only \"LIST\" chunks.");
       return;
     }
     if (!alwaysCreate) {
@@ -418,7 +420,7 @@ public abstract class RiffFile extends FileBase {
       var name = readBlock(4);
       long declared = readBlock(4).toUnsignedInt(bigEndian);
       if (!validName(name)) {
-        readDebug("Chunk '" + new TagString(name) + "' has invalid ID");
+        readDebug("Chunk '" + name.decodeTerminatedText(ISO_8859_1) + "' has invalid ID");
         break;
       }
       if (longForm && name.equals(new ByteVector("ds64")) && chunks.isEmpty() && declared >= 28) {
@@ -434,7 +436,7 @@ public abstract class RiffFile extends FileBase {
         chunkSize = Long.compareUnsigned(dataSize64, available) > 0 ? available : dataSize64;
       }
       if (chunkSize > available) {
-        readDebug("Chunk '" + new TagString(name) + "' is truncated; clamping size to available bytes.");
+        readDebug("Chunk '" + name.decodeTerminatedText(ISO_8859_1) + "' is truncated; clamping size to available bytes.");
         chunkSize = length() - offset - 8;
       }
       var c = new Chunk(name, offset + 8, chunkSize, 0);
@@ -452,7 +454,7 @@ public abstract class RiffFile extends FileBase {
   }
 
   private static void readDebug(String message) {
-    Debug.debug(new TagString("RIFF::File::read() -- " + message));
+    Debug.debug("RIFF::File::read() -- " + message);
   }
 
   @Override

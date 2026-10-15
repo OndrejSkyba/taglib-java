@@ -1,14 +1,20 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Package-local constructor and decoder protocol; does not stand in for a live Tag or factory.
@@ -23,11 +29,11 @@ public class Id3TextProbe {
   }
 
   static String string(String s) {
-    return TagString.from8Bit(bytes(s).data(), TagString.Type.UTF8).toString();
+    return TextBytes.decode(bytes(s).data(), UTF_8);
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static List<String> list(String s) {
@@ -57,7 +63,7 @@ public class Id3TextProbe {
   static class Utf8Handler extends Latin1StringHandler {
     @Override
     public String parse(ByteVector data) {
-      return new TagString(data, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(data.data(), UTF_8);
     }
   }
 
@@ -77,7 +83,7 @@ public class Id3TextProbe {
   }
 
   static Frame create(
-    String kind, String mode, ByteVector data, long version, TagString.Type encoding) {
+    String kind, String mode, ByteVector data, long version, Charset encoding) {
     if (mode.equals("F")) {
       var h = new Frame.Header(data, version);
       // These fixtures isolate constructors with provided headers, including the factory's
@@ -123,10 +129,10 @@ public class Id3TextProbe {
     var h = f.header();
     var detail = new StringBuilder();
     if (f instanceof TextIdentificationFrame v)
-      detail.append(v.textEncoding().ordinal()).append(':').append(fields(v.fieldList()));
+      detail.append(TextCharsets.id(v.textEncoding())).append(':').append(fields(v.fieldList()));
     if (f instanceof CommentsFrame v)
       detail
-        .append(v.textEncoding().ordinal())
+        .append(TextCharsets.id(v.textEncoding()))
         .append(':')
         .append(hex(v.language()))
         .append(':')
@@ -135,7 +141,7 @@ public class Id3TextProbe {
         .append(text(v.text()));
     if (f instanceof UnsynchronizedLyricsFrame v)
       detail
-        .append(v.textEncoding().ordinal())
+        .append(TextCharsets.id(v.textEncoding()))
         .append(':')
         .append(hex(v.language()))
         .append(':')
@@ -144,7 +150,7 @@ public class Id3TextProbe {
         .append(text(v.text()));
     if (f instanceof UserUrlLinkFrame v)
       detail
-        .append(v.textEncoding().ordinal())
+        .append(TextCharsets.id(v.textEncoding()))
         .append(':')
         .append(text(v.description()))
         .append(':');
@@ -193,7 +199,7 @@ public class Id3TextProbe {
 
   static void mutate(
     Frame f,
-    TagString.Type encoding,
+    Charset encoding,
     String desc,
     String value,
     ByteVector payload,
@@ -362,7 +368,7 @@ public class Id3TextProbe {
     @Override
     public String parse(ByteVector data) {
       if (++calls == 2) throw new IllegalArgumentException("second callback");
-      return "decoded:" + new TagString(data);
+      return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
     }
   }
 
@@ -381,9 +387,9 @@ public class Id3TextProbe {
     System.out.println("virtual/user-url-reparse\t" + u.calls);
     state("virtual/user-url-state", u);
     for (String kind : List.of("T", "U", "C", "L", "I")) {
-      var f = create(kind, "B", new ByteVector(), 4, TagString.Type.LATIN1);
+      var f = create(kind, "B", new ByteVector(), 4, ISO_8859_1);
       mutate(
-        f, TagString.Type.LATIN1, "old-desc", "old-text", new ByteVector("eng"), List.of("old"));
+        f, ISO_8859_1, "old-desc", "old-text", new ByteVector("eng"), List.of("old"));
       var handler = new ThrowHandler();
       Id3Text.setHandler(handler);
       var body =
@@ -421,7 +427,7 @@ public class Id3TextProbe {
         if (p.length != 12) throw new IllegalArgumentException(line);
         String id = p[0];
         long version = Long.parseUnsignedLong(p[3]);
-        var encoding = TagString.Type.values()[Integer.parseInt(p[7])];
+        var encoding = TextCharsets.ALL[Integer.parseInt(p[7])];
         Id3Text.setHandler(p[4].equals("1") ? utf8 : null);
         var value = create(p[1], p[2], bytes(p[5]), version, encoding);
         var live = value.header();

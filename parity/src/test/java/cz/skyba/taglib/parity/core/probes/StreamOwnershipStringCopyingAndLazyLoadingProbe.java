@@ -1,13 +1,11 @@
 package cz.skyba.taglib.parity.core.probes;
 
-import cz.skyba.taglib.mp4.Mp4File;
-import cz.skyba.taglib.mpeg.MpegFile;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-
-import java.io.IOException;
-
 import cz.skyba.taglib.*;
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.internal.TextNumbers;
+import cz.skyba.taglib.mp4.Mp4File;
+import cz.skyba.taglib.mpeg.MpegFile;
 import cz.skyba.taglib.toolkit.*;
 
 import java.nio.channels.FileChannel;
@@ -23,13 +21,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+
 class StreamOwnershipStringCopyingAndLazyLoadingProbe {
   static String hex(ByteVector b) {
     return HexFormat.of().formatHex(b.toByteArray());
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static void put(String k, String s) {
@@ -233,7 +234,7 @@ class StreamOwnershipStringCopyingAndLazyLoadingProbe {
       "defaults/stringlist",
       text(
         String.join(" ", List.of(new ByteVector("a"), new ByteVector("b")).stream()
-          .map(value -> new TagString(value).toString()).toList())));
+          .map(value -> TextBytes.decodeTerminated(value.data(), ISO_8859_1)).toList())));
     for (int i = 0; i < 4; i++) {
       List<String> v =
         switch (i) {
@@ -244,22 +245,7 @@ class StreamOwnershipStringCopyingAndLazyLoadingProbe {
         };
       put("join/" + i, text(Ape.joined(v)));
     }
-    var u = new TagString("a\0b");
-    u.append(new TagString("c"));
-    put("copy/unique", text(u.toString()));
-    var a = new TagString("abc");
-    var b = new TagString(a);
-    a.append(new TagString("x"));
-    put("copy/first", text(a.toString()) + ":" + text(b.toString()));
-    b.append(new TagString("y"));
-    put("copy/second", text(b.toString()));
-    for (String s : List.of("", "abc")) {
-      var t = new TagString(s);
-      var before = new TagString(t);
-      int end = t.at(t.size());
-      t.set(t.size(), (char) 0);
-      put("terminator/" + s.length(), end + ":" + text(t.toString()) + ":" + bit(t.equals(before)));
-    }
+
   }
 
   static String common(TagBase t) {
@@ -277,9 +263,9 @@ class StreamOwnershipStringCopyingAndLazyLoadingProbe {
   }
 
   static void commonCases() {
-    var numeric = new TagString("123");
-    var signed = numeric.extractLong();
-    var unsigned = numeric.extractUnsignedLong();
+    String numeric = "123";
+    var signed = TextNumbers.extractLong(numeric, 10);
+    var unsigned = TextNumbers.extractUnsignedLong(numeric, 10);
     put(
       "defaults/string-numeric",
       signed.value()
@@ -300,8 +286,8 @@ class StreamOwnershipStringCopyingAndLazyLoadingProbe {
     put("removal/file-zero-length", hex(s.data()) + ":" + s.tell());
     s.removeBlock(1, 0);
     put("removal/stream-zero-length", hex(s.data()) + ":" + s.tell());
-    var str = TagString.from8Bit(new byte[]{(byte) 0xe9});
-    put("defaults/string8", hex(new ByteVector(str.to8Bit())) + ":" + text(str.toString()));
+    var str = TextBytes.decode(new byte[]{(byte) 0xe9}, ISO_8859_1);
+    put("defaults/string8", hex(new ByteVector(TextBytes.encode(str, ISO_8859_1))) + ":" + text(str));
     var a = new cz.skyba.taglib.riff.info.Tag();
     var b = new cz.skyba.taglib.id3.v1.Tag();
     var c = new cz.skyba.taglib.ape.Tag();

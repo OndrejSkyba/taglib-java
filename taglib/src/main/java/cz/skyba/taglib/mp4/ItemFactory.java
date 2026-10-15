@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.mp4;
 
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Extensible MP4 item decoding, serialization and common-property mappings.
@@ -93,17 +96,17 @@ public class ItemFactory {
     NONE, PAIR, INT, UINT, LONG, BYTE, BOOL, TEXT;
 
     Item importValues(List<String> values) {
-      var first = new TagString(values.getFirst());
+      var first = Objects.requireNonNull(values.getFirst());
       return switch (this) {
         case PAIR -> {
           String[] parts = values.getFirst().split("/", -1);
-          yield new Item(new TagString(parts[0]).toInt(), parts.length > 1 ? new TagString(parts[1]).toInt() : 0);
+          yield new Item(TextNumbers.parseInt(parts[0]), parts.length > 1 ? TextNumbers.parseInt(parts[1]) : 0);
         }
-        case INT -> new Item(first.toInt());
-        case UINT -> Item.fromUnsignedInt(first.toInt());
-        case LONG -> new Item(first.toLong());
-        case BYTE -> Item.fromByte(first.toInt());
-        case BOOL -> new Item(first.toInt() != 0);
+        case INT -> new Item(TextNumbers.parseInt(first));
+        case UINT -> Item.fromUnsignedInt(TextNumbers.parseInt(first));
+        case LONG -> new Item(TextNumbers.parseLong(first, 10));
+        case BYTE -> Item.fromByte(TextNumbers.parseInt(first));
+        case BOOL -> new Item(TextNumbers.parseInt(first) != 0);
         case TEXT -> Item.textValues(values);
         case NONE -> new Item();
       };
@@ -188,7 +191,7 @@ public class ItemFactory {
   }
 
   private static String latin(ByteVector value) {
-    return new TagString(value).toString();
+    return value.decodeTerminatedText(ISO_8859_1);
   }
 
   /**
@@ -238,7 +241,7 @@ public class ItemFactory {
     cacheProperties();
     ByteVector name = names.get(key);
     return name != null ? new ByteVector(name) : !key.isEmpty() && key.charAt(0) >= 'A' && key.charAt(0) <= 'Z'
-      ? new TagString(FREE + key).data(TagString.Type.UTF8) : new ByteVector();
+      ? ByteVector.fromText(FREE + key, UTF_8) : new ByteVector();
   }
 
   /**
@@ -385,7 +388,7 @@ public class ItemFactory {
     if (itemName.startsWith("----")) {
       return renderFreeForm(itemName, item);
     }
-    ByteVector name = new TagString(itemName).data(TagString.Type.LATIN1);
+    ByteVector name = ByteVector.fromText(itemName, ISO_8859_1);
     return HANDLER_SPECS.get(handlerTypeForName(name)).renderer.render(itemName, name, item);
   }
 

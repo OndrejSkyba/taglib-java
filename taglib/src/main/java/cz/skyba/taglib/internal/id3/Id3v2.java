@@ -7,9 +7,9 @@ import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.Tag;
 import cz.skyba.taglib.internal.MetadataPadding;
 import cz.skyba.taglib.internal.NativeSaveState;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.UnsupportedDataRemoval;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
+
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * Bounded ID3v2 parser. Writes preserve the source version and unedited opaque frames.
@@ -70,7 +72,7 @@ public final class Id3v2 {
   }
 
   private static final Charset LATIN1 = StandardCharsets.ISO_8859_1;
-  private static final TagString.Type[] TEXT_ENCODINGS = TagString.Type.values();
+  private static final Charset[] TEXT_ENCODINGS = {ISO_8859_1, UTF_16, UTF_16BE, UTF_8, UTF_16LE};
   private static final Set<String> V2_UNKNOWN_IDS =
     Set.of("CRM", "EQUA", "LINK", "RVAD", "TIME", "TSIZ", "TDAT");
   private static final Set<String> V2_NON_TEXT_IDS = Set.of("TIM", "TSI", "TDA");
@@ -1250,7 +1252,7 @@ public final class Id3v2 {
     byte[] text = nativeTextData(List.of(name, description, ""), encoding);
     var payload = new ByteArrayOutputStream();
     payload.write(text[0]);
-    payload.writeBytes(new TagString(mime).data(TagString.Type.LATIN1).toByteArray());
+    payload.writeBytes(TextBytes.encode(mime, ISO_8859_1));
     payload.write(0);
     payload.write(text, 1, text.length - 1 - ((text[0] & 255) == 1 ? 2 : 0));
     payload.writeBytes(object);
@@ -1691,18 +1693,18 @@ public final class Id3v2 {
       if (field.isEmpty() && !(i == 0 && userText)) {
         continue;
       }
-      var type = TEXT_ENCODINGS[encoding];
+      var charset = TEXT_ENCODINGS[encoding];
       if (encoding == 1 && i > 0) {
         int bom = field.toUnsignedShort();
         if (bom != 0xfeff && bom != 0xfffe) {
           if (firstBom == 0xfeff) {
-            type = TagString.Type.UTF16BE;
+            charset = UTF_16BE;
           } else if (firstBom == 0xfffe) {
-            type = TagString.Type.UTF16LE;
+            charset = UTF_16LE;
           }
         }
       }
-      values.add(new TagString(field, type).toString());
+      values.add(field.decodeTerminatedText(charset));
     }
     return values;
   }

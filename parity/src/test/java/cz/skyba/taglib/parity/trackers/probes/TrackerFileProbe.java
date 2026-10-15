@@ -1,23 +1,22 @@
 package cz.skyba.taglib.parity.trackers.probes;
 
+import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.it.ItFile;
 import cz.skyba.taglib.mod.ModFile;
 import cz.skyba.taglib.parity.support.OpenOutcome;
-
-
 import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.s3m.S3mFile;
+import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.xm.XmFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HexFormat;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class TrackerFileProbe {
   static String fields(cz.skyba.taglib.mod.Properties p) {
@@ -147,7 +146,7 @@ public class TrackerFileProbe {
   }
 
   static String hex(String s) {
-    return HexFormat.of().formatHex(new TagString(s).data(TagString.Type.UTF8).toByteArray());
+    return HexFormat.of().formatHex(ByteVector.fromText(s, UTF_8).toByteArray());
   }
 
   static void state(String id, cz.skyba.taglib.internal.codec.TrackerFile file, long cursor) {

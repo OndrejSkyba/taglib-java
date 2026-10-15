@@ -3,7 +3,6 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
 
@@ -120,13 +119,13 @@ public class Header {
     for (int i = 6; i < 10; i++) {
       if ((data.at(i) & 255) >= 128) {
         tagSize = 0;
-        Debug.debug(new TagString("TagLib::ID3v2::Header::parse() - One of the size bytes in the ID3v2 header was greater than the allowed 128."));
+        Debug.debug("TagLib::ID3v2::Header::parse() - One of the size bytes in the ID3v2 header was greater than the allowed 128.");
         return;
       }
     }
     if ((data.at(3) & 255) == 255 || (data.at(4) & 255) == 255) {
       tagSize = 0;
-      Debug.debug(new TagString("TagLib::ID3v2::Header::parse() - The version or revision in the ID3v2 header was 0xFF."));
+      Debug.debug("TagLib::ID3v2::Header::parse() - The version or revision in the ID3v2 header was 0xFF.");
       return;
     }
     // Pinned Linux char is signed before promotion to native unsigned int.

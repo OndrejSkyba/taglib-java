@@ -5,9 +5,9 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.internal.WriteGuard;
 import cz.skyba.taglib.internal.codec.MatroskaCodec;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.io.IOException;
@@ -308,7 +308,7 @@ public class Tag extends TagBase {
     if (value.isEmpty()) {
       return 0;
     }
-    return Integer.toUnsignedLong(new TagString(value.split("-", -1)[0]).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(value.split("-", -1)[0]));
   }
 
   @Override

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib;
 
-
-import cz.skyba.taglib.toolkit.TagString;
+import cz.skyba.taglib.internal.TextNumbers;
 
 /**
  * An immutable common-field snapshot, separate from the complete text property map.
@@ -91,6 +90,6 @@ public record Tag(
     } else if (year && !isXiphFormat(format) && format != Format.ASF && format != Format.MP4) {
       value = value.substring(0, Math.min(4, value.length()));
     }
-    return Integer.toUnsignedLong(new TagString(value).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(value));
   }
 }

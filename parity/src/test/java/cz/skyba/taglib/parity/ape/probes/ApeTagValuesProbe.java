@@ -4,12 +4,13 @@ import cz.skyba.taglib.ape.Footer;
 import cz.skyba.taglib.ape.Item;
 import cz.skyba.taglib.ape.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 class ApeTagValuesProbe {
   static void core(String name, ByteVector body, long count) throws Exception {
@@ -47,7 +48,7 @@ class ApeTagValuesProbe {
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(s, UTF_8));
   }
 
   static String list(List<String> v) {
@@ -290,10 +291,9 @@ class ApeTagValuesProbe {
       "core-roundtrip-unsupported",
       payload(
         "ARTIST",
-        new TagString("α")
-          .data(TagString.Type.UTF8)
+        ByteVector.fromText("α", UTF_8)
           .append(new ByteVector((byte) 0))
-          .append(new TagString("β").data(TagString.Type.UTF8)),
+          .append(ByteVector.fromText("β", UTF_8)),
         0)
         .append(payload("TRACK", new ByteVector("2/12"), 0))
         .append(payload("YEAR", new ByteVector("2026"), 0))

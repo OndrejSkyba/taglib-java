@@ -5,11 +5,11 @@ import cz.skyba.taglib.dsf.DsfFile;
 import cz.skyba.taglib.flac.FlacFile;
 import cz.skyba.taglib.id3.v2.Frame;
 import cz.skyba.taglib.id3.v2.FrameFactory;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.mpeg.MpegFile;
 import cz.skyba.taglib.riff.aiff.AiffFile;
 import cz.skyba.taglib.riff.wav.WavFile;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.trueaudio.TrueAudioFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -60,7 +60,7 @@ class CustomFrameFactoryDispatchTest {
 
   static class CustomFactory extends FrameFactory {
     public Frame createFrameForProperty(String key, List<String> values) {
-      return key.equals("CUSTOM") ? new CustomFrame(values.isEmpty() ? 0 : new TagString(values.getFirst()).toInt()) : super.createFrameForProperty(key, values);
+      return key.equals("CUSTOM") ? new CustomFrame(values.isEmpty() ? 0 : TextNumbers.parseInt(values.getFirst())) : super.createFrameForProperty(key, values);
     }
 
     protected Frame createFrame(ByteVector d, Frame.Header h, cz.skyba.taglib.id3.v2.Header t) {

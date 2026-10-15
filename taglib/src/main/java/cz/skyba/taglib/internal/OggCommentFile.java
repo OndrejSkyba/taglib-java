@@ -294,6 +294,6 @@ public abstract class OggCommentFile extends OggFile {
   }
 
   private static void debug(String message) {
-    Debug.debug(new TagString(message));
+    Debug.debug(message);
   }
 }

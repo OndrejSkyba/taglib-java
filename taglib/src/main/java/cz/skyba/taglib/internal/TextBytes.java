@@ -2,52 +2,84 @@
 package cz.skyba.taglib.internal;
 
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.*;
+
 /**
- * Native text decoding over borrowed byte ranges; returned strings own their characters.
+ * Metadata text conversion over borrowed byte ranges and immutable Java strings.
+ * Supports the standard Latin-1, UTF-8 and UTF-16 charsets with TagLib's conversion rules:
+ * UTF-8 is strict; Latin-1 encoding keeps low bytes; UTF-16 preserves raw code units
+ * and drops odd trailing bytes. UTF_16 requires a BOM when decoding and emits a
+ * little-endian BOM when encoding. These differ from the JDK's replacement/BOM defaults.
+ * Returned strings and encoded bytes own their storage.
  */
 public final class TextBytes {
   private TextBytes() {
   }
 
-  public static String terminated(byte[] bytes, int offset, int length, TagString.Type type) {
-    String value = length == 0 ? "" : decode(bytes, offset, length, type);
+  public static boolean isLatin1(String value) {
+    for (int i = 0; i < value.length(); i++) {
+      if (value.charAt(i) > 255) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static String decodeTerminated(byte[] bytes, Charset charset) {
+    return decodeTerminated(bytes, 0, bytes.length, charset);
+  }
+
+  /**
+   * Decodes the entire range before truncating at the first decoded NUL.
+   */
+  public static String decodeTerminated(byte[] bytes, int offset, int length, Charset charset) {
+    if (length == 0) {
+      if (!ISO_8859_1.equals(charset) && !UTF_8.equals(charset)) requireUtf16(charset);
+      return "";
+    }
+    String value = decode(bytes, offset, length, charset);
     int nul = value.indexOf('\0');
     return nul < 0 ? value : value.substring(0, nul);
   }
 
-  public static String decode(byte[] bytes, int offset, int length, TagString.Type type) {
+  public static String decode(byte[] bytes, Charset charset) {
+    return decode(bytes, 0, bytes.length, charset);
+  }
+
+  public static String decode(byte[] bytes, int offset, int length, Charset charset) {
     Objects.checkFromIndexSize(offset, length, bytes.length);
-    if (type == TagString.Type.LATIN1) {
-      return new String(bytes, offset, length, StandardCharsets.ISO_8859_1);
+    if (ISO_8859_1.equals(charset)) {
+      return new String(bytes, offset, length, ISO_8859_1);
     }
-    if (type == TagString.Type.UTF8) {
+    if (UTF_8.equals(charset)) {
       try {
-        return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes, offset, length)).toString();
+        return UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes, offset, length)).toString();
       } catch (CharacterCodingException invalid) {
         if (Debug.mode() != Debug.Mode.RELEASE) {
-          Debug.debug(new TagString("String::copyFromUTF8() - UTF8-CPP error: " + utf8Error(bytes, offset, length)));
+          Debug.debug("String::copyFromUTF8() - UTF8-CPP error: " + utf8Error(bytes, offset, length));
         }
         return "";
       }
     }
+    requireUtf16(charset);
     int start = offset;
-    boolean big = type == TagString.Type.UTF16BE;
-    if (type == TagString.Type.UTF16) {
+    boolean big = UTF_16BE.equals(charset);
+    if (UTF_16.equals(charset)) {
       if (length < 2) {
-        Debug.debug(new TagString("String::copyFromUTF16() - Invalid UTF16 string. Too short to have a BOM."));
+        Debug.debug("String::copyFromUTF16() - Invalid UTF16 string. Too short to have a BOM.");
         return "";
       }
       if (bytes[offset] == (byte) 0xfe && bytes[offset + 1] == (byte) 0xff) {
         big = true;
       } else if (bytes[offset] != (byte) 0xff || bytes[offset + 1] != (byte) 0xfe) {
-        Debug.debug(new TagString("String::copyFromUTF16() - Invalid UTF16 string. BOM is broken."));
+        Debug.debug("String::copyFromUTF16() - Invalid UTF16 string. BOM is broken.");
         return "";
       }
       start += 2;
@@ -58,6 +90,55 @@ public final class TextBytes {
       result[i] = (char) (big ? a << 8 | b : b << 8 | a);
     }
     return new String(result);
+  }
+
+  /**
+   * Encodes all UTF-16 code units into independent bytes, preserving embedded NULs.
+   * Latin-1 retains the low eight bits; malformed UTF-16 produces empty UTF-8 output.
+   */
+  public static byte[] encode(String value, Charset charset) {
+    Objects.requireNonNull(value);
+    if (UTF_8.equals(charset)) {
+      try {
+        var encoded = UTF_8.newEncoder().encode(CharBuffer.wrap(value));
+        byte[] result = new byte[encoded.remaining()];
+        encoded.get(result);
+        return result;
+      } catch (CharacterCodingException invalid) {
+        if (Debug.mode() != Debug.Mode.RELEASE) {
+          Debug.debug("String::data() - UTF8-CPP error: Invalid UTF-16");
+        }
+        return new byte[0];
+      }
+    }
+    if (ISO_8859_1.equals(charset)) {
+      byte[] result = new byte[value.length()];
+      for (int i = 0; i < result.length; i++) {
+        result[i] = (byte) value.charAt(i);
+      }
+      return result;
+    }
+    requireUtf16(charset);
+    int start = UTF_16.equals(charset) ? 2 : 0;
+    byte[] result = new byte[Math.addExact(start, Math.multiplyExact(value.length(), 2))];
+    if (start == 2) {
+      result[0] = (byte) 255;
+      result[1] = (byte) 254;
+    }
+    boolean big = UTF_16BE.equals(charset);
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      result[start + 2 * i] = (byte) (big ? c >>> 8 : c);
+      result[start + 2 * i + 1] = (byte) (big ? c : c >>> 8);
+    }
+    return result;
+  }
+
+  private static void requireUtf16(Charset charset) {
+    Objects.requireNonNull(charset);
+    if (!UTF_16.equals(charset) && !UTF_16BE.equals(charset) && !UTF_16LE.equals(charset)) {
+      throw new IllegalArgumentException("Unsupported metadata charset: " + charset);
+    }
   }
 
   /**

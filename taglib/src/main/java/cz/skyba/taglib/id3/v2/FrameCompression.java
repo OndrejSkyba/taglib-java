@@ -4,7 +4,6 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
@@ -25,19 +24,19 @@ final class FrameCompression {
       do {
         count = inflater.inflate(chunk);
         if (inflater.needsDictionary()) {
-          Debug.debug(new TagString("zlib::decompress() - Error reading compressed stream."));
+          Debug.debug("zlib::decompress() - Error reading compressed stream.");
           return new ByteVector();
         }
         int retained = Math.min(count, limit - out.size());
         out.append(chunk, 0, retained);
         if ((long) out.size() + count - retained > limit) {
-          Debug.debug(new TagString("zlib::decompress() - Too long compressed stream."));
+          Debug.debug("zlib::decompress() - Too long compressed stream.");
           break;
         }
       } while (count == chunk.length);
       return out.toByteVector();
     } catch (DataFormatException invalid) {
-      Debug.debug(new TagString("zlib::decompress() - Error reading compressed stream."));
+      Debug.debug("zlib::decompress() - Error reading compressed stream.");
       return new ByteVector();
     }
   }

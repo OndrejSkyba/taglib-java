@@ -1,20 +1,17 @@
 package cz.skyba.taglib.parity.asf.probes;
 
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
-import cz.skyba.taglib.asf.Attribute;
 import cz.skyba.taglib.asf.AsfFile;
+import cz.skyba.taglib.asf.Attribute;
 import cz.skyba.taglib.asf.Picture;
 import cz.skyba.taglib.asf.Tag;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.nio.file.Files;
@@ -24,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 // Independent Java ASF mutable value/tag/file protocol.
 
@@ -37,7 +37,7 @@ public class AsfMutableProbe {
   }
 
   static String hex(String v) {
-    return hex(new TagString(v).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(v, UTF_16BE));
   }
 
   static String list(List<String> v) {
@@ -278,7 +278,7 @@ public class AsfMutableProbe {
       for (int type = 0; type <= 7; type++)
         for (int declared : new int[]{0, 1, 2, 4, 8, 65536}) {
           var name =
-            new TagString("WM/Picture").data(TagString.Type.UTF16LE).append(new ByteVector(4));
+            ByteVector.fromText("WM/Picture", UTF_16LE).append(new ByteVector(4));
           var payload = ByteVector.fromUnsignedInt(0x80000001L, false).append(new ByteVector("abcdefghi"));
           ByteVector wire;
           if (kind == 0)
@@ -348,8 +348,8 @@ public class AsfMutableProbe {
       var stream = new ReadFailure(Files.readAllBytes(root.resolve("inputs/plain.wma")));
       try (var file = new AsfFile(stream, ReadOptions.TAGS_ONLY)) {
         var name =
-          new TagString("WM/Picture").data(TagString.Type.UTF16LE).append(new ByteVector(4));
-        var payload = new TagString("text").data(TagString.Type.UTF16LE).append(new ByteVector(4));
+          ByteVector.fromText("WM/Picture", UTF_16LE).append(new ByteVector(4));
+        var payload = ByteVector.fromText("text", UTF_16LE).append(new ByteVector(4));
         stream.data().clear();
         stream
           .data()
@@ -395,8 +395,8 @@ public class AsfMutableProbe {
       try (var file = new AsfFile(stream, ReadOptions.TAGS_ONLY)) {
         var value = new Attribute();
         for (int type : new int[]{0, 3, 1, 7, 6, 4, 5, 2}) {
-          var name = new TagString("name").data(TagString.Type.UTF16LE).append(new ByteVector(4));
-          var payload = new TagString("old").data(TagString.Type.UTF16LE).append(new ByteVector(4));
+          var name = ByteVector.fromText("name", UTF_16LE).append(new ByteVector(4));
+          var payload = ByteVector.fromText("old", UTF_16LE).append(new ByteVector(4));
           stream.data().clear();
           stream
             .data()

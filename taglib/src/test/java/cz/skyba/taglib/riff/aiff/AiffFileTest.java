@@ -5,7 +5,6 @@ import cz.skyba.taglib.id3.v2.*;
 import cz.skyba.taglib.id3.v2.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,6 +14,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AiffFileTest {
@@ -244,7 +244,7 @@ class AiffFileTest {
     var stream = new ByteVectorStream(bytes);
     try (var f = new AiffFile(stream, ReadOptions.TAGS_ONLY)) {
       assertEquals("first", f.tag().title());
-      f.tag().addFrame(new TextIdentificationFrame(new ByteVector("TXXX"), TagString.Type.UTF8) {
+      f.tag().addFrame(new TextIdentificationFrame(new ByteVector("TXXX"), UTF_8) {
         @Override
         public ByteVector renderFields() {
           throw new IllegalStateException("render failure");

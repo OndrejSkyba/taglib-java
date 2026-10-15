@@ -8,7 +8,10 @@ import cz.skyba.taglib.internal.FailureSupport;
 import cz.skyba.taglib.internal.TagUtils;
 import cz.skyba.taglib.internal.codec.RiffCodec;
 import cz.skyba.taglib.riff.RiffFile;
-import cz.skyba.taglib.toolkit.*;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.Debug;
+import cz.skyba.taglib.toolkit.FileStream;
+import cz.skyba.taglib.toolkit.IOStream;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -123,7 +126,7 @@ public class AiffFile extends RiffFile {
           tag = new Tag(this, chunkOffset(i), selectedFactory);
           hasID3 = true;
         } else {
-          Debug.debug(new TagString("RIFF::AIFF::File::read() - Duplicate ID3v2 tag found."));
+          Debug.debug("RIFF::AIFF::File::read() - Duplicate ID3v2 tag found.");
         }
       }
     }
@@ -197,20 +200,20 @@ public class AiffFile extends RiffFile {
         if (data.isEmpty()) {
           data = chunkData(i);
         } else {
-          Debug.debug(new TagString("RIFF::AIFF::Properties::read() - Duplicate 'COMM' chunk found."));
+          Debug.debug("RIFF::AIFF::Properties::read() - Duplicate 'COMM' chunk found.");
         }
       } else if (name.equals(new ByteVector("SSND"))) {
         if (streamLength == 0) {
           streamLength = (chunkDataSize(i) + chunkPadding(i)) & 0xffff_ffffL;
         } else {
-          Debug.debug(new TagString("RIFF::AIFF::Properties::read() - Duplicate 'SSND' chunk found."));
+          Debug.debug("RIFF::AIFF::Properties::read() - Duplicate 'SSND' chunk found.");
         }
       }
     }
     if (data.size() < 18) {
-      Debug.debug(new TagString("RIFF::AIFF::Properties::read() - 'COMM' chunk not found or too short."));
+      Debug.debug("RIFF::AIFF::Properties::read() - 'COMM' chunk not found or too short.");
     } else if (streamLength == 0) {
-      Debug.debug(new TagString("RIFF::AIFF::Properties::read() - 'SSND' chunk not found."));
+      Debug.debug("RIFF::AIFF::Properties::read() - 'SSND' chunk not found.");
     }
     return RiffCodec.aiffFromChunks(data.toByteArray(), streamLength);
   }

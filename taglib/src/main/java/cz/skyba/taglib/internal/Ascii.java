@@ -19,4 +19,19 @@ public final class Ascii {
     }
     return new String(chars);
   }
+
+  /**
+   * Removes ASCII space, tab, newline, form feed and carriage return at either end.
+   * Vertical tabs and other Unicode whitespace are retained.
+   */
+  public static String stripWhiteSpace(String value) {
+    int begin = 0, end = value.length();
+    while (begin < end && "\t\n\f\r ".indexOf(value.charAt(begin)) >= 0) {
+      begin++;
+    }
+    while (end > begin && "\t\n\f\r ".indexOf(value.charAt(end - 1)) >= 0) {
+      end--;
+    }
+    return value.substring(begin, end);
+  }
 }

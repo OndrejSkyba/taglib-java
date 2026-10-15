@@ -9,7 +9,6 @@ import cz.skyba.taglib.internal.id3.Id3v2;
 import cz.skyba.taglib.internal.xiph.XiphComment;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +16,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Native FLAC metadata; compressed audio, application blocks and seek tables are preserved.
@@ -150,13 +151,11 @@ public final class FlacCodec implements Codec {
         offset == 12
           ? (int) Math.min(Binary.u32le(payload, 8), payload.length - offset)
           : payload.length - offset;
-      byte[] data = Arrays.copyOfRange(payload, offset, offset + length);
       if (id.equals("iXML")) {
-        xml = new TagString(new ByteVector(data),
-          TagString.Type.UTF8).toString();
+        xml = TextBytes.decodeTerminated(payload, offset, length, UTF_8);
         hasXml = true;
       } else {
-        bext = data;
+        bext = Arrays.copyOfRange(payload, offset, offset + length);
         hasBext = true;
       }
     }
@@ -602,8 +601,7 @@ public final class FlacCodec implements Codec {
       }
     }
     if (!xml.isEmpty()) {
-      blocks.add(new RenderedBlock(2, broadcastBlock("iXML", new TagString(xml)
-        .data(TagString.Type.UTF8).toByteArray())));
+      blocks.add(new RenderedBlock(2, broadcastBlock("iXML", TextBytes.encode(xml, UTF_8))));
     }
     if (bext.length > 0) {
       blocks.add(new RenderedBlock(2, broadcastBlock("bext", bext)));

@@ -174,23 +174,7 @@ static void values() {
     }
     put("join/" + std::to_string(i), text(TagLib::Tag::joinTagValues(v)));
   }
-  auto u = nul();
-  u.append("c");
-  put("copy/unique", text(u));
-  String a("abc"), b(a);
-  a.append("x");
-  put("copy/first", text(a) + ":" + text(b));
-  b.append("y");
-  put("copy/second", text(b));
-  for (const auto &s: {String(), String("abc")}) {
-    String t(s);
-    const auto &c = t;
-    auto before = t;
-    auto end = c[t.size()];
-    t[t.size()] = 0;
-    put("terminator/" + std::to_string(s.size()),
-        std::to_string(end) + ":" + text(t) + ":" + std::to_string(t == before));
-  }
+
 }
 
 struct Audio : AudioProperties {

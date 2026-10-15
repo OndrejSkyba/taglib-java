@@ -1,17 +1,20 @@
 package cz.skyba.taglib.parity.riff.probes;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.riff.info.StringHandler;
 import cz.skyba.taglib.riff.info.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 class RiffInfoProbe {
   static ByteVector bytes(String v) {
-    return new TagString(v).data(TagString.Type.LATIN1);
+    return ByteVector.fromText(v, ISO_8859_1);
   }
 
   static String hex(ByteVector v) {
@@ -19,7 +22,7 @@ class RiffInfoProbe {
   }
 
   static String text(String v) {
-    return hex(new TagString(v).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(v, UTF_8));
   }
 
   static String props(PropertyMap p) {
@@ -109,11 +112,11 @@ class RiffInfoProbe {
     Tag.setStringHandler(
       new StringHandler() {
         public String parse(ByteVector d) {
-          return new TagString(d, TagString.Type.LATIN1).toString();
+          return TextBytes.decodeTerminated(d.data(), ISO_8859_1);
         }
 
         public ByteVector render(String s) {
-          return new TagString(s).data(TagString.Type.LATIN1);
+          return ByteVector.fromText(s, ISO_8859_1);
         }
       });
     var raw = bytes("INFO");

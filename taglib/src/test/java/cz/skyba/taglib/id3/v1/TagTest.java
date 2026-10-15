@@ -1,10 +1,10 @@
 package cz.skyba.taglib.id3.v1;
 
 import cz.skyba.taglib.*;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TagTest {
@@ -122,7 +124,7 @@ class TagTest {
 
         @Override
         public ByteVector render(String value) {
-          return new TagString("!" + value).data(TagString.Type.UTF8);
+          return ByteVector.fromText("!" + value, UTF_8);
         }
       });
     byte[] source = footer();
@@ -136,9 +138,9 @@ class TagTest {
     var v11 = new Tag(new ByteVector(source));
     assertEquals("[x]", v11.comment());
     assertEquals(7, v11.track());
-    assertEquals("![x]", new TagString(v11.render().mid(97, 28)).toString());
+    assertEquals("![x]", TextBytes.decodeTerminated(v11.render().mid(97, 28).data(), ISO_8859_1));
     Tag.setStringHandler(null);
-    assertEquals("[x]", new TagString(v11.render().mid(97, 28)).toString());
+    assertEquals("[x]", TextBytes.decodeTerminated(v11.render().mid(97, 28).data(), ISO_8859_1));
     assertEquals("[x]", v11.comment());
   }
 

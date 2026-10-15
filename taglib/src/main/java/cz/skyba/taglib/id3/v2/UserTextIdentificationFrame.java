@@ -3,13 +3,16 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable ID3v2 frame containing TXXX description and text values.
@@ -38,7 +41,7 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
    * Creates a frame containing TXXX description and text values.
    */
   public UserTextIdentificationFrame() {
-    this(TagString.Type.LATIN1);
+    this(ISO_8859_1);
   }
 
   /**
@@ -46,7 +49,7 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
    *
    * @param encoding the requested text encoding
    */
-  public UserTextIdentificationFrame(TagString.Type encoding) {
+  public UserTextIdentificationFrame(Charset encoding) {
     super(new ByteVector("TXXX"), encoding);
     setValues(List.of("", ""));
   }
@@ -68,7 +71,7 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
    * @param values      text values to copy
    */
   public UserTextIdentificationFrame(String description, List<String> values) {
-    this(description, values, TagString.Type.UTF8);
+    this(description, values, UTF_8);
   }
 
   /**
@@ -78,7 +81,7 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
    * @param description the descriptive text
    * @param values      text values to copy
    */
-  public UserTextIdentificationFrame(String description, List<String> values, TagString.Type encoding) {
+  public UserTextIdentificationFrame(String description, List<String> values, Charset encoding) {
     super(new ByteVector("TXXX"), encoding);
     setDescription(description);
     setValues(values);

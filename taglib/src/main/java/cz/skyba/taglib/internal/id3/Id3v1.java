@@ -4,8 +4,8 @@ package cz.skyba.taglib.internal.id3;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.id3.v1.StringHandler;
 import cz.skyba.taglib.internal.NativeSaveState;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -65,7 +65,7 @@ public final class Id3v1 {
       add(out, "ARTIST", text(tag, 33, 30));
       add(out, "ALBUM", text(tag, 63, 30));
       yearText = text(tag, 93, 4);
-      int year = new TagString(yearText).toInt();
+      int year = TextNumbers.parseInt(yearText);
       if (year != 0) {
         out.put("DATE", Integer.toString(year));
       }
@@ -343,11 +343,11 @@ public final class Id3v1 {
     if (!genre.isEmpty()) {
       result.put("GENRE", genre);
     }
-    var year = new TagString(input.first("DATE")).extractInt();
+    var year = TextNumbers.extractInt(input.first("DATE"));
     if (year.ok() && year.value() != 0) {
       result.put("DATE", Integer.toString(year.value()));
     }
-    var track = new TagString(input.first("TRACKNUMBER")).extractInt();
+    var track = TextNumbers.extractInt(input.first("TRACKNUMBER"));
     if (track.ok() && track.value() > 0 && track.value() < 256) {
       result.put("TRACKNUMBER", Integer.toString(track.value()));
     }
@@ -394,7 +394,7 @@ public final class Id3v1 {
     put(result, 3, 30, properties.first("TITLE"));
     put(result, 33, 30, properties.first("ARTIST"));
     put(result, 63, 30, properties.first("ALBUM"));
-    var year = new TagString(properties.first("DATE")).extractInt();
+    var year = TextNumbers.extractInt(properties.first("DATE"));
     var nativeFields = NativeSaveState.id3v1Fields();
     put(
       result,
@@ -404,9 +404,9 @@ public final class Id3v1 {
         ? nativeFields.yearText()
         : year.ok() && year.value() != 0 ? Integer.toString(year.value()) : "");
     put(result, 97, 28, properties.first("COMMENT"));
-    var track = new TagString(properties.first("TRACKNUMBER")).extractInt();
+    var track = TextNumbers.extractInt(properties.first("TRACKNUMBER"));
     if (track.ok() && track.value() > 0 && track.value() < 256) {
-      result[126] = (byte) (int) track.value();
+      result[126] = (byte) track.value();
     }
     result[127] = (byte) genreIndex(properties.first("GENRE"));
     if (nativeFields != null) {

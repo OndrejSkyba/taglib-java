@@ -1,8 +1,8 @@
 package cz.skyba.taglib.riff.info;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InfoTagTest {
@@ -136,12 +137,12 @@ class InfoTagTest {
     Tag.setStringHandler(new StringHandler() {
       @Override
       public String parse(ByteVector data) {
-        return new TagString(data, TagString.Type.LATIN1).toString();
+        return TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
 
       @Override
       public ByteVector render(String value) {
-        return new TagString(value).data(TagString.Type.LATIN1);
+        return ByteVector.fromText(value, ISO_8859_1);
       }
     });
     var tag = new Tag(data(field("INAM", new byte[]{(byte) 0xe9, 0})));

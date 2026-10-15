@@ -202,7 +202,7 @@ public final class PageHeader {
     stream.seek(offset);
     byte[] data = stream.readBlock(27).toByteArray();
     if (data.length != 27 || !Binary.ascii(data, 0, 4).equals("OggS")) {
-      Debug.debug(new TagString("Ogg::PageHeader::read() -- error reading page header"));
+      Debug.debug("Ogg::PageHeader::read() -- error reading page header");
       return;
     }
     firstContinued = (data[5] & 1) != 0;

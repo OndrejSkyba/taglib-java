@@ -3,19 +3,26 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * A mutable ID3v2 frame with a live header and extensible field parsing and rendering.
  * Payload size and frame identifier come from the header. Rendering updates that header's
  * payload size and emits serialized bytes without writing storage. Subclasses define their
  * field layout and common-property mapping.
+ * Text-encoding parameters accept {@link StandardCharsets#ISO_8859_1},
+ * {@link StandardCharsets#UTF_8}, {@link StandardCharsets#UTF_16},
+ * {@link StandardCharsets#UTF_16BE} and {@link StandardCharsets#UTF_16LE}.
+ * Unsupported charsets are rejected with {@link IllegalArgumentException}.
  */
 public abstract class Frame {
   public static final String instrumentPrefix = "PERFORMER:";
@@ -119,10 +126,10 @@ public abstract class Frame {
    * @param encoding the text encoding
    * @return delimiter bytes
    */
-  public static ByteVector textDelimiter(TagString.Type encoding) {
-    Objects.requireNonNull(encoding);
-    return new ByteVector(encoding == TagString.Type.UTF16 || encoding == TagString.Type.UTF16BE
-      || encoding == TagString.Type.UTF16LE ? 2 : 1);
+  public static ByteVector textDelimiter(Charset encoding) {
+    Id3Text.requireEncoding(encoding);
+    return new ByteVector(UTF_16.equals(encoding) || UTF_16BE.equals(encoding)
+      || UTF_16LE.equals(encoding) ? 2 : 1);
   }
 
   /**
@@ -198,24 +205,24 @@ public abstract class Frame {
     if (!header.compression() && data.size() >= headerSize
       && ((offset + length) & UINT_MASK) > data.size()) {
       if (offset > data.size()) {
-        Debug.debug(new TagString("Invalid frame data length"));
+        Debug.debug("Invalid frame data length");
         return new ByteVector();
       }
       length = data.size() - offset;
     }
     if (header.compression() && !header.encryption()) {
       if (data.size() <= offset) {
-        Debug.debug(new TagString("Compressed frame doesn't have enough data to decode"));
+        Debug.debug("Compressed frame doesn't have enough data to decode");
         return new ByteVector();
       }
       ByteVector compressed = mid(data, offset, data.size());
       if (length > MAX_COMPRESSED_OUTPUT || length > (long) compressed.size() * 64) {
-        Debug.debug(new TagString("Compressed frame exceeds decompression limit"));
+        Debug.debug("Compressed frame exceeds decompression limit");
         return new ByteVector();
       }
       var decoded = FrameCompression.decompress(compressed, (int) length);
       if (!decoded.isEmpty() && length != decoded.size()) {
-        Debug.debug(new TagString("frameDataLength does not match the data length returned by zlib"));
+        Debug.debug("frameDataLength does not match the data length returned by zlib");
       }
       return decoded;
     }
@@ -230,14 +237,14 @@ public abstract class Frame {
    * @param encoding the text encoding
    * @return decoded field text
    */
-  protected final String readStringField(ByteVector data, TagString.Type encoding) {
+  protected final String readStringField(ByteVector data, Charset encoding) {
     return readStringField(data, encoding, null);
   }
 
   record StringField(String value, int nextPosition) {
   }
 
-  final StringField stringField(ByteVector data, TagString.Type encoding, int start) {
+  final StringField stringField(ByteVector data, Charset encoding, int start) {
     Objects.requireNonNull(data);
     ByteVector delimiter = textDelimiter(encoding);
     int end = data.find(delimiter, start, delimiter.size());
@@ -257,7 +264,7 @@ public abstract class Frame {
    * @return decoded field text
    * @throws IllegalArgumentException if the cursor array does not have one element
    */
-  protected final String readStringField(ByteVector data, TagString.Type encoding, int[] position) {
+  protected final String readStringField(ByteVector data, Charset encoding, int[] position) {
     Objects.requireNonNull(data);
     if (position != null && position.length != 1) {
       throw new IllegalArgumentException("String position must have exactly one element");
@@ -278,31 +285,31 @@ public abstract class Frame {
    * @param encoding the requested encoding
    * @return an encoding suitable for the fields and version
    */
-  protected final TagString.Type checkTextEncoding(List<String> fields, TagString.Type encoding) {
+  protected final Charset checkTextEncoding(List<String> fields, Charset encoding) {
     Objects.requireNonNull(fields);
-    Objects.requireNonNull(encoding);
-    if ((encoding == TagString.Type.UTF8 || encoding == TagString.Type.UTF16BE)
+    Id3Text.requireEncoding(encoding);
+    if ((UTF_8.equals(encoding) || UTF_16BE.equals(encoding))
       && header.version() != 4) {
-      return TagString.Type.UTF16;
+      return UTF_16;
     }
-    if (encoding != TagString.Type.LATIN1) {
+    if (!ISO_8859_1.equals(encoding)) {
       return encoding;
     }
     for (String field : fields) {
-      if (!new TagString(field).isLatin1()) {
-        Debug.debug(new TagString(header.version() == 4
-          ? "Frame::checkEncoding() -- Rendering using UTF8." : "Frame::checkEncoding() -- Rendering using UTF16."));
-        return header.version() == 4 ? TagString.Type.UTF8 : TagString.Type.UTF16;
+      if (!TextBytes.isLatin1(field)) {
+        Debug.debug(header.version() == 4
+          ? "Frame::checkEncoding() -- Rendering using UTF8." : "Frame::checkEncoding() -- Rendering using UTF16.");
+        return header.version() == 4 ? UTF_8 : UTF_16;
       }
     }
-    return TagString.Type.LATIN1;
+    return ISO_8859_1;
   }
 
   /**
    * Returns the standard properties represented by this frame.
    */
   protected PropertyMap asProperties() {
-    String id = new TagString(frameID()).toString();
+    String id = Id3Text.fixedLatin1(frameID());
     return PropertyMap.builder().addUnsupportedData(this instanceof UnknownFrame ? "UNKNOWN/" + id : id).build();
   }
 
@@ -548,7 +555,7 @@ public abstract class Frame {
       version = newVersion & UINT_MASK;
       int idSize = version <= 2 ? 3 : 4;
       if (data.size() - offset < idSize) {
-        Debug.debug(new TagString("You must at least specify a frame ID."));
+        Debug.debug("You must at least specify a frame ID.");
         return;
       }
       frameID = data.mid(offset, idSize);

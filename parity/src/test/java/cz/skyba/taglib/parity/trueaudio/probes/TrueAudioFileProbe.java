@@ -1,20 +1,17 @@
 package cz.skyba.taglib.parity.trueaudio.probes;
 
-import cz.skyba.taglib.parity.support.TagSelections;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.id3.v2.*;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
+import cz.skyba.taglib.parity.support.TagSelections;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.trueaudio.TrueAudioFile;
 
 import java.nio.file.Files;
@@ -24,6 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 // Independent Java side of the pinned TrueAudio File/shared ID3 owner protocol.
 
 public class TrueAudioFileProbe {
@@ -32,7 +33,7 @@ public class TrueAudioFileProbe {
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static String list(List<String> v) {
@@ -56,7 +57,7 @@ public class TrueAudioFileProbe {
 
     Factory(int m) {
       mode = m;
-      setDefaultTextEncoding(TagString.Type.UTF8);
+      setDefaultTextEncoding(UTF_8);
     }
 
     public Frame createFrame(ByteVector d, Header h) {
@@ -82,7 +83,7 @@ public class TrueAudioFileProbe {
 
     public String parse(ByteVector d) {
       calls++;
-      return new TagString(d, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(d.data(), UTF_8);
     }
   }
 
@@ -541,7 +542,7 @@ public class TrueAudioFileProbe {
         t.setTitle("");
         t.setComment("");
         if (mode == 1) {
-          var title = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+          var title = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
           title.setText("existing");
           t.addFrame(title);
           t.setTitle("changed");

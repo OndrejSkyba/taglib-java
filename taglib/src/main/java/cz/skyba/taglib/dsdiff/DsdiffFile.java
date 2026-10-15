@@ -7,10 +7,7 @@ import cz.skyba.taglib.dsdiff.DsdiffLayout.Chunk;
 import cz.skyba.taglib.dsdiff.DsdiffLayout.ContainerState;
 import cz.skyba.taglib.id3.v2.FrameFactory;
 import cz.skyba.taglib.id3.v2.Tag;
-import cz.skyba.taglib.internal.Binary;
-import cz.skyba.taglib.internal.FailureSupport;
-import cz.skyba.taglib.internal.MetadataLimitException;
-import cz.skyba.taglib.internal.TagUtils;
+import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.*;
 
 import java.nio.file.Path;
@@ -19,6 +16,8 @@ import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * An editable DSDIFF file with live metadata and format-specific audio properties.
@@ -286,14 +285,14 @@ public class DsdiffFile extends FileBase {
   }
 
   private void invalid(String message) {
-    Debug.debug(new TagString("DSDIFF::File::read() -- " + message));
+    Debug.debug("DSDIFF::File::read() -- " + message);
     setValid(false);
   }
 
   private Chunk nextChunk(long end, String context) {
     var name = readBlock(4);
     long count = readBlock(8).toUnsignedLong(true);
-    String id = new TagString(name).toString();
+    String id = name.decodeTerminatedText(ISO_8859_1);
     if (name.size() != 4 || !validId(name)) {
       invalid(context + "Chunk '" + id + "' has invalid ID");
       return null;
@@ -461,7 +460,8 @@ public class DsdiffFile extends FileBase {
           seek(child.offset);
           long count = readBlock(4).toUnsignedInt(0, 4, true);
           if (Long.compareUnsigned(count, child.size) <= 0) {
-            String value = new TagString(readBlock(count)).toString();
+            var data = readBlock(count);
+            String value = data.decodeTerminatedText(ISO_8859_1);
             if (child.id.equals("DITI")) {
               diinTag().setTitle(value);
             } else {
@@ -609,7 +609,7 @@ public class DsdiffFile extends FileBase {
   }
 
   private static byte[] diinBytes(String value, int declaredCount) {
-    byte[] raw = new TagString(value).data(TagString.Type.LATIN1).toByteArray();
+    byte[] raw = TextBytes.encode(value, ISO_8859_1);
     int count = 0;
     while (count < raw.length && raw[count] != 0) {
       count++;
@@ -650,7 +650,7 @@ public class DsdiffFile extends FileBase {
     }
 
     public void debug(String message) {
-      Debug.debug(new TagString(message));
+      Debug.debug(message);
     }
   }
 

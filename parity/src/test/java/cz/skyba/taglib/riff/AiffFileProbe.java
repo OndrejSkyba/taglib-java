@@ -1,21 +1,16 @@
 package cz.skyba.taglib.riff;
 
-import cz.skyba.taglib.parity.support.OpenOutcome;
-
-
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.*;
 import cz.skyba.taglib.id3.v2.*;
 import cz.skyba.taglib.id3.v2.Tag;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.riff.aiff.AiffFile;
 import cz.skyba.taglib.riff.aiff.Properties;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,13 +18,15 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.TreeMap;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class AiffFileProbe {
   static String hex(ByteVector b) {
     return b.toHex().toString();
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(s, UTF_8));
   }
 
   static String list(List<String> values) {

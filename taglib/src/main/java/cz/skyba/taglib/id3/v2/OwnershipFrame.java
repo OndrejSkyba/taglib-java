@@ -2,25 +2,27 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing OWNE price, purchase date and seller.
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class OwnershipFrame extends Frame {
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private String pricePaid = "", datePurchased = "", seller = "";
 
   /**
    * Creates a frame containing OWNE price, purchase date and seller. The initial text encoding is ISO-8859-1.
    */
   public OwnershipFrame() {
-    this(TagString.Type.LATIN1);
+    this(ISO_8859_1);
   }
 
   /**
@@ -28,9 +30,9 @@ public class OwnershipFrame extends Frame {
    *
    * @param encoding the requested text encoding
    */
-  public OwnershipFrame(TagString.Type encoding) {
+  public OwnershipFrame(Charset encoding) {
     super(new ByteVector("OWNE"));
-    this.encoding = Objects.requireNonNull(encoding);
+    this.encoding = Id3Text.requireEncoding(encoding);
   }
 
   /**
@@ -73,12 +75,12 @@ public class OwnershipFrame extends Frame {
     seller = Objects.requireNonNull(value);
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   @Override
@@ -105,7 +107,7 @@ public class OwnershipFrame extends Frame {
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
-    StringField field = stringField(data, TagString.Type.LATIN1, 1);
+    StringField field = stringField(data, ISO_8859_1, 1);
     pricePaid = field.value();
     int position = field.nextPosition();
     if (data.size() - position < 8) {
@@ -120,9 +122,9 @@ public class OwnershipFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type rendered = checkTextEncoding(List.of(seller), encoding);
-    return new ByteVector((byte) rendered.ordinal()).append(Id3Text.encode(pricePaid, TagString.Type.LATIN1))
-      .append((byte) 0).append(Id3Text.encode(datePurchased, TagString.Type.LATIN1))
-      .append(Id3Text.encode(seller, rendered));
+    Charset rendered = checkTextEncoding(List.of(seller), encoding);
+    return new ByteVector(Id3Text.encodingByte(rendered)).append(ByteVector.fromText(pricePaid, ISO_8859_1))
+      .append((byte) 0).append(ByteVector.fromText(datePurchased, ISO_8859_1))
+      .append(ByteVector.fromText(seller, rendered));
   }
 }

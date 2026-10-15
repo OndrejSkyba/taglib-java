@@ -1,15 +1,16 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TextFramesTest {
@@ -67,7 +68,7 @@ class TextFramesTest {
   @Test
   void userValueConstructorAllowsDescriptionWithNoValues() {
     var frame = new UserTextIdentificationFrame("owner", List.of());
-    assertEquals(TagString.Type.UTF8, frame.textEncoding());
+    assertEquals(UTF_8, frame.textEncoding());
     assertEquals(List.of("owner"), frame.fieldList());
     assertEquals(PropertyMap.EMPTY, frame.asProperties());
     assertEquals("[owner] ", frame.toString());
@@ -80,7 +81,7 @@ class TextFramesTest {
     frame.setData(wire("TIT2", "01"));
     assertSame(h, frame.header());
     assertEquals(new ByteVector("TIT2"), frame.frameID());
-    assertEquals(TagString.Type.UTF8, frame.textEncoding());
+    assertEquals(UTF_8, frame.textEncoding());
     assertEquals(List.of("one", "two"), frame.fieldList());
     assertEquals(List.of("one", "two"), frame.asProperties().get("TITLE"));
   }
@@ -88,7 +89,7 @@ class TextFramesTest {
   @Test
   void utf16LittleEndianEncodingByteFourIsAccepted() {
     var frame = new TextIdentificationFrame(wire("TCOM", "04410000004200"));
-    assertEquals(TagString.Type.UTF16LE, frame.textEncoding());
+    assertEquals(UTF_16LE, frame.textEncoding());
     assertEquals(List.of("A", "B"), frame.fieldList());
     assertEquals(wire("TCOM", "04410000004200"), frame.render());
   }
@@ -96,7 +97,7 @@ class TextFramesTest {
   @Test
   void unrecognizedEncodingByteUsesLatin1() {
     var frame = new TextIdentificationFrame(wire("TCOM", "ff636166e9"));
-    assertEquals(TagString.Type.LATIN1, frame.textEncoding());
+    assertEquals(ISO_8859_1, frame.textEncoding());
     assertEquals(List.of("café"), frame.fieldList());
   }
 
@@ -117,13 +118,13 @@ class TextFramesTest {
 
   @Test
   void renderingFallbackDoesNotMutateRequestedEncoding() {
-    var frame = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var frame = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     frame.setText("Ž");
     assertEquals(wire("TIT2", "03c5bd"), frame.render());
-    assertEquals(TagString.Type.LATIN1, frame.textEncoding());
+    assertEquals(ISO_8859_1, frame.textEncoding());
     frame.header().setVersion(3);
     assertEquals(wire("TIT2", "01fffe7d01"), frame.render());
-    assertEquals(TagString.Type.LATIN1, frame.textEncoding());
+    assertEquals(ISO_8859_1, frame.textEncoding());
     assertEquals(5, frame.size());
   }
 
@@ -147,11 +148,11 @@ class TextFramesTest {
 
   @Test
   void nativeGenreAndDateProjectionLeaveStoredFieldsUnchanged() {
-    var genre = new TextIdentificationFrame(new ByteVector("TCON"), TagString.Type.LATIN1);
+    var genre = new TextIdentificationFrame(new ByteVector("TCON"), ISO_8859_1);
     genre.setText(List.of("17", "255", "-1", "2147483647", "17x"));
     assertEquals(List.of("Rock", "", "", "2147483647", "17x"), genre.asProperties().get("GENRE"));
     assertEquals("17", genre.fieldList().getFirst());
-    var date = new TextIdentificationFrame(new ByteVector("TDRC"), TagString.Type.UTF8);
+    var date = new TextIdentificationFrame(new ByteVector("TDRC"), UTF_8);
     date.setText("2026T10T05");
     assertEquals("2026 10T05", date.asProperties().first("DATE"));
     assertEquals("2026T10T05", date.toString());
@@ -159,7 +160,7 @@ class TextFramesTest {
 
   @Test
   void rolesRequireEvenPairsAndRejectWholeFrameForUnknownRole() {
-    var frame = new TextIdentificationFrame(new ByteVector("TIPL"), TagString.Type.LATIN1);
+    var frame = new TextIdentificationFrame(new ByteVector("TIPL"), ISO_8859_1);
     frame.setText(List.of("arranger", "one,,two", "ENGINEER", "three"));
     assertEquals(List.of("one", "", "two"), frame.asProperties().get("ARRANGER"));
     frame.setText(List.of("ARRANGER", "one", "unknown", "two"));
@@ -272,7 +273,7 @@ class TextFramesTest {
     frame.setDescription("old");
     frame.setText("text");
     frame.setData(wire("COMM", "036672616e657700"));
-    assertEquals(TagString.Type.UTF8, frame.textEncoding());
+    assertEquals(UTF_8, frame.textEncoding());
     assertEquals(new ByteVector("fra"), frame.language());
     assertEquals("old", frame.description());
     assertEquals("text", frame.text());
@@ -302,7 +303,7 @@ class TextFramesTest {
   void customHandlerAffectsTextCommentsLyricsAndUfidOwnerOnly() {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
-        return new TagString(data, TagString.Type.UTF8).toString();
+        return TextBytes.decodeTerminated(data.data(), UTF_8);
       }
     });
     assertEquals("é", new TextIdentificationFrame(wire("TCOM", "00c3a9")).toString());
@@ -322,17 +323,17 @@ class TextFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 2) throw new IllegalArgumentException("second");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
-    var frame = new TextIdentificationFrame(new ByteVector("TCOM"), TagString.Type.UTF8);
+    var frame = new TextIdentificationFrame(new ByteVector("TCOM"), UTF_8);
     frame.setText("old");
     var h = frame.header();
     assertThrows(IllegalArgumentException.class, () -> frame.setData(wire("TIT2", "006f6e650074776f")));
     assertSame(h, frame.header());
     assertEquals(new ByteVector("TIT2"), frame.frameID());
     assertEquals(8, frame.size());
-    assertEquals(TagString.Type.LATIN1, frame.textEncoding());
+    assertEquals(ISO_8859_1, frame.textEncoding());
     assertEquals(List.of("decoded:one"), frame.fieldList());
   }
 
@@ -362,7 +363,7 @@ class TextFramesTest {
     frame.setUrl("old");
     frame.setDescription("kept");
     frame.setData(wire("WXXX", "016e6f64656c696d"));
-    assertEquals(TagString.Type.UTF16, frame.textEncoding());
+    assertEquals(UTF_16, frame.textEncoding());
     assertEquals("old", frame.url());
     assertEquals("kept", frame.description());
   }

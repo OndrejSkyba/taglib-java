@@ -2,25 +2,10 @@ package cz.skyba.taglib.toolkit;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class RoundTwoOwnershipTest {
-  @Test
-  void stringIteratorCapturesCodeUnitsBeforeMutation() {
-    var text = new TagString("A\ud83d\ude00\0Z");
-    var iterator = text.iterator();
-    text.clear().append(new TagString("changed"));
-    var characters = new ArrayList<Character>();
-    iterator.forEachRemaining(characters::add);
-    assertEquals(List.of('A', '\ud83d', '\ude00', '\0', 'Z'), characters);
-    assertFalse(iterator.hasNext());
-    assertThrows(NoSuchElementException.class, iterator::next);
-  }
-
   @Test
   void memoryWritesPreserveAliasedSourceAcrossGrowthAndOverlap() {
     var growing = new ByteVectorStream(new ByteVector("abcd"));

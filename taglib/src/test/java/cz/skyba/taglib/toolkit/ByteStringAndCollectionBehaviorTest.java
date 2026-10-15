@@ -26,7 +26,6 @@ class ByteStringAndCollectionBehaviorTest {
     assertThrows(IndexOutOfBoundsException.class, () -> new ByteVector(source, 2, 2));
     var parts = List.of(new ByteVector("a"), new ByteVector(), new ByteVector("b"));
     assertEquals(new ByteVector("a  b"), ByteVector.join(parts));
-    assertEquals("|a||b|", String.join("|", new TagString(" a  b ").split()));
     assertEquals(new ByteVector("a  b"), ByteVector.join(new ByteVector("a::b:").split(new ByteVector(":"), 1)));
   }
 

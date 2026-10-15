@@ -1,12 +1,14 @@
 package cz.skyba.taglib.parity.core.probes;
 
-import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.ReadStyle;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 class FileRefReadProbe {
   static class Memory extends ByteVectorStream {
@@ -24,7 +26,7 @@ class FileRefReadProbe {
   }
 
   static String hex(String value) {
-    return new TagString(value).data(TagString.Type.UTF8).toHex().toString();
+    return ByteVector.fromText(value, UTF_8).toHex().toString();
   }
 
   public static void main(String[] args) throws Exception {

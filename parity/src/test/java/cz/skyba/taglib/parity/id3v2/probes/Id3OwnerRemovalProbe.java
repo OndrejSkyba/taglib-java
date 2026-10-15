@@ -4,14 +4,15 @@ import cz.skyba.taglib.id3.v2.ChapterFrame;
 import cz.skyba.taglib.id3.v2.Tag;
 import cz.skyba.taglib.id3.v2.TextIdentificationFrame;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 class Id3OwnerRemovalProbe {
   public static void main(String[] args) {
     for (String mode : List.of("tag-missing", "tag-stale", "chapter-missing", "chapter-stale")) {
-      var f = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+      var f = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
       boolean threw = false;
       if (mode.startsWith("tag")) {
         var t = new Tag();

@@ -1,11 +1,10 @@
 package cz.skyba.taglib.parity;
 
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.mp4.*;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.toolkit.*;
 
 import java.nio.file.Files;
@@ -14,13 +13,15 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Mp4MutableProbe {
   static String hex(ByteVector b) {
     return HexFormat.of().formatHex(b.toByteArray());
   }
 
   static String hs(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(s, UTF_8));
   }
 
   static String sl(List<String> v) {

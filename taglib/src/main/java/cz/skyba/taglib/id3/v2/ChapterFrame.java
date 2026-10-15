@@ -5,11 +5,12 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing CHAP timing, byte offsets and embedded frames.
@@ -234,11 +235,11 @@ public class ChapterFrame extends Frame {
 
   private void parseChapter(ByteVector data) {
     if (data.size() < 18) {
-      Debug.debug(new TagString("A CHAP frame must contain at least 18 bytes (1 byte element ID terminated by null and 4x4 bytes for start and end time and offset)."));
+      Debug.debug("A CHAP frame must contain at least 18 bytes (1 byte element ID terminated by null and 4x4 bytes for start and end time and offset).");
       return;
     }
-    StringField field = stringField(data, TagString.Type.LATIN1, 0);
-    elementID = Id3Text.encode(field.value(), TagString.Type.LATIN1);
+    StringField field = stringField(data, ISO_8859_1, 0);
+    elementID = ByteVector.fromText(field.value(), ISO_8859_1);
     int pos = field.nextPosition();
     startTime = data.toUnsignedInt(pos, true);
     pos += 4;

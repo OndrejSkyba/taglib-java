@@ -1,7 +1,7 @@
 package cz.skyba.taglib.id3.v2;
 
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NumericFramesTest {
@@ -28,14 +30,14 @@ class NumericFramesTest {
   @Test
   void ownershipZeroStateAndEmptyReparseKeepNativeDefaultsAndOldState() {
     var o = new OwnershipFrame(new ByteVector());
-    assertEquals(TagString.Type.LATIN1, o.textEncoding());
+    assertEquals(ISO_8859_1, o.textEncoding());
     assertEquals(List.of("", "", ""), o.toStringList());
     o.setPricePaid("old-price");
     o.setDatePurchased("old-date");
     o.setSeller("old-seller");
-    o.setTextEncoding(TagString.Type.UTF8);
+    o.setTextEncoding(UTF_8);
     o.setData(wire("OWNE", ""));
-    assertEquals(TagString.Type.UTF8, o.textEncoding());
+    assertEquals(UTF_8, o.textEncoding());
     assertEquals(List.of("old-price", "old-date", "old-seller"), o.toStringList());
   }
 
@@ -45,7 +47,7 @@ class NumericFramesTest {
     o.setDatePurchased("old-date");
     o.setSeller("old-seller");
     o.setData(wire("OWNE", "03700073686f7274"));
-    assertEquals(TagString.Type.UTF8, o.textEncoding());
+    assertEquals(UTF_8, o.textEncoding());
     assertEquals(List.of("p", "old-date", "old-seller"), o.toStringList());
   }
 
@@ -69,7 +71,7 @@ class NumericFramesTest {
     var calls = new ArrayList<String>();
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
-        var s = new TagString(data).toString();
+        var s = TextBytes.decodeTerminated(data.data(), ISO_8859_1);
         calls.add(s);
         data.clear();
         return "decoded:" + s;
@@ -89,7 +91,7 @@ class NumericFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 2) throw new IllegalArgumentException("second");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
     var o = new OwnershipFrame();
@@ -105,13 +107,13 @@ class NumericFramesTest {
     o.setDatePurchased("abcdefghi");
     o.setSeller("seller");
     assertEquals(wire("OWNE", "00ea0061626364656667686973656c6c6572"), o.render());
-    assertEquals(TagString.Type.LATIN1, o.textEncoding());
+    assertEquals(ISO_8859_1, o.textEncoding());
     o.setSeller("Ž");
     var h = o.header();
     var rendered = o.render();
     assertSame(h, o.header());
     assertEquals(3, rendered.at(10));
-    assertEquals(TagString.Type.LATIN1, o.textEncoding());
+    assertEquals(ISO_8859_1, o.textEncoding());
     o.header().setVersion(3);
     assertEquals(1, o.render().at(10));
   }
@@ -376,7 +378,7 @@ class NumericFramesTest {
       String text = f.toString();
       f.setText("ignored");
       assertEquals(text, f.toString());
-      assertEquals(List.of(new TagString(f.frameID()).toString()), f.asProperties().unsupportedData());
+      assertEquals(List.of(TextBytes.decodeTerminated(f.frameID().data(), ISO_8859_1)), f.asProperties().unsupportedData());
     }
   }
 

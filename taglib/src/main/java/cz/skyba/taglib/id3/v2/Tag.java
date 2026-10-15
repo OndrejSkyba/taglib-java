@@ -7,12 +7,16 @@ import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.id3.v1.Genres;
 import cz.skyba.taglib.internal.ByteVectorOutput;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
+import java.nio.charset.Charset;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16;
 
 /**
  * A mutable ID3v2 tag containing live frame objects and a live tag header.
@@ -209,7 +213,7 @@ public class Tag extends TagBase {
       if (field.isEmpty()) {
         continue;
       }
-      var number = new TagString(field).extractInt();
+      var number = TextNumbers.extractInt(field);
       if (number.ok() && number.value() >= 0 && number.value() <= 255) {
         field = Genres.genre(number.value());
       }
@@ -232,13 +236,13 @@ public class Tag extends TagBase {
       return 0;
     }
     String text = list.getFirst().toString();
-    return Integer.toUnsignedLong(new TagString(text.substring(0, Math.min(4, text.length()))).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(text.substring(0, Math.min(4, text.length()))));
   }
 
   @Override
   public long track() {
     var list = frameList(new ByteVector("TRCK"));
-    return list.isEmpty() ? 0 : Integer.toUnsignedLong(new TagString(list.getFirst().toString()).toInt());
+    return list.isEmpty() ? 0 : Integer.toUnsignedLong(TextNumbers.parseInt(list.getFirst().toString()));
   }
 
   @Override
@@ -331,15 +335,15 @@ public class Tag extends TagBase {
         if (id.length() != 4) {
           continue;
         }
-        for (Frame frame : new ArrayList<>(frameList(Id3Text.encode(id, TagString.Type.LATIN1)))) {
+        for (Frame frame : new ArrayList<>(frameList(ByteVector.fromText(id, ISO_8859_1)))) {
           if (frame instanceof UnknownFrame) {
             removeFrame(frame);
           }
         }
       } else if (property.length() == 4) {
-        removeFrames(Id3Text.encode(property, TagString.Type.LATIN1));
+        removeFrames(ByteVector.fromText(property, ISO_8859_1));
       } else if (property.length() > 5) {
-        ByteVector id = Id3Text.encode(property.substring(0, 4), TagString.Type.LATIN1);
+        ByteVector id = ByteVector.fromText(property.substring(0, 4), ISO_8859_1);
         String description = property.substring(5);
         Frame frame = switch (Id3Text.fixedLatin1(id)) {
           case "TXXX" -> UserTextIdentificationFrame.find(frameList(id), description);
@@ -701,9 +705,9 @@ public class Tag extends TagBase {
       }
     }
     if (tipl != null || tmcl != null) {
-      var encoding = (tipl == null || tipl.textEncoding() == TagString.Type.LATIN1) && (tmcl == null
-        || tmcl.textEncoding() == TagString.Type.LATIN1)
-        ? TagString.Type.LATIN1 : TagString.Type.UTF16;
+      var encoding = (tipl == null || ISO_8859_1.equals(tipl.textEncoding())) && (tmcl == null
+        || ISO_8859_1.equals(tmcl.textEncoding()))
+        ? ISO_8859_1 : UTF_16;
       var people = new ArrayList<String>();
       if (tmcl != null) {
         addPairs(people, tmcl.fieldList());
@@ -720,7 +724,7 @@ public class Tag extends TagBase {
       var combined = new StringBuilder();
       String text = "";
       for (String genre : genres) {
-        var number = new TagString(genre).extractInt();
+        var number = TextNumbers.extractInt(genre);
         if ((number.ok() && number.value() >= 0 && number.value() <= 255) || genre.equals("RX") || genre.equals("CR")) {
           combined.append('(').append(genre).append(')');
         } else if (genres.size() > 1 && Genres.genreIndex(genre) != 255) {
@@ -743,11 +747,11 @@ public class Tag extends TagBase {
     }
   }
 
-  private static TagString.Type downgraded(TextIdentificationFrame text) {
-    return text.textEncoding() == TagString.Type.LATIN1 ? TagString.Type.LATIN1 : TagString.Type.UTF16;
+  private static Charset downgraded(TextIdentificationFrame text) {
+    return ISO_8859_1.equals(text.textEncoding()) ? ISO_8859_1 : UTF_16;
   }
 
-  private static void addTemporary(String id, String text, TagString.Type encoding, List<Frame> selected) {
+  private static void addTemporary(String id, String text, Charset encoding, List<Frame> selected) {
     var frame = new TextIdentificationFrame(new ByteVector(id), encoding);
     frame.setText(text);
     selected.add(frame);

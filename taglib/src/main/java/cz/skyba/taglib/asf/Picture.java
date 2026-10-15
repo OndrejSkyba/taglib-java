@@ -2,10 +2,12 @@
 package cz.skyba.taglib.asf;
 
 import cz.skyba.taglib.internal.PictureTypes;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 /**
  * A mutable ASF picture value with copied image inputs and detached binary exports.
@@ -170,13 +172,13 @@ public final class Picture {
     if (end < 0) {
       return;
     }
-    mime = new TagString(bytes.mid(position, end - position), TagString.Type.UTF16LE).toString();
+    mime = TextBytes.decodeTerminated(bytes.data(), position, end - position, UTF_16LE);
     position = end + 2;
     end = bytes.find(terminator, position, 2);
     if (end < 0) {
       return;
     }
-    description = new TagString(bytes.mid(position, end - position), TagString.Type.UTF16LE).toString();
+    description = TextBytes.decodeTerminated(bytes.data(), position, end - position, UTF_16LE);
     position = end + 2;
     if (((length + position) & 0xffff_ffffL) != bytes.size()) {
       return;
@@ -186,7 +188,7 @@ public final class Picture {
   }
 
   static ByteVector stringBytes(String value) {
-    return new TagString(value + '\0').data(TagString.Type.UTF16LE);
+    return ByteVector.fromText(value + '\0', UTF_16LE);
   }
 
   /**

@@ -1,30 +1,27 @@
 package cz.skyba.taglib.parity;
 
-import cz.skyba.taglib.parity.support.TagSelections;
-import cz.skyba.taglib.flac.FlacFile;
-import cz.skyba.taglib.id3.v2.Tag.Version;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-
-
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.*;
+import cz.skyba.taglib.flac.FlacFile;
 import cz.skyba.taglib.id3.v2.Frame;
 import cz.skyba.taglib.id3.v2.FrameFactory;
 import cz.skyba.taglib.id3.v2.Header;
+import cz.skyba.taglib.id3.v2.Tag.Version;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
+import cz.skyba.taglib.parity.support.TagSelections;
 import cz.skyba.taglib.riff.wav.WavFile;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.TreeMap;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * FLAC and Wave tag-owner operations; no native fault cases.
@@ -35,7 +32,7 @@ public class FlacWaveTagOwnerProbe {
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(s, UTF_8));
   }
 
   static String props(PropertyMap p) {

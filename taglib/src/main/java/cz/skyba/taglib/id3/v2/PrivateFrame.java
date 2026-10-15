@@ -3,9 +3,10 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing PRIV owner and private binary payload.
@@ -68,10 +69,10 @@ public class PrivateFrame extends Frame {
 
   private void parsePrivate(ByteVector value) {
     if (value.size() < 2) {
-      Debug.debug(new TagString("A private frame must contain at least 2 bytes."));
+      Debug.debug("A private frame must contain at least 2 bytes.");
       return;
     }
-    int end = value.find(textDelimiter(TagString.Type.LATIN1));
+    int end = value.find(textDelimiter(ISO_8859_1));
     // Native -1 becomes UINT_MAX in mid(), retaining the whole owner and payload.
     owner = Id3Text.fixedLatin1(value.mid(0, end < 0 ? Integer.MAX_VALUE : end));
     data = value.mid(end + 1);
@@ -82,6 +83,6 @@ public class PrivateFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    return Id3Text.encode(owner, TagString.Type.LATIN1).append((byte) 0).append(data);
+    return ByteVector.fromText(owner, ISO_8859_1).append((byte) 0).append(data);
   }
 }

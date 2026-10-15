@@ -4,14 +4,21 @@ import cz.skyba.taglib.AudioProperties;
 import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.TagBase;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.*;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Independent live Tag/factory operations matching the native transcript schema.
@@ -26,11 +33,11 @@ public class Id3OwnerProbe {
   }
 
   static String string(String s) {
-    return TagString.from8Bit(bytes(s).data(), TagString.Type.UTF8).toString();
+    return TextBytes.decode(bytes(s).data(), UTF_8);
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static int b(boolean v) {
@@ -86,7 +93,7 @@ public class Id3OwnerProbe {
 
   static class Utf8 extends Latin1StringHandler {
     public String parse(ByteVector d) {
-      return new TagString(d, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(d.data(), UTF_8);
     }
   }
 
@@ -168,7 +175,7 @@ public class Id3OwnerProbe {
           + text(f.toString())
           + ":"
           + fields(f.toStringList()));
-    TagString.Type e =
+    Charset e =
       switch (f) {
         case TextIdentificationFrame t -> t.textEncoding();
         case CommentsFrame t -> t.textEncoding();
@@ -180,7 +187,7 @@ public class Id3OwnerProbe {
         case OwnershipFrame t -> t.textEncoding();
         default -> null;
       };
-    if (e != null) out.append(":e=").append(e.ordinal());
+    if (e != null) out.append(":e=").append(TextCharsets.id(e));
     if (f instanceof UnknownFrame u) out.append(":u=").append(hex(u.data()));
     if (f instanceof ChapterFrame c) {
       out.append(":c=")
@@ -444,7 +451,7 @@ public class Id3OwnerProbe {
     var tag = new Tag();
     var list = tag.frameList();
     var mapped = tag.frameListMap();
-    var f = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var f = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     f.setText("a");
     tag.addFrame(f);
     var bucket = tag.frameList(new ByteVector("TIT2"));
@@ -514,9 +521,9 @@ public class Id3OwnerProbe {
         + ":"
         + map(hooks.frameListMap()));
     var iterations = new Tag();
-    var a = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var a = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     a.setText("a");
-    var bb = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var bb = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     bb.setText("b");
     iterations.addFrame(a);
     iterations.addFrame(bb);
@@ -524,7 +531,7 @@ public class Id3OwnerProbe {
     iterator.next();
     var second = iterator.next();
     iterations.removeFrame(a);
-    var added = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var added = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     added.setText("c");
     iterations.addFrame(added);
     System.out.println(
@@ -543,13 +550,13 @@ public class Id3OwnerProbe {
       if (p.length != 7) throw new IllegalArgumentException(line);
       var c = new Factory();
       if (!p[3].equals("-1"))
-        c.setDefaultTextEncoding(TagString.Type.values()[Integer.parseInt(p[3])]);
+        c.setDefaultTextEncoding(TextCharsets.ALL[Integer.parseInt(p[3])]);
       Tag.setLatin1StringHandler(p[4].equals("1") ? handler : null);
       if (p[1].equals("T")) owner(p, c);
       else if (p[1].equals("P")) {
         var values = new ArrayList<String>();
         for (ByteVector v : bytes(p[6]).split(new ByteVector("|")))
-          values.add(TagString.from8Bit(v.data(), TagString.Type.UTF8).toString());
+          values.add(TextBytes.decode(v.data(), UTF_8));
         Frame f = c.createFrameForProperty(string(p[5]), values);
         System.out.println(p[0] + "/property\t" + frame(f));
         System.out.println(p[0] + "/render\t" + hex(f.render()));

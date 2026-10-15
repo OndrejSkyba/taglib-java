@@ -2,11 +2,12 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing POPM email, rating and play counter.
@@ -85,7 +86,7 @@ public class PopularimeterFrame extends Frame {
   }
 
   private void parsePopularimeter(ByteVector data) {
-    StringField field = stringField(data, TagString.Type.LATIN1, 0);
+    StringField field = stringField(data, ISO_8859_1, 0);
     email = field.value();
     int position = field.nextPosition();
     rating = 0;
@@ -103,7 +104,7 @@ public class PopularimeterFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    return Id3Text.encode(email, TagString.Type.LATIN1).append((byte) 0)
+    return ByteVector.fromText(email, ISO_8859_1).append((byte) 0)
       .append((byte) rating).append(ByteVector.fromUnsignedInt(counter));
   }
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib;
 
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.List;
@@ -115,7 +115,7 @@ public abstract class TagBase {
       return;
     }
     var list = values.getOrCreate(key);
-    var number = new TagString(list.getFirst()).extractInt();
+    var number = TextNumbers.extractInt(list.getFirst());
     setter.accept(number.ok() ? Integer.toUnsignedLong(number.value()) : 0);
     if (number.ok()) {
       list.removeFirst();

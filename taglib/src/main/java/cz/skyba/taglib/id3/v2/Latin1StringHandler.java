@@ -2,7 +2,8 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A replaceable decoder for ID3v2 fields marked as ISO-8859-1.
@@ -17,6 +18,6 @@ public class Latin1StringHandler {
    * @return decoded text; a custom implementation must not return null
    */
   public String parse(ByteVector data) {
-    return new TagString(data, TagString.Type.LATIN1).toString();
+    return data.decodeTerminatedText(ISO_8859_1);
   }
 }

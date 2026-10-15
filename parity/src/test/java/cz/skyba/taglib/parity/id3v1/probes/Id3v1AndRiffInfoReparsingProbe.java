@@ -1,20 +1,18 @@
 package cz.skyba.taglib.parity.id3v1.probes;
 
-
+import cz.skyba.taglib.*;
 import cz.skyba.taglib.ape.ApeFile;
 import cz.skyba.taglib.flac.FlacFile;
+import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.mpc.MpcFile;
 import cz.skyba.taglib.mpeg.MpegFile;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
 import cz.skyba.taglib.parity.support.FileRefAdapter;
-
-import cz.skyba.taglib.*;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.riff.wav.WavFile;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.trueaudio.TrueAudioFile;
 import cz.skyba.taglib.wavpack.WavPackFile;
 
@@ -23,6 +21,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * ID3v1 and RIFF INFO owner operations; output schema independently matches the pinned C++
@@ -34,7 +36,7 @@ class Id3v1AndRiffInfoReparsingProbe {
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static String props(PropertyMap p) {
@@ -82,15 +84,14 @@ class Id3v1AndRiffInfoReparsingProbe {
       parsed++;
       String s =
         mode == 1
-          ? new TagString(b, TagString.Type.UTF8).stripWhiteSpace().toString()
+          ? Ascii.stripWhiteSpace(TextBytes.decodeTerminated(b.data(), UTF_8))
           : super.parse(b);
       return mode == 2 ? s + "!" + parsed : s;
     }
 
     public ByteVector render(String s) {
       rendered++;
-      return new TagString(mode == 2 ? s + "~" + rendered : s)
-        .data(mode == 1 ? TagString.Type.UTF8 : TagString.Type.LATIN1);
+      return ByteVector.fromText(mode == 2 ? s + "~" + rendered : s, mode == 1 ? UTF_8 : ISO_8859_1);
     }
   }
 
@@ -104,14 +105,13 @@ class Id3v1AndRiffInfoReparsingProbe {
     public String parse(ByteVector b) {
       parsed++;
       String s =
-        new TagString(b, mode == 2 ? TagString.Type.LATIN1 : TagString.Type.UTF8).toString();
+        TextBytes.decodeTerminated(b.data(), mode == 2 ? ISO_8859_1 : UTF_8);
       return mode == 2 ? s + "!" + parsed : s;
     }
 
     public ByteVector render(String s) {
       rendered++;
-      return new TagString(mode == 2 ? s + "~" + rendered : s)
-        .data(mode == 2 ? TagString.Type.LATIN1 : TagString.Type.UTF8);
+      return ByteVector.fromText(mode == 2 ? s + "~" + rendered : s, mode == 2 ? ISO_8859_1 : UTF_8);
     }
   }
 
@@ -621,7 +621,7 @@ class Id3v1AndRiffInfoReparsingProbe {
   }
 
   static ByteVector field(String id, String s) {
-    var b = new TagString(s).data(TagString.Type.UTF8).append((byte) 0);
+    var b = ByteVector.fromText(s, UTF_8).append((byte) 0);
     var out = new ByteVector(id).append(ByteVector.fromUnsignedInt(b.size(), false)).append(b);
     if (b.size() % 2 != 0) out.append((byte) 0);
     return out;

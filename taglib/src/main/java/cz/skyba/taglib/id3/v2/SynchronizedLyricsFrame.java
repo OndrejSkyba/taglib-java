@@ -4,11 +4,13 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * A mutable ID3v2 frame containing SYLT language, description and timed text.
@@ -58,7 +60,7 @@ public class SynchronizedLyricsFrame extends Frame {
     }
   }
 
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private ByteVector language = new ByteVector();
   private TimestampFormat format = TimestampFormat.AbsoluteMilliseconds;
   private Type type = Type.Lyrics;
@@ -69,7 +71,7 @@ public class SynchronizedLyricsFrame extends Frame {
    * Creates a frame containing SYLT language, description and timed text. The initial text encoding is ISO-8859-1.
    */
   public SynchronizedLyricsFrame() {
-    this(TagString.Type.LATIN1);
+    this(ISO_8859_1);
   }
 
   /**
@@ -77,9 +79,9 @@ public class SynchronizedLyricsFrame extends Frame {
    *
    * @param encoding the requested text encoding
    */
-  public SynchronizedLyricsFrame(TagString.Type encoding) {
+  public SynchronizedLyricsFrame(Charset encoding) {
     super(new ByteVector("SYLT"));
-    this.encoding = Objects.requireNonNull(encoding);
+    this.encoding = Id3Text.requireEncoding(encoding);
   }
 
   /**
@@ -98,12 +100,12 @@ public class SynchronizedLyricsFrame extends Frame {
     parseLyrics(fieldData(data));
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   /**
@@ -184,7 +186,7 @@ public class SynchronizedLyricsFrame extends Frame {
   private void parseLyrics(ByteVector data) {
     int end = data.size();
     if (end < 7) {
-      Debug.debug(new TagString("A synchronized lyrics frame must contain at least 7 bytes."));
+      Debug.debug("A synchronized lyrics frame must contain at least 7 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
@@ -198,19 +200,19 @@ public class SynchronizedLyricsFrame extends Frame {
     if (position == 6) {
       return;
     }
-    TagString.Type inherited = encoding;
-    if (encoding == TagString.Type.UTF16) {
+    Charset inherited = encoding;
+    if (UTF_16.equals(encoding)) {
       int bom = data.toUnsignedShort(6, true);
       if (bom == 0xfffe) {
-        inherited = TagString.Type.UTF16LE;
+        inherited = UTF_16LE;
       } else if (bom == 0xfeff) {
-        inherited = TagString.Type.UTF16BE;
+        inherited = UTF_16BE;
       }
     }
     text.clear();
     while (position < end) {
-      TagString.Type entryEncoding = encoding;
-      if (entryEncoding == TagString.Type.UTF16 && end - position > 1) {
+      Charset entryEncoding = encoding;
+      if (UTF_16.equals(entryEncoding) && end - position > 1) {
         int bom = data.toUnsignedShort(position, true);
         if (bom != 0xfffe && bom != 0xfeff) {
           entryEncoding = inherited;
@@ -233,17 +235,17 @@ public class SynchronizedLyricsFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type rendered = checkTextEncoding(List.of(description), encoding);
+    Charset rendered = checkTextEncoding(List.of(description), encoding);
     for (var entry : text) {
       rendered = checkTextEncoding(List.of(entry.text()), rendered);
     }
-    var data = new ByteVectorOutput().append((byte) rendered.ordinal()).append(language.size() == 3 ? language : new ByteVector("XXX"))
+    var data = new ByteVectorOutput().append(Id3Text.encodingByte(rendered)).append(language.size() == 3 ? language : new ByteVector("XXX"))
       .append((byte) format.code())
       .append((byte) type.code())
-      .append(Id3Text.encode(description, rendered))
+      .append(ByteVector.fromText(description, rendered))
       .append(textDelimiter(rendered));
     for (var entry : text) {
-      data.append(Id3Text.encode(entry.text(), rendered)).append(textDelimiter(rendered)).append(ByteVector.fromUnsignedInt(entry.time()));
+      data.append(ByteVector.fromText(entry.text(), rendered)).append(textDelimiter(rendered)).append(ByteVector.fromUnsignedInt(entry.time()));
     }
     return data.toByteVector();
   }

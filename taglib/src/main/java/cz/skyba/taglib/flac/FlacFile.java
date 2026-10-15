@@ -9,6 +9,9 @@ import cz.skyba.taglib.toolkit.*;
 import java.nio.file.Path;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * An editable FLAC file with live metadata and format-specific audio properties.
  * Path construction owns storage; stream construction borrows it. Metadata edits require
@@ -152,7 +155,7 @@ public class FlacFile extends FileBase {
   }
 
   private InvalidAudioFileException invalid(String reason) {
-    Debug.debug(new TagString("FLAC::File::scan() -- " + reason));
+    Debug.debug("FLAC::File::scan() -- " + reason);
     return new InvalidAudioFileException("FLAC " + reason + ": " + name());
   }
 
@@ -194,14 +197,14 @@ public class FlacFile extends FileBase {
           commentData = data;
           blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
         } else {
-          Debug.debug(new TagString("FLAC::File::scan() -- multiple Vorbis Comment blocks found, discarding"));
+          Debug.debug("FLAC::File::scan() -- multiple Vorbis Comment blocks found, discarding");
         }
       } else if (code == 6) {
         var picture = new Picture();
         if (picture.parse(data.toByteArray())) {
           blocks.add(picture);
         } else {
-          Debug.debug(new TagString("FLAC::File::scan() -- invalid picture found, discarding"));
+          Debug.debug("FLAC::File::scan() -- invalid picture found, discarding");
         }
       } else if (code != 1) {
         var inner = recognized(data);
@@ -209,15 +212,15 @@ public class FlacFile extends FileBase {
           int skip = data.startsWith(new ByteVector("riff")) ? 12 : 4;
           var payload = skip == 12 ? data.mid(skip, (int) Math.min(data.toUnsignedInt(8, false), data.size() - skip)) : data.mid(skip);
           if (inner.equals("iXML") && !hasXml) {
-            xml = new TagString(payload, TagString.Type.UTF8).toString();
+            xml = payload.decodeTerminatedText(UTF_8);
             hasXml = true;
           } else if (inner.equals("bext") && !hasBext) {
             bext = payload;
             hasBext = true;
           } else {
-            Debug.debug(new TagString(
+            Debug.debug(
               "FLAC::File::scan() -- multiple " + (inner.equals("iXML") ? "iXML" : "BEXT")
-                + " blocks found, discarding"));
+                + " blocks found, discarding");
           }
         } else {
           blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
@@ -239,7 +242,7 @@ public class FlacFile extends FileBase {
     if (id.equals(new ByteVector("riff")) && data.size() >= 12) {
       id = data.mid(4, 4);
     }
-    String value = new TagString(id).toString();
+    String value = id.decodeTerminatedText(ISO_8859_1);
     return value.equals("iXML") || value.equals("bext") ? value : null;
   }
 
@@ -566,7 +569,7 @@ public class FlacFile extends FileBase {
     commentData = xiphComment().render(false);
     blocks.removeIf(block -> block.code() == 2 && recognized(new ByteVector(block.render())) != null);
     if (!xml.isEmpty()) {
-      blocks.add(new UnknownMetadataBlock(2, application("iXML", new TagString(xml).data(TagString.Type.UTF8)).toByteArray()));
+      blocks.add(new UnknownMetadataBlock(2, application("iXML", ByteVector.fromText(xml, UTF_8)).toByteArray()));
     }
     hasXml = !xml.isEmpty();
     if (!bext.isEmpty()) {
@@ -592,7 +595,7 @@ public class FlacFile extends FileBase {
     for (int i = 0; i < blocks.size(); ) {
       byte[] payload = blocks.get(i).render();
       if (payload.length > 0xffffff) {
-        Debug.debug(new TagString("FLAC::File::save() -- Removing too large block."));
+        Debug.debug("FLAC::File::save() -- Removing too large block.");
         blocks.remove(i);
         continue;
       }

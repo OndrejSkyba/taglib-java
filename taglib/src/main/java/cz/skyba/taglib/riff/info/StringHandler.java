@@ -2,7 +2,8 @@
 package cz.skyba.taglib.riff.info;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A replaceable decoder and encoder for RIFF INFO text. The default encoding is UTF-8.
@@ -15,7 +16,7 @@ public class StringHandler {
    * @return decoded text
    */
   public String parse(ByteVector data) {
-    return new TagString(data, TagString.Type.UTF8).toString();
+    return data.decodeTerminatedText(UTF_8);
   }
 
   /**
@@ -25,6 +26,6 @@ public class StringHandler {
    * @return encoded bytes
    */
   public ByteVector render(String value) {
-    return new TagString(value).data(TagString.Type.UTF8);
+    return ByteVector.fromText(value, UTF_8);
   }
 }

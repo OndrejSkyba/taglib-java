@@ -42,8 +42,6 @@ int main(int argc, char **argv) {
           << '\n';
   ByteVectorList defaultList{ByteVector("a"), ByteVector(), ByteVector("b")};
   std::cout << "default-join=" << defaultList.toByteVector().toHex() << '\n';
-  auto defaultSplit = String(" a  b ").split();
-  std::cout << "default-split=" << defaultSplit.size() << ':' << defaultSplit.toString("|") << '\n';
   auto aligned = ByteVectorList::split(ByteVector("a::b:"), ByteVector(":"), 1);
   std::cout << "default-max=" << aligned.size() << ':' << aligned.toByteVector().toHex() << '\n';
   const char *texts[] = {"", "a", "abcab", "OggS*OggS*OggS", "....SggO."};

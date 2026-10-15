@@ -1,29 +1,26 @@
 package cz.skyba.taglib.parity;
 
+import cz.skyba.taglib.*;
 import cz.skyba.taglib.ogg.OggFile;
+import cz.skyba.taglib.ogg.XiphComment;
 import cz.skyba.taglib.ogg.flac.OggFlacFile;
 import cz.skyba.taglib.ogg.opus.OpusFile;
 import cz.skyba.taglib.ogg.speex.SpeexFile;
 import cz.skyba.taglib.ogg.vorbis.VorbisFile;
-import cz.skyba.taglib.parity.support.OpenOutcome;
-
-
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
 import cz.skyba.taglib.parity.support.FileRefAdapter;
-
-import cz.skyba.taglib.*;
-import cz.skyba.taglib.ogg.XiphComment;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.TreeMap;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defined ordinary codec-owner operations; faulting native inputs are excluded.
@@ -34,7 +31,7 @@ public class OggCodecTagOwnerProbe {
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF8));
+    return hex(ByteVector.fromText(s, UTF_8));
   }
 
   static String props(PropertyMap p) {

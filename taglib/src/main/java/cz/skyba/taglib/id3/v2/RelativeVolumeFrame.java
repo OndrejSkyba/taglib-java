@@ -3,9 +3,10 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing RVA2 channel volume adjustments and peaks.
@@ -252,7 +253,7 @@ public class RelativeVolumeFrame extends Frame {
   }
 
   private void parseRelativeVolume(ByteVector data) {
-    StringField field = stringField(data, TagString.Type.LATIN1, 0);
+    StringField field = stringField(data, ISO_8859_1, 0);
     identification = field.value();
     int pos = field.nextPosition();
     while (pos <= data.size() - 4) {
@@ -276,7 +277,7 @@ public class RelativeVolumeFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    var data = new ByteVectorOutput().append(Id3Text.encode(identification, TagString.Type.LATIN1)).append((byte) 0);
+    var data = new ByteVectorOutput().append(ByteVector.fromText(identification, ISO_8859_1)).append((byte) 0);
     for (var entry : channels.entrySet()) {
       Channel channel = entry.getValue();
       data.append((byte) entry.getKey().code()).append(ByteVector.fromShort(channel.index))

@@ -3,19 +3,16 @@ package cz.skyba.taglib.mp4;
 
 import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.TagLibException;
-import cz.skyba.taglib.internal.Binary;
-import cz.skyba.taglib.internal.ByteVectorOutput;
-import cz.skyba.taglib.internal.FileOwnerStream;
-import cz.skyba.taglib.internal.Mp4Save;
+import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
 import static cz.skyba.taglib.mp4.ChapterTables.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable QuickTime chapter list with explicit storage read, write and removal operations.
@@ -283,7 +280,7 @@ public class QtChapterList extends ChapterHolder {
         if (data.size() >= 2) {
           int n = data.toUnsignedShort();
           if (n > 0 && n <= data.size() - 2) {
-            title = new TagString(data.mid(2, n), TagString.Type.UTF8).toString();
+            title = TextBytes.decodeTerminated(data.data(), 2, n, UTF_8);
           }
         }
         double milliseconds = current * 1000.0 / scale + 0.5;
@@ -316,7 +313,7 @@ public class QtChapterList extends ChapterHolder {
   }
 
   private static ByteVector sample(String title) {
-    ByteVector bytes = new TagString(title).data(TagString.Type.UTF8);
+    ByteVector bytes = ByteVector.fromText(title, UTF_8);
     return ByteVector.fromShort((short) bytes.size()).append(bytes).append(atom("encd", new ByteVector(new byte[]{0, 0, 1, 0})));
   }
 

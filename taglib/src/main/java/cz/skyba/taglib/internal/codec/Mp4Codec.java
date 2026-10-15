@@ -7,7 +7,6 @@ import cz.skyba.taglib.internal.id3.Id3v1;
 import cz.skyba.taglib.mp4.Atoms;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +16,8 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static cz.skyba.taglib.internal.Binary.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * ISO BMFF/iTunes metadata. Media payloads are streamed, never loaded into the metadata tree.
@@ -989,7 +990,7 @@ public final class Mp4Codec implements Codec {
       return new Details(new AudioProperties(length, 0, 0, 0, 0, false), 0, "", false);
     }
     data = propertyAtom(file, body, stsd);
-    String codecId = data.size() >= 24 ? new TagString(data.mid(20, 4)).toString() : "";
+    String codecId = data.size() >= 24 ? TextBytes.decodeTerminated(data.data(), 20, 4, ISO_8859_1) : "";
     boolean lossless = data.size() >= 50 && (data.containsAt(new ByteVector("alac"), 20) || data.containsAt(
       new ByteVector("fLaC"), 20));
     boolean fallback = false;
@@ -1454,10 +1455,8 @@ public final class Mp4Codec implements Codec {
           return item; // List<ByteVector> values retain binary bytes and type.
         }
         if (type == 1 || type == 0 && (name.equals("purl") || name.equals("egid"))) {
-          byte[] value = Arrays.copyOfRange(child.leafData(), 8, child.leafData().length);
-          values.add(
-            new TagString(new ByteVector(value), TagString.Type.UTF8)
-              .toString());
+          byte[] value = child.leafData();
+          values.add(TextBytes.decodeTerminated(value, 8, value.length - 8, UTF_8));
         }
       }
     }
@@ -1809,8 +1808,8 @@ public final class Mp4Codec implements Codec {
           : LONG_NAMES.contains(name) ? 8 : 2;
       long n =
         LONG_NAMES.contains(name)
-          ? new TagString(first).toLong()
-          : new TagString(first).toInt();
+          ? TextNumbers.parseLong(first, 10)
+          : TextNumbers.parseInt(first);
       if (BOOL_NAMES.contains(name)) {
         n = n == 0 ? 0 : 1;
       }
@@ -1832,7 +1831,7 @@ public final class Mp4Codec implements Codec {
   }
 
   private static int number(String s) {
-    return new TagString(s).toInt();
+    return TextNumbers.parseInt(s);
   }
 
   private static byte[] data(int type, byte[] data) throws IOException {

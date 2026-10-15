@@ -6,7 +6,6 @@ import cz.skyba.taglib.UpstreamAudioFixtures;
 import cz.skyba.taglib.mpeg.MpegFile;
 import cz.skyba.taglib.mpeg.MpegSaveOptions;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,6 +16,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -56,13 +56,13 @@ class Id3TagVersionsAndTypedFrameValuesTest {
   }
 
   static TextIdentificationFrame text(String id, String value) {
-    var frame = new TextIdentificationFrame(b(id), TagString.Type.LATIN1);
+    var frame = new TextIdentificationFrame(b(id), ISO_8859_1);
     frame.setText(value);
     return frame;
   }
 
   static TextIdentificationFrame text(String id, List<String> values) {
-    var frame = new TextIdentificationFrame(b(id), TagString.Type.LATIN1);
+    var frame = new TextIdentificationFrame(b(id), ISO_8859_1);
     frame.setText(values);
     return frame;
   }
@@ -73,7 +73,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
     }
 
     String stringField(ByteVector data) {
-      return readStringField(data, TagString.Type.LATIN1);
+      return readStringField(data, ISO_8859_1);
     }
 
     @Override
@@ -109,7 +109,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
 
   @Test
   void testDowngradeUTF8ForID3v23_1() throws Exception {
-    var frame = new TextIdentificationFrame(b("TPE1"), TagString.Type.UTF8);
+    var frame = new TextIdentificationFrame(b("TPE1"), UTF_8);
     frame.setText(List.of("Foo"));
     try (var file = new MpegFile(copy("xing.mp3"))) {
       file.getOrCreateId3v2Tag().addFrame(frame);
@@ -119,13 +119,13 @@ class Id3TagVersionsAndTypedFrameValuesTest {
       assertEquals(19, data.size());
       var reread = new TextIdentificationFrame(data);
       assertEquals(List.of("Foo"), reread.fieldList());
-      assertEquals(TagString.Type.UTF16, reread.textEncoding());
+      assertEquals(UTF_16, reread.textEncoding());
     }
   }
 
   @Test
   void testDowngradeUTF8ForID3v23_2() throws Exception {
-    var frame = new UnsynchronizedLyricsFrame(TagString.Type.UTF8);
+    var frame = new UnsynchronizedLyricsFrame(UTF_8);
     frame.setText("Foo");
     try (var file = new MpegFile(copy("xing.mp3"))) {
       file.getOrCreateId3v2Tag().addFrame(frame);
@@ -135,13 +135,13 @@ class Id3TagVersionsAndTypedFrameValuesTest {
       assertEquals(26, data.size());
       var reread = new UnsynchronizedLyricsFrame(data);
       assertEquals("Foo", reread.text());
-      assertEquals(TagString.Type.UTF16, reread.textEncoding());
+      assertEquals(UTF_16, reread.textEncoding());
     }
   }
 
   @Test
   void testUTF16BEDelimiter() {
-    var frame = new TextIdentificationFrame(b("TPE1"), TagString.Type.UTF16BE);
+    var frame = new TextIdentificationFrame(b("TPE1"), UTF_16BE);
     frame.setText(List.of("Foo", "Bar"));
     var data = frame.render();
     assertEquals(25, data.size());
@@ -152,7 +152,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
 
   @Test
   void testUTF16Delimiter() {
-    var frame = new TextIdentificationFrame(b("TPE1"), TagString.Type.UTF16);
+    var frame = new TextIdentificationFrame(b("TPE1"), UTF_16);
     frame.setText(List.of("Foo", "Bar"));
     var data = frame.render();
     assertEquals(29, data.size());
@@ -222,7 +222,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
     var encoding = factory.defaultTextEncoding();
     Path path = copy("xing.mp3");
     try {
-      factory.setDefaultTextEncoding(TagString.Type.UTF16);
+      factory.setDefaultTextEncoding(UTF_16);
       try (var file = new MpegFile(path)) {
         file.strip();
         file.tag().setComment("Test comment!");
@@ -285,7 +285,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
       tag.addFrame(text("TIPL", List.of("Producer", "Artist 3", "Engineer", "Artist 4")));
       tag.addFrame(text("TCON", List.of("51", "Noise", "Power Noise")));
       for (String id : List.of("TDRL", "TDTG", "TMOO", "TPRO", "TSOA", "TSOT", "TSST", "TSOP"))
-        tag.addFrame(new TextIdentificationFrame(b(id), TagString.Type.LATIN1));
+        tag.addFrame(new TextIdentificationFrame(b(id), ISO_8859_1));
       file.save(new MpegSaveOptions(Set.of(MpegFile.TagType.values()), MpegFile.StripTags.STRIP_OTHERS, Tag.Version.V3, MpegFile.DuplicateTags.DUPLICATE));
     }
     try (var file = new MpegFile(path)) {
@@ -505,7 +505,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
     // Native suite's earlier encoding test enables the sticky LATIN1 override.
     // An isolated factory reproduces that setting without depending on JUnit order.
     var factory = new FrameFactory();
-    factory.setDefaultTextEncoding(TagString.Type.LATIN1);
+    factory.setDefaultTextEncoding(ISO_8859_1);
     try (var file = new MpegFile(path, ReadOptions.DEFAULT, factory)) {
       file.seek(file.id3v2Tag().header().completeTagSize());
       audio = file.readBlock(2089);
@@ -647,7 +647,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
   @Test
   void testParseCommentsFrame() {
     var frame = new CommentsFrame(hex("434f4d4d000000140000036465754465736372697074696f6e0054657874"));
-    assertEquals(TagString.Type.UTF8, frame.textEncoding());
+    assertEquals(UTF_8, frame.textEncoding());
     assertEquals(b("deu"), frame.language());
     assertEquals("Description", frame.description());
     assertEquals("Text", frame.text());
@@ -656,7 +656,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
   @Test
   void testRenderCommentsFrame() {
     var frame = new CommentsFrame();
-    frame.setTextEncoding(TagString.Type.UTF16);
+    frame.setTextEncoding(UTF_16);
     frame.setLanguage(b("eng"));
     frame.setDescription("Description");
     frame.setText("Text");

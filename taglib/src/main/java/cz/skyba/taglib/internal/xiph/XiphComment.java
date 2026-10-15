@@ -6,11 +6,12 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.Binary;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.internal.TextBytes;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Xiph comments, including the FLAC picture representation used by Vorbis and Opus.
@@ -211,11 +212,11 @@ public record XiphComment(String vendor, PropertyMap properties, List<Picture> p
   }
 
   private static String utf8(byte[] data, int offset, int length) {
-    return TextBytes.terminated(data, offset, length, TagString.Type.UTF8);
+    return TextBytes.decodeTerminated(data, offset, length, UTF_8);
   }
 
   private static byte[] utf8(String value) {
-    return new TagString(value).data(TagString.Type.UTF8).toByteArray();
+    return TextBytes.encode(value, UTF_8);
   }
 
   private static void write32(ByteArrayOutputStream out, int value) {

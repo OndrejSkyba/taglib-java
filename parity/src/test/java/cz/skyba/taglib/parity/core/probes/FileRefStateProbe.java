@@ -1,10 +1,9 @@
 package cz.skyba.taglib.parity.core.probes;
 
-import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.nio.file.Files;
@@ -13,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 class FileRefStateProbe {
   static class Memory extends ByteVectorStream {
@@ -36,7 +37,7 @@ class FileRefStateProbe {
   }
 
   static String hex(String value) {
-    return new TagString(value).data(TagString.Type.UTF8).toHex().toString();
+    return ByteVector.fromText(value, UTF_8).toHex().toString();
   }
 
   static void dump(String label, FileRefAdapter file) {

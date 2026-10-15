@@ -6,7 +6,6 @@ import cz.skyba.taglib.id3.v2.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -16,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DsdiffFileTest {
@@ -333,11 +333,11 @@ class DsdiffFileTest {
   void factoryRemainsAttachedToReplacementModernChild() throws IOException {
     var c = new FrameFactory() {
     };
-    c.setDefaultTextEncoding(TagString.Type.UTF8);
+    c.setDefaultTextEncoding(UTF_8);
     try (var f = new DsdiffFile(new ByteVectorStream(audio()), ReadOptions.DEFAULT, c)) {
       f.strip(Set.of(DsdiffFile.TagType.ID3V2));
       f.id3v2Tag().setTitle("factory");
-      assertEquals(TagString.Type.UTF8, ((TextIdentificationFrame) f.id3v2Tag().frameList().getFirst()).textEncoding());
+      assertEquals(UTF_8, ((TextIdentificationFrame) f.id3v2Tag().frameList().getFirst()).textEncoding());
     }
   }
 

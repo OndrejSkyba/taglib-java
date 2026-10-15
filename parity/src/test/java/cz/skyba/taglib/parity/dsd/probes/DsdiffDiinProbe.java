@@ -4,7 +4,7 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.TagUnion;
 import cz.skyba.taglib.dsdiff.diin.Tag;
-import cz.skyba.taglib.toolkit.TagString;
+import cz.skyba.taglib.toolkit.ByteVector;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,10 +12,12 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+
 class DsdiffDiinProbe {
   static String hex(String value) {
     return HexFormat.of()
-      .formatHex(new TagString(value).data(TagString.Type.UTF16BE).toByteArray());
+      .formatHex(ByteVector.fromText(value, UTF_16BE).toByteArray());
   }
 
   static String text(String raw) {

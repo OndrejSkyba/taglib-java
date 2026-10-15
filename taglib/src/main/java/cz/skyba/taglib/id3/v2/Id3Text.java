@@ -4,12 +4,14 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.Ascii;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.*;
+
 /**
- * Shared native decoding; the public Tag facade will own handler registration.
+ * ID3 text encoding bytes, field conversion and Latin-1 handler registration.
  */
 final class Id3Text {
   private static final Latin1StringHandler DEFAULT = new Latin1StringHandler();
@@ -26,27 +28,38 @@ final class Id3Text {
     handler = value == null ? DEFAULT : value;
   }
 
-  static TagString.Type encoding(byte value) {
+  static Charset encoding(byte value) {
     return switch (value & 255) {
-      case 1 -> TagString.Type.UTF16;
-      case 2 -> TagString.Type.UTF16BE;
-      case 3 -> TagString.Type.UTF8;
-      case 4 -> TagString.Type.UTF16LE;
-      default -> TagString.Type.LATIN1;
+      case 1 -> UTF_16;
+      case 2 -> UTF_16BE;
+      case 3 -> UTF_8;
+      case 4 -> UTF_16LE;
+      default -> ISO_8859_1;
     };
   }
 
-  static String decode(ByteVector data, TagString.Type type) {
-    return type == TagString.Type.LATIN1 ? Objects.requireNonNull(handler.parse(new ByteVector(data)))
-      : new TagString(data, type).toString();
+  static byte encodingByte(Charset charset) {
+    Objects.requireNonNull(charset);
+    if (ISO_8859_1.equals(charset)) return 0;
+    if (UTF_16.equals(charset)) return 1;
+    if (UTF_16BE.equals(charset)) return 2;
+    if (UTF_8.equals(charset)) return 3;
+    if (UTF_16LE.equals(charset)) return 4;
+    throw new IllegalArgumentException("Unsupported ID3 text charset: " + charset);
+  }
+
+  static Charset requireEncoding(Charset charset) {
+    encodingByte(charset);
+    return charset;
+  }
+
+  static String decode(ByteVector data, Charset charset) {
+    return ISO_8859_1.equals(charset) ? Objects.requireNonNull(handler.parse(new ByteVector(data)))
+      : data.decodeTerminatedText(charset);
   }
 
   static String fixedLatin1(ByteVector data) {
-    return new TagString(data).toString();
-  }
-
-  static ByteVector encode(String text, TagString.Type type) {
-    return new TagString(text).data(type);
+    return data.decodeTerminatedText(ISO_8859_1);
   }
 
   static String upper(String text) {

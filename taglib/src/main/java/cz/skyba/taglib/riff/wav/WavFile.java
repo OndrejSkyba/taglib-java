@@ -6,12 +6,17 @@ import cz.skyba.taglib.id3.v2.FrameFactory;
 import cz.skyba.taglib.internal.FailureSupport;
 import cz.skyba.taglib.internal.TagUtils;
 import cz.skyba.taglib.riff.RiffFile;
-import cz.skyba.taglib.toolkit.*;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.Debug;
+import cz.skyba.taglib.toolkit.FileStream;
+import cz.skyba.taglib.toolkit.IOStream;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * An editable WAV file with live metadata and format-specific audio properties.
@@ -162,7 +167,8 @@ public class WavFile extends RiffFile {
           }
         }
       } else if (name.equals(new ByteVector("iXML"))) {
-        xml = new TagString(chunkData(i), TagString.Type.UTF8).toString();
+        var data = chunkData(i);
+        xml = data.decodeTerminatedText(UTF_8);
         hasXml = true;
       } else if (name.equals(new ByteVector("bext"))) {
         bext = chunkData(i);
@@ -335,7 +341,7 @@ public class WavFile extends RiffFile {
   }
 
   private static void propertiesDebug(String message) {
-    Debug.debug(new TagString("RIFF::WAV::Properties::read() - " + message));
+    Debug.debug("RIFF::WAV::Properties::read() - " + message);
   }
 
   private void removeTagChunks(int mask) {
@@ -424,7 +430,7 @@ public class WavFile extends RiffFile {
     }
     if (!xml.isEmpty()) {
       removeChunk(new ByteVector("iXML"));
-      setChunkData(new ByteVector("iXML"), new TagString(xml).data(TagString.Type.UTF8));
+      setChunkData(new ByteVector("iXML"), ByteVector.fromText(xml, UTF_8));
       hasXml = true;
     } else if (hasXml) {
       removeChunk(new ByteVector("iXML"));
@@ -449,6 +455,6 @@ public class WavFile extends RiffFile {
   }
 
   private static void debug(String value) {
-    Debug.debug(new TagString("RIFF::WAV::File::" + value));
+    Debug.debug("RIFF::WAV::File::" + value);
   }
 }

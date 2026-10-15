@@ -4,11 +4,13 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.internal.PictureTypes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing APIC MIME type, picture role, description and image bytes.
@@ -31,7 +33,7 @@ public class AttachedPictureFrame extends Frame {
     }
   }
 
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private String mimeType = "", description = "";
   private Type type = Type.Other;
   private ByteVector picture = new ByteVector();
@@ -100,12 +102,12 @@ public class AttachedPictureFrame extends Frame {
     return typeFromUInt(value & 255);
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   public final String mimeType() {
@@ -161,15 +163,15 @@ public class AttachedPictureFrame extends Frame {
 
   private void parsePicture(ByteVector data) {
     if (data.size() < 5) {
-      Debug.debug(new TagString("A picture frame must contain at least 5 bytes."));
+      Debug.debug("A picture frame must contain at least 5 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
-    StringField field = stringField(data, TagString.Type.LATIN1, 1);
+    StringField field = stringField(data, ISO_8859_1, 1);
     mimeType = field.value();
     int position = field.nextPosition();
     if (position + 1 >= data.size()) {
-      Debug.debug(new TagString("Truncated picture frame."));
+      Debug.debug("Truncated picture frame.");
       return;
     }
     type = typeFromByte(data.at(position++));
@@ -182,7 +184,7 @@ public class AttachedPictureFrame extends Frame {
   // restricted to that package-owned implementation, without exposing mutable field values.
   final void parsePictureV22(ByteVector data) {
     if (data.size() < 5) {
-      Debug.debug(new TagString("A picture frame must contain at least 5 bytes."));
+      Debug.debug("A picture frame must contain at least 5 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
@@ -191,7 +193,7 @@ public class AttachedPictureFrame extends Frame {
       case "JPG" -> "image/jpeg";
       case "PNG" -> "image/png";
       default -> {
-        Debug.debug(new TagString("probably unsupported image type"));
+        Debug.debug("probably unsupported image type");
         yield "image/" + format;
       }
     };
@@ -206,9 +208,9 @@ public class AttachedPictureFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type rendered = checkTextEncoding(List.of(description), encoding);
-    return new ByteVector((byte) rendered.ordinal()).append(Id3Text.encode(mimeType, TagString.Type.LATIN1))
-      .append(textDelimiter(TagString.Type.LATIN1)).append((byte) type.ordinal())
-      .append(Id3Text.encode(description, rendered)).append(textDelimiter(rendered)).append(picture);
+    Charset rendered = checkTextEncoding(List.of(description), encoding);
+    return new ByteVector(Id3Text.encodingByte(rendered)).append(ByteVector.fromText(mimeType, ISO_8859_1))
+      .append(textDelimiter(ISO_8859_1)).append((byte) type.ordinal())
+      .append(ByteVector.fromText(description, rendered)).append(textDelimiter(rendered)).append(picture);
   }
 }

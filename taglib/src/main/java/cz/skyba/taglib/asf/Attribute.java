@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.asf;
 
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 /**
  * A mutable typed ASF attribute with stream and language scope.
@@ -80,15 +82,6 @@ public final class Attribute {
   public Attribute(String value) {
     this();
     state.text = Objects.requireNonNull(value);
-  }
-
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
-  public Attribute(TagString value) {
-    this(value.toString());
   }
 
   /**
@@ -294,15 +287,14 @@ public final class Attribute {
       parsedName = readText(file, nameLength);
     }
     if (kind != 2 && size > 65535) {
-      Debug.debug(new TagString("ASF::Attribute::parse() -- Value larger than 64kB"));
+      Debug.debug("ASF::Attribute::parse() -- Value larger than 64kB");
     }
     switch (dataType) {
       case WordType, BoolType, DWordType, QWordType -> state.number = readNumeric(file, kind, dataType);
       case UnicodeType -> state.text = readText(file, size);
       case BytesType, GuidType -> state.bytes = new ByteVector(file.readBlock(size));
       default -> {
-        Debug.debug(
-          new TagString(String.format(Locale.ROOT, "ASF::Attribute::parse() -- Unknown data type 0x%x", dataType)));
+        Debug.debug(String.format(Locale.ROOT, "ASF::Attribute::parse() -- Unknown data type 0x%x", dataType));
         return "";
       }
     }
@@ -346,7 +338,7 @@ public final class Attribute {
     while (size >= 2 && data.at(size - 1) == 0 && data.at(size - 2) == 0) {
       size -= 2;
     }
-    return new TagString(data.mid(0, size), TagString.Type.UTF16LE).toString();
+    return TextBytes.decodeTerminated(data.data(), 0, size, UTF_16LE);
   }
 
   /**

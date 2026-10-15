@@ -1,7 +1,11 @@
 package cz.skyba.taglib;
 
 import cz.skyba.taglib.id3.v2.SynchData;
-import cz.skyba.taglib.toolkit.*;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.ByteVectorStream;
+import cz.skyba.taglib.toolkit.FileStream;
+import cz.skyba.taglib.toolkit.IOStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FileBaseDefaultsAndOwnershipTest {
@@ -173,8 +178,8 @@ class FileBaseDefaultsAndOwnershipTest {
     assertTrue(new ByteVector("blah blah").containsAt(new ByteVector("blah"), 6, 1));
     assertEquals(1, new ByteVector(".OggS....").rfind((byte) 'O', 4));
     assertEquals(0x010203, new ByteVector(new byte[]{1, 2, 3}).toUnsignedInt(0, 3));
-    assertArrayEquals(new byte[]{(byte) 0xe9}, new TagString("é").to8Bit());
-    assertEquals("é", TagString.from8Bit(new byte[]{(byte) 0xe9}).toString());
+    assertArrayEquals(new byte[]{(byte) 0xe9}, TextBytes.encode("é", ISO_8859_1));
+    assertEquals("é", TextBytes.decode(new byte[]{(byte) 0xe9}, ISO_8859_1));
     var stream = new ByteVectorStream(new ByteVector("abc"));
     stream.removeBlock(1, 0);
     assertEquals("abc", stream.data().toString());

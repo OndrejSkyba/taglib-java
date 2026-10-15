@@ -1,7 +1,7 @@
 package cz.skyba.taglib.id3.v2;
 
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LanguageTextCallbackTest {
@@ -36,12 +37,12 @@ class LanguageTextCallbackTest {
   void handlerSeesLanguageThenDescriptionBeforeSecondDecode() {
     for (Frame frame : List.of(new CommentsFrame(), new UnsynchronizedLyricsFrame())) {
       frame.setText("old-text");
-      String id = new TagString(frame.frameID()).toString();
+      String id = TextBytes.decodeTerminated(frame.frameID().data(), ISO_8859_1);
       var calls = new ArrayList<String>();
       Id3Text.setHandler(new Latin1StringHandler() {
         public String parse(ByteVector data) {
           calls.add(language(frame) + ":" + description(frame) + ":" + frame);
-          return "decoded:" + new TagString(data);
+          return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
         }
       });
       frame.setData(wire(id, "00656e67646573630074657874"));
@@ -55,7 +56,7 @@ class LanguageTextCallbackTest {
   void secondDecodeFailureRetainsCompletedDescriptionAndOldText() {
     for (Frame frame : List.of(new CommentsFrame(), new UnsynchronizedLyricsFrame())) {
       frame.setText("old-text");
-      String id = new TagString(frame.frameID()).toString();
+      String id = TextBytes.decodeTerminated(frame.frameID().data(), ISO_8859_1);
       var failure = new IllegalArgumentException("decode failed");
       Id3Text.setHandler(new Latin1StringHandler() {
         private int calls;

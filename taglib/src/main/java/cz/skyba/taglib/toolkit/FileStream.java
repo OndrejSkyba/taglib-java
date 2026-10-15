@@ -126,7 +126,7 @@ public class FileStream extends IOStream {
   }
 
   private static void message(String text) {
-    Debug.debug(new TagString(text));
+    Debug.debug(text);
   }
 
   @Override

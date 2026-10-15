@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.toolkit;
 
+import cz.skyba.taglib.internal.TextBytes;
+
 import java.util.Locale;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Shared diagnostic mode and listener configuration.
@@ -20,16 +24,11 @@ public final class Debug {
     TRACE_IN_RELEASE
   }
 
-  private static final DebugListener DEFAULT_LISTENER =
-    new DebugListener() {
-      @Override
-      public void printMessage(TagString message) {
-        // Native POSIX std::cerr << String writes UTF-8, including embedded NULs.
-        byte[] bytes = message.to8Bit(true);
-        System.err.write(bytes, 0, bytes.length);
-        System.err.flush();
-      }
-    };
+  private static final DebugListener DEFAULT_LISTENER = message -> {
+    byte[] bytes = TextBytes.encode(message, UTF_8);
+    System.err.write(bytes, 0, bytes.length);
+    System.err.flush();
+  };
 
   private static volatile DebugListener listener = DEFAULT_LISTENER;
   private static volatile Mode mode = Mode.RELEASE;
@@ -64,17 +63,15 @@ public final class Debug {
    * Dispatches a diagnostic message when output is enabled. Text ends at its first NUL
    * and is sent with a {@code TagLib: } prefix and a trailing newline. Listener failures propagate.
    *
-   * @param message the text to dispatch
+   * @param text the text to dispatch
    */
-  public static void debug(TagString message) {
+  public static void debug(String text) {
     if (mode == Mode.RELEASE) {
       return;
     }
-    String text = message.toString();
-    // The native second operator+ detaches a shared String through a wide C-string,
-    // truncating at its first NUL before the newline is appended.
+    // Native diagnostics truncate at NUL before the newline is appended.
     int nul = text.indexOf('\0');
-    listener.printMessage(new TagString("TagLib: " + (nul < 0 ? text : text.substring(0, nul)) + "\n"));
+    listener.printMessage("TagLib: " + (nul < 0 ? text : text.substring(0, nul)) + "\n");
   }
 
   /**
@@ -96,7 +93,7 @@ public final class Debug {
       String text = String.format(Locale.ROOT, "*** [%d] - char '%c' - int %d, 0x%02x, 0b%s\n",
         i, (char) (b & 255), (int) b, (int) b, bits);
       int nul = text.indexOf('\0');
-      listener.printMessage(new TagString(nul < 0 ? text : text.substring(0, nul)));
+      listener.printMessage(nul < 0 ? text : text.substring(0, nul));
     }
   }
 }

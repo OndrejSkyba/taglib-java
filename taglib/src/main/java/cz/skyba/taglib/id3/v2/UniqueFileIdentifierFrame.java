@@ -3,9 +3,10 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing UFID owner and binary identifier.
@@ -109,7 +110,7 @@ public class UniqueFileIdentifierFrame extends Frame {
     if (data.isEmpty()) {
       return;
     }
-    StringField field = stringField(data, TagString.Type.LATIN1, 0);
+    StringField field = stringField(data, ISO_8859_1, 0);
     owner = field.value();
     identifier = data.mid(field.nextPosition());
   }
@@ -119,6 +120,6 @@ public class UniqueFileIdentifierFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    return Id3Text.encode(owner, TagString.Type.LATIN1).append((byte) 0).append(identifier);
+    return ByteVector.fromText(owner, ISO_8859_1).append((byte) 0).append(identifier);
   }
 }

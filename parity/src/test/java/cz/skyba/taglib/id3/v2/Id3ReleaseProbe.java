@@ -1,22 +1,18 @@
 package cz.skyba.taglib.id3.v2;
 
-
 import cz.skyba.taglib.FileBase;
+import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.dsdiff.DsdiffFile;
 import cz.skyba.taglib.dsf.DsfFile;
 import cz.skyba.taglib.flac.FlacFile;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
-import cz.skyba.taglib.PropertyMap;
-import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.mpeg.MpegFile;
+import cz.skyba.taglib.parity.TextCharsets;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.riff.aiff.AiffFile;
 import cz.skyba.taglib.riff.wav.WavFile;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.trueaudio.TrueAudioFile;
 
 import java.nio.file.Files;
@@ -25,6 +21,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import static cz.skyba.taglib.id3.v2.Id3OwnerProbe.*;
+import static java.nio.charset.StandardCharsets.UTF_16;
 
 /**
  * Complete real-file state through ordinary encodings/handlers and versioned saves.
@@ -135,7 +132,7 @@ public class Id3ReleaseProbe {
       List.of("mpeg.mp3", "flac.flac", "wav.wav", "aiff.aiff", "dsf.dsf", "tta.tta", "dff.dff"))
       for (int decode : new int[]{0, 1}) {
         var factory = new Factory();
-        factory.setDefaultTextEncoding(TagString.Type.UTF16);
+        factory.setDefaultTextEncoding(UTF_16);
         var handler = new Utf8();
         Tag.setLatin1StringHandler(decode == 1 ? handler : null);
         String key = "parent/" + name + "/" + decode;
@@ -205,7 +202,7 @@ public class Id3ReleaseProbe {
         for (int decode : new int[]{0, 1})
           for (boolean path : new boolean[]{false, true}) {
             var factory = new Factory();
-            if (mode >= 0) factory.setDefaultTextEncoding(TagString.Type.values()[mode]);
+            if (mode >= 0) factory.setDefaultTextEncoding(TextCharsets.ALL[mode]);
             var handler = new Utf8();
             Tag.setLatin1StringHandler(decode == 1 ? handler : null);
             String key = name + "/" + mode + "/" + decode + "/" + (path ? "path" : "borrowed");

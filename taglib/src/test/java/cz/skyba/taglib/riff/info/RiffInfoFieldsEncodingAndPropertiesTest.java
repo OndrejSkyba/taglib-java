@@ -1,7 +1,6 @@
 package cz.skyba.taglib.riff.info;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RiffInfoFieldsEncodingAndPropertiesTest {
@@ -33,7 +33,7 @@ class RiffInfoFieldsEncodingAndPropertiesTest {
   }
 
   static ByteVector field(String id, String value) {
-    return new ByteVector(InfoTagTest.field(id, new TagString(value).data(TagString.Type.UTF8).append((byte) 0).data()));
+    return new ByteVector(InfoTagTest.field(id, ByteVector.fromText(value, UTF_8).append((byte) 0).data()));
   }
 
   @Test

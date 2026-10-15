@@ -9,7 +9,6 @@ import cz.skyba.taglib.internal.id3.Id3v2;
 import cz.skyba.taglib.mpeg.MpegFile;
 import cz.skyba.taglib.mpeg.XingHeader;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -345,7 +344,7 @@ public final class MpegCodec implements Codec {
   }
 
   private static long strictNumber(String value) {
-    var converted = new TagString(value).extractInt();
+    var converted = TextNumbers.extractInt(value);
     return converted.ok() ? Integer.toUnsignedLong(converted.value()) : 0;
   }
 

@@ -1,20 +1,17 @@
 package cz.skyba.taglib.parity.dsd.probes;
 
-import cz.skyba.taglib.parity.support.OpenOutcome;
-import cz.skyba.taglib.parity.support.SaveOutcome;
-
-import cz.skyba.taglib.ReadOptions;
-
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
 import cz.skyba.taglib.dsf.DsfFile;
 import cz.skyba.taglib.id3.v2.*;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
+import cz.skyba.taglib.parity.support.OpenOutcome;
+import cz.skyba.taglib.parity.support.SaveOutcome;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +19,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 // Independent Java side of the pinned DSF File/shared ID3 owner protocol.
 
@@ -31,7 +31,7 @@ public class DsfFileProbe {
   }
 
   static String hex(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static String list(List<String> v) {
@@ -55,7 +55,7 @@ public class DsfFileProbe {
 
     Factory(int m) {
       mode = m;
-      setDefaultTextEncoding(TagString.Type.UTF8);
+      setDefaultTextEncoding(UTF_8);
     }
 
     public Frame createFrame(ByteVector d, Header h) {
@@ -81,7 +81,7 @@ public class DsfFileProbe {
 
     public String parse(ByteVector d) {
       calls++;
-      return new TagString(d, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(d.data(), UTF_8);
     }
   }
 

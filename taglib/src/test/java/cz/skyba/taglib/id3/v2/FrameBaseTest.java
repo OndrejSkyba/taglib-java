@@ -3,15 +3,45 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.Charset;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FrameBaseTest {
+  @Test
+  void javaCharsetsRetainId3EncodingBytes() {
+    var charsets = List.of(ISO_8859_1, UTF_16, UTF_16BE, UTF_8, UTF_16LE);
+    for (int id = 0; id < charsets.size(); id++) {
+      var charset = charsets.get(id);
+      var frame = new TextIdentificationFrame(new ByteVector("TIT2"), charset);
+      frame.setText("A");
+      var bytes = frame.render();
+      assertEquals((byte) id, bytes.at(10));
+      var parsed = new TextIdentificationFrame(bytes);
+      assertEquals(charset, parsed.textEncoding());
+      assertEquals("A", parsed.toString());
+    }
+  }
+
+  @Test
+  void unsupportedCharsetsAreRejectedBeforeChangingFrameConfiguration() {
+    var unsupported = java.nio.charset.StandardCharsets.US_ASCII;
+    assertThrows(IllegalArgumentException.class, () -> new CommentsFrame(unsupported));
+    assertThrows(IllegalArgumentException.class, () -> Frame.textDelimiter(unsupported));
+    var frame = new CommentsFrame(UTF_8);
+    assertThrows(IllegalArgumentException.class, () -> frame.setTextEncoding(unsupported));
+    assertEquals(UTF_8, frame.textEncoding());
+    var factory = new FrameFactory();
+    assertThrows(IllegalArgumentException.class, () -> factory.setDefaultTextEncoding(unsupported));
+    assertFalse(factory.isUsingDefaultTextEncoding());
+    assertEquals(ISO_8859_1, factory.defaultTextEncoding());
+  }
+
   static ByteVector bytes(String hex) {
     return new ByteVector(HexFormat.of().parseHex(hex));
   }
@@ -52,11 +82,11 @@ class FrameBaseTest {
       setHeader(value);
     }
 
-    String string(ByteVector data, TagString.Type type, int[] pos) {
+    String string(ByteVector data, Charset type, int[] pos) {
       return readStringField(data, type, pos);
     }
 
-    TagString.Type encoding(List<String> fields, TagString.Type type) {
+    Charset encoding(List<String> fields, Charset type) {
       return checkTextEncoding(fields, type);
     }
 
@@ -269,35 +299,35 @@ class FrameBaseTest {
   void stringFieldRequiresDelimiterAndRetainsPositionWhenAbsent() {
     var raw = new Raw(new ByteVector("X001"), 4);
     int[] pos = {0};
-    assertEquals("a", raw.string(bytes("61006200"), TagString.Type.LATIN1, pos));
+    assertEquals("a", raw.string(bytes("61006200"), ISO_8859_1, pos));
     assertEquals(2, pos[0]);
-    assertEquals("b", raw.string(bytes("61006200"), TagString.Type.LATIN1, pos));
+    assertEquals("b", raw.string(bytes("61006200"), ISO_8859_1, pos));
     assertEquals(4, pos[0]);
     pos[0] = 1;
-    assertEquals("", raw.string(new ByteVector("abc"), TagString.Type.LATIN1, pos));
+    assertEquals("", raw.string(new ByteVector("abc"), ISO_8859_1, pos));
     assertEquals(1, pos[0]);
-    assertThrows(IllegalArgumentException.class, () -> raw.string(new ByteVector(), TagString.Type.UTF8, new int[0]));
+    assertThrows(IllegalArgumentException.class, () -> raw.string(new ByteVector(), UTF_8, new int[0]));
   }
 
   @Test
   void utf16DelimiterSearchAlignsFromRequestedPosition() {
     var raw = new Raw(new ByteVector("X001"), 4);
     int[] pos = {1};
-    assertEquals("A", raw.string(bytes("99fffe41000000"), TagString.Type.UTF16, pos));
+    assertEquals("A", raw.string(bytes("99fffe41000000"), UTF_16, pos));
     assertEquals(7, pos[0]);
-    assertEquals(bytes("0000"), Frame.textDelimiter(TagString.Type.UTF16LE));
+    assertEquals(bytes("0000"), Frame.textDelimiter(UTF_16LE));
   }
 
   @Test
   void encodingFallbackDependsOnHeaderVersionAndAllFields() {
     var raw = new Raw(new ByteVector("X001"), 4);
-    assertEquals(TagString.Type.UTF8, raw.encoding(List.of("latin", "Ž"), TagString.Type.LATIN1));
-    assertEquals(TagString.Type.LATIN1, raw.encoding(List.of("café"), TagString.Type.LATIN1));
+    assertEquals(UTF_8, raw.encoding(List.of("latin", "Ž"), ISO_8859_1));
+    assertEquals(ISO_8859_1, raw.encoding(List.of("café"), ISO_8859_1));
     raw.header().setVersion(3);
-    assertEquals(TagString.Type.UTF16, raw.encoding(List.of("Ž"), TagString.Type.LATIN1));
-    assertEquals(TagString.Type.UTF16, raw.encoding(List.of(), TagString.Type.UTF8));
-    assertEquals(TagString.Type.UTF16, raw.encoding(List.of(), TagString.Type.UTF16BE));
-    assertEquals(TagString.Type.UTF16LE, raw.encoding(List.of(), TagString.Type.UTF16LE));
+    assertEquals(UTF_16, raw.encoding(List.of("Ž"), ISO_8859_1));
+    assertEquals(UTF_16, raw.encoding(List.of(), UTF_8));
+    assertEquals(UTF_16, raw.encoding(List.of(), UTF_16BE));
+    assertEquals(UTF_16LE, raw.encoding(List.of(), UTF_16LE));
   }
 
   @Test
@@ -382,7 +412,7 @@ class FrameBaseTest {
       }
 
       public void setText(String v) {
-        fields = new TagString(v).data(TagString.Type.UTF8);
+        fields = ByteVector.fromText(v, UTF_8);
       }
 
       public List<String> toStringList() {

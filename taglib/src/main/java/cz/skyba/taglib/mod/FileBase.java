@@ -3,13 +3,14 @@ package cz.skyba.taglib.mod;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Base for tracker format implementations with fixed-width binary stream helpers.
@@ -61,7 +62,7 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
     if (width > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("String width exceeds Java array range");
     }
-    writeBlock(new TagString(value).data(TagString.Type.LATIN1).resize((int) width, padding));
+    writeBlock(ByteVector.fromText(value, ISO_8859_1).resize((int) width, padding));
   }
 
   /**
@@ -141,7 +142,7 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
         bytes.data()[i] = ' ';
       }
     }
-    output.accept(new TagString(bytes).toString());
+    output.accept(bytes.decodeTerminatedText(ISO_8859_1));
     return true;
   }
 

@@ -7,9 +7,17 @@ import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.internal.Ascii;
 import cz.skyba.taglib.internal.ByteVectorOutput;
-import cz.skyba.taglib.toolkit.*;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.internal.TextNumbers;
+import cz.skyba.taglib.toolkit.ByteVector;
+import cz.skyba.taglib.toolkit.Debug;
+import cz.skyba.taglib.toolkit.MutablePropertyMap;
+import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable APE tag with copied item inputs and exports, a live footer and case-normalized keys.
@@ -80,15 +88,15 @@ public class Tag extends TagBase {
     if (key.length() < 2 || key.length() > 255) {
       return false;
     }
-    var encoded = new TagString(key).data(TagString.Type.UTF8);
+    byte[] encoded = TextBytes.encode(key, UTF_8);
     // Native validates converted bytes. A malformed UTF-16 key converts to an empty
-    // vector, which passes its byte validation even though the original key is nonempty.
+    // byte array, which passes its byte validation even though the original key is nonempty.
     for (byte b : encoded) {
       if ((b & 255) < 32 || (b & 255) > 126) {
         return false;
       }
     }
-    return !RESERVED_KEYS.contains(new TagString(encoded).upper().toString());
+    return !RESERVED_KEYS.contains(Ascii.upper(TextBytes.decodeTerminated(encoded, ISO_8859_1)));
   }
 
   public static ByteVector fileIdentifier() {
@@ -181,7 +189,7 @@ public class Tag extends TagBase {
     if (checkKey(key)) {
       items.put(upper(key), new Item(item));
     } else {
-      Debug.debug(new TagString("APE::Tag::setItem() - Couldn't set an item due to an invalid key."));
+      Debug.debug("APE::Tag::setItem() - Couldn't set an item due to an invalid key.");
     }
   }
 
@@ -239,7 +247,7 @@ public class Tag extends TagBase {
     var item = items.get(key);
     return item == null || item.isEmpty()
       ? 0
-      : Integer.toUnsignedLong(new TagString(item.toString()).toInt());
+      : Integer.toUnsignedLong(TextNumbers.parseInt(item.toString()));
   }
 
   @Override
@@ -411,7 +419,7 @@ public class Tag extends TagBase {
           ? -1
           : data.find((byte) 0);
       var description =
-        zero >= 0 ? new TagString(data.mid(0, zero), TagString.Type.UTF8).toString() : "";
+        zero >= 0 ? TextBytes.decodeTerminated(data.data(), 0, zero, UTF_8) : "";
       if (zero >= 0) {
         data = data.mid(zero + 1);
       }
@@ -437,8 +445,7 @@ public class Tag extends TagBase {
     for (var picture : values) {
       var description = picture.getOrDefault("description", EMPTY_VARIANT).toText();
       var data =
-        new TagString(description)
-          .data(TagString.Type.UTF8)
+        ByteVector.fromText(description, UTF_8)
           .append(new ByteVector(new byte[]{0}))
           .append(picture.getOrDefault("data", EMPTY_VARIANT).toByteVector());
       String type = picture.getOrDefault("pictureType", EMPTY_VARIANT).toText();
@@ -483,28 +490,28 @@ public class Tag extends TagBase {
     long position = 0;
     for (long i = 0; i < footer.itemCount() && position <= data.size() - 11L; i++) {
       if (i >= 50000) {
-        Debug.debug(new TagString("APE::Tag::parse() - Maximum item count exceeded. Stopped parsing."));
+        Debug.debug("APE::Tag::parse() - Maximum item count exceeded. Stopped parsing.");
         return;
       }
       int start = (int) position;
       int zero = data.find((byte) 0, start + 8);
       if (zero < 0) {
-        Debug.debug(new TagString("APE::Tag::parse() - Couldn't find a key/value separator. Stopped parsing."));
+        Debug.debug("APE::Tag::parse() - Couldn't find a key/value separator. Stopped parsing.");
         return;
       }
       int keyLength = zero - start - 8;
       long valueLength = data.toUnsignedInt(start, false);
       if (valueLength >= data.size() || position > data.size() - valueLength) {
-        Debug.debug(new TagString("APE::Tag::parse() - Invalid val length. Stopped parsing."));
+        Debug.debug("APE::Tag::parse() - Invalid val length. Stopped parsing.");
         return;
       }
-      String key = new TagString(data.mid(start + 8, keyLength)).toString();
+      String key = TextBytes.decodeTerminated(data.data(), start + 8, keyLength, ISO_8859_1);
       if (checkKey(key)) {
         var item = new Item();
         item.parse(data, start);
         items.put(upper(item.key()), item);
       } else {
-        Debug.debug(new TagString("APE::Tag::parse() - Skipped an item due to an invalid key."));
+        Debug.debug("APE::Tag::parse() - Skipped an item due to an invalid key.");
       }
       position += keyLength + valueLength + 9;
     }

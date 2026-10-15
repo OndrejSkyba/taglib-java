@@ -3,7 +3,6 @@ package cz.skyba.taglib;
 import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ParserOptimizationBehaviorTest {
@@ -25,12 +25,12 @@ class ParserOptimizationBehaviorTest {
         signedMax.add(BigInteger.ONE), unsignedMax, unsignedMax.add(BigInteger.ONE))) {
         for (boolean negative : List.of(false, true)) {
           String text = (negative ? "-" : "") + value.toString(base);
-          var unsigned = new TagString(text).extractUnsignedLong(base);
+          var unsigned = TextNumbers.extractUnsignedLong(text, base);
           boolean overflow = value.compareTo(unsignedMax) > 0;
           long bits = overflow ? -1L : value.longValue();
           assertEquals(negative && !overflow ? -bits : bits, unsigned.value(), text);
           assertEquals(!overflow, unsigned.ok(), text);
-          var signed = new TagString(text).extractLong(base);
+          var signed = TextNumbers.extractLong(text, base);
           BigInteger limit = negative ? signedMax.add(BigInteger.ONE) : signedMax;
           BigInteger magnitude = value.min(limit);
           assertEquals((negative ? magnitude.negate() : magnitude).longValue(), signed.value(), text);
@@ -38,24 +38,6 @@ class ParserOptimizationBehaviorTest {
         }
       }
     }
-  }
-
-  @Test
-  void copiedNulValuesRemainIndependentOnAppend() {
-    var original = new TagString("x\0y");
-    var copied = new TagString(original);
-    copied.append(new TagString("q"));
-    original.append(new TagString("r"));
-    assertEquals("x\0yq", copied.toString());
-    assertEquals("x\0yr", original.toString());
-    var simple = new TagString("plain");
-    var simpleCopy = new TagString(simple);
-    simple.append(new TagString("\0tail"));
-    var nulCopy = new TagString(simple);
-    simple.append(new TagString("!"));
-    assertEquals("plain\0tail!", simple.toString());
-    assertEquals("plain", simpleCopy.toString());
-    assertEquals("plain\0tail", nulCopy.toString());
   }
 
   @Test
@@ -74,9 +56,25 @@ class ParserOptimizationBehaviorTest {
 
   @Test
   void textRangesKeepOffsetsNulsAndMalformedInputRules() {
-    assertEquals("é", TextBytes.terminated(new byte[]{9, (byte) 0xc3, (byte) 0xa9, 0, 65, 9}, 1, 4, TagString.Type.UTF8));
-    assertEquals("A", TextBytes.terminated(new byte[]{9, (byte) 0xff, (byte) 0xfe, 65, 0, 0, 0, 9}, 1, 6, TagString.Type.UTF16));
-    assertEquals("", TextBytes.terminated(new byte[]{9, (byte) 0xe2, (byte) 0x82, 9}, 1, 2, TagString.Type.UTF8));
+    assertEquals("é", TextBytes.decodeTerminated(new byte[]{9, (byte) 0xc3, (byte) 0xa9, 0, 65, 9}, 1, 4, UTF_8));
+    assertEquals("A", TextBytes.decodeTerminated(new byte[]{9, (byte) 0xff, (byte) 0xfe, 65, 0, 0, 0, 9}, 1, 6, UTF_16));
+    assertEquals("", TextBytes.decodeTerminated(new byte[]{9, (byte) 0xe2, (byte) 0x82, 9}, 1, 2, UTF_8));
+    // Decode the whole field before applying NUL termination, including malformed suffixes.
+    assertEquals("", TextBytes.decodeTerminated(new byte[]{9, 'A', 0, (byte) 0xc0, 9}, 1, 3, UTF_8));
+    assertEquals("A", TextBytes.decodeTerminated(new byte[]{9, 'A', 0, (byte) 0xc0, 9}, 1, 2, UTF_8));
+    assertEquals("A", TextBytes.decodeTerminated(new byte[]{9, 0, 'A', 99, 9}, 1, 3, UTF_16BE));
+  }
+
+  @Test
+  void directTextEncodingPreservesCodeUnitsAndReturnsIndependentBytes() {
+    assertArrayEquals(new byte[]{65, 0, 0}, TextBytes.encode("A\0\u0100", ISO_8859_1));
+    assertArrayEquals(new byte[]{(byte) 255, (byte) 254, 65, 0, 0, 0}, TextBytes.encode("A\0", UTF_16));
+    assertArrayEquals(new byte[]{(byte) 0xd8, 0}, TextBytes.encode("\ud800", UTF_16BE));
+    assertArrayEquals(new byte[0], TextBytes.encode("A\ud800", UTF_8));
+    assertArrayEquals(new byte[]{65, 0, 66}, TextBytes.encode("A\0B", UTF_8));
+    byte[] first = TextBytes.encode("A", UTF_8);
+    first[0] = 0;
+    assertArrayEquals(new byte[]{65}, TextBytes.encode("A", UTF_8));
   }
 
   @Test

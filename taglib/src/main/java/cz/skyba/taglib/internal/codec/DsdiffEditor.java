@@ -5,13 +5,15 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.internal.Binary;
 import cz.skyba.taglib.internal.BinaryFile;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Constructor-owned root and child chunks, including upstream's physical update ordering.
@@ -172,7 +174,7 @@ final class DsdiffEditor {
     if (value.isEmpty()) {
       return new byte[0];
     }
-    byte[] raw = new TagString(value).data(TagString.Type.LATIN1).toByteArray();
+    byte[] raw = TextBytes.encode(value, ISO_8859_1);
     int count = 0;
     while (count < raw.length && raw[count] != 0) {
       count++;

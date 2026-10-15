@@ -3,18 +3,20 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing GEOB MIME type, filename, description and binary object.
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class GeneralEncapsulatedObjectFrame extends Frame {
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private String mimeType = "", fileName = "", description = "";
   private ByteVector object = new ByteVector();
 
@@ -41,12 +43,12 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
     parseObject(fieldData(data));
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   public final String mimeType() {
@@ -113,11 +115,11 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
 
   private void parseObject(ByteVector data) {
     if (data.size() < 4) {
-      Debug.debug(new TagString("An object frame must contain at least 4 bytes."));
+      Debug.debug("An object frame must contain at least 4 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
-    StringField field = stringField(data, TagString.Type.LATIN1, 1);
+    StringField field = stringField(data, ISO_8859_1, 1);
     mimeType = field.value();
     field = stringField(data, encoding, field.nextPosition());
     fileName = field.value();
@@ -131,10 +133,10 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type rendered = checkTextEncoding(List.of(fileName, description), encoding);
-    return new ByteVector((byte) rendered.ordinal()).append(Id3Text.encode(mimeType, TagString.Type.LATIN1))
-      .append(textDelimiter(TagString.Type.LATIN1)).append(Id3Text.encode(fileName, rendered))
-      .append(textDelimiter(rendered)).append(Id3Text.encode(description, rendered))
+    Charset rendered = checkTextEncoding(List.of(fileName, description), encoding);
+    return new ByteVector(Id3Text.encodingByte(rendered)).append(ByteVector.fromText(mimeType, ISO_8859_1))
+      .append(textDelimiter(ISO_8859_1)).append(ByteVector.fromText(fileName, rendered))
+      .append(textDelimiter(rendered)).append(ByteVector.fromText(description, rendered))
       .append(textDelimiter(rendered)).append(object);
   }
 }

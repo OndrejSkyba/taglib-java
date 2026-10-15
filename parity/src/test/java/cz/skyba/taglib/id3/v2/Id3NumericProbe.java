@@ -1,13 +1,18 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * OWNE/POPM/RVA2 operations; provided-header paths do not qualify a public factory.
@@ -22,11 +27,11 @@ public class Id3NumericProbe {
   }
 
   static String string(String s) {
-    return TagString.from8Bit(bytes(s).data(), TagString.Type.UTF8).toString();
+    return TextBytes.decode(bytes(s).data(), UTF_8);
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static int b(boolean v) {
@@ -53,7 +58,7 @@ public class Id3NumericProbe {
 
   static class Utf8 extends Latin1StringHandler {
     public String parse(ByteVector data) {
-      return new TagString(data, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(data.data(), UTF_8);
     }
   }
 
@@ -76,7 +81,7 @@ public class Id3NumericProbe {
     return switch (kind) {
       case "O" -> mode.equals("P")
         ? new OwnershipFrame(data)
-        : new OwnershipFrame(TagString.Type.values()[Integer.parseInt(p[7])]);
+        : new OwnershipFrame(TextCharsets.ALL[Integer.parseInt(p[7])]);
       case "P" -> mode.equals("P") ? new PopularimeterFrame(data) : new PopularimeterFrame();
       default -> mode.equals("P") ? new RelativeVolumeFrame(data) : new RelativeVolumeFrame();
     };
@@ -87,7 +92,7 @@ public class Id3NumericProbe {
     String detail;
     if (f instanceof OwnershipFrame o)
       detail =
-        o.textEncoding().ordinal()
+        TextCharsets.id(o.textEncoding())
           + ":"
           + text(o.pricePaid())
           + ":"
@@ -157,7 +162,7 @@ public class Id3NumericProbe {
   static void mutate(Frame f, String[] p) {
     f.setText("ignored");
     if (f instanceof OwnershipFrame o) {
-      o.setTextEncoding(TagString.Type.values()[Integer.parseInt(p[7])]);
+      o.setTextEncoding(TextCharsets.ALL[Integer.parseInt(p[7])]);
       o.setPricePaid(string(p[8]));
       o.setDatePurchased(string(p[9]));
       o.setSeller(string(p[10]));
@@ -231,7 +236,7 @@ public class Id3NumericProbe {
 
     public String parse(ByteVector data) {
       if (++calls == fail) throw new IllegalArgumentException("callback");
-      return "decoded:" + new TagString(data);
+      return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
     }
   }
 

@@ -5,7 +5,6 @@ import cz.skyba.taglib.id3.v2.*;
 import cz.skyba.taglib.id3.v2.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DsfFileTest {
@@ -222,7 +222,7 @@ class DsfFileTest {
     int raw, aggregate;
 
     Factory() {
-      setDefaultTextEncoding(TagString.Type.UTF8);
+      setDefaultTextEncoding(UTF_8);
     }
 
     public Frame createFrame(ByteVector d, Header h) {
@@ -242,9 +242,9 @@ class DsfFileTest {
     try (var f = new DsfFile(new ByteVectorStream(tagged("a")), new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), c)) {
       assertEquals(1, c.raw);
       assertEquals(1, c.aggregate);
-      assertEquals(TagString.Type.UTF8, ((TextIdentificationFrame) f.tag().frameList().getFirst()).textEncoding());
+      assertEquals(UTF_8, ((TextIdentificationFrame) f.tag().frameList().getFirst()).textEncoding());
       f.tag().setArtist("b");
-      assertEquals(TagString.Type.UTF8, ((TextIdentificationFrame) f.tag().frameList(new ByteVector("TPE1")).getFirst()).textEncoding());
+      assertEquals(UTF_8, ((TextIdentificationFrame) f.tag().frameList(new ByteVector("TPE1")).getFirst()).textEncoding());
     }
   }
 

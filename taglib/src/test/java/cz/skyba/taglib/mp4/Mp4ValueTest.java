@@ -4,9 +4,9 @@ import cz.skyba.taglib.AudioFile;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.ReadStyle;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class Mp4ValueTest {
@@ -223,7 +224,7 @@ class Mp4ValueTest {
     assertTrue(file.replaceProperties(input.build()).rejected().isEmpty());
     assertEquals(0, file.tag().track());
     for (var key : keys) {
-      var name = new TagString(ItemFactory.instance().nameForPropertyKey(key)).toString();
+      var name = TextBytes.decodeTerminated(ItemFactory.instance().nameForPropertyKey(key).data(), ISO_8859_1);
       assertEquals(Item.Type.STRING_LIST, file.tag().item(name).type());
       assertEquals(List.of("0"), file.properties().get(key));
     }

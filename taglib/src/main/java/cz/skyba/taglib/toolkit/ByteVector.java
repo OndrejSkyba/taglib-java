@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.toolkit;
 
+import cz.skyba.taglib.internal.TextBytes;
+
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -67,6 +70,35 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
 
   static ByteVector takeOwnership(byte[] value) {
     return new ByteVector(value, true);
+  }
+
+  /**
+   * Encodes metadata text into independent storage, including embedded NULs.
+   * Supports the standard Latin-1, UTF-8 and UTF-16 charsets. Latin-1 keeps each
+   * code unit's low byte; UTF-8 rejects malformed UTF-16 by returning empty bytes.
+   * UTF-16 preserves raw code units, with a little-endian BOM for {@code UTF_16}.
+   *
+   * @param text    the text to encode
+   * @param charset the metadata charset
+   * @return encoded bytes
+   * @throws IllegalArgumentException if the charset is unsupported
+   */
+  public static ByteVector fromText(String text, Charset charset) {
+    return takeOwnership(TextBytes.encode(text, charset));
+  }
+
+  /**
+   * Decodes a metadata field and ends the result at its first decoded NUL.
+   * The entire byte sequence is decoded before truncation. Invalid UTF-8 or a
+   * missing required UTF-16 BOM produces empty text. Explicit-endian UTF-16
+   * preserves raw code units and ignores an odd trailing byte.
+   *
+   * @param charset a standard Latin-1, UTF-8 or UTF-16 charset
+   * @return decoded field text
+   * @throws IllegalArgumentException if the charset is unsupported
+   */
+  public String decodeTerminatedText(Charset charset) {
+    return TextBytes.decodeTerminated(data, charset);
   }
 
   /**
@@ -718,7 +750,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
 
   private long number(int offset, int length, boolean bigEndian) {
     if (offset < 0 || offset >= size()) {
-      Debug.debug(new TagString("toNumber<T>() -- No data to convert. Returning 0."));
+      Debug.debug("toNumber<T>() -- No data to convert. Returning 0.");
       return 0;
     }
     int count = Math.min(length, size() - offset);
@@ -798,7 +830,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
    */
   public long toUnsignedInt(int offset, int length, boolean bigEndian) {
     if (offset < 0 || offset >= size()) {
-      Debug.debug(new TagString("toNumber<T>() -- No data to convert. Returning 0."));
+      Debug.debug("toNumber<T>() -- No data to convert. Returning 0.");
       return 0;
     }
     int count = Math.clamp(length, 0, size() - offset), result = 0;
@@ -1059,13 +1091,13 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
 
   private Float80 toFloat80(int offset, boolean bigEndian) {
     if (!available(offset, 10)) {
-      Debug.debug(new TagString("toFloat80() - offset is out of range. Returning 0."));
+      Debug.debug("toFloat80() - offset is out of range. Returning 0.");
       return Float80.ZERO;
     }
     int header = toUnsignedShort(offset + (bigEndian ? 0 : 8), bigEndian);
     int exponent = header & 0x7fff;
     if (exponent == 0x7fff) {
-      Debug.debug(new TagString("toFloat80() - can't handle the infinity or NaN. Returning 0."));
+      Debug.debug("toFloat80() - can't handle the infinity or NaN. Returning 0.");
       return Float80.ZERO;
     }
     return Float80.fromNativeFields((header & 0x8000) != 0, exponent,

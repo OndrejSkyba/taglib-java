@@ -17,7 +17,6 @@ import cz.skyba.taglib.s3m.S3mFile;
 import cz.skyba.taglib.shorten.ShortenFile;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import cz.skyba.taglib.trueaudio.TrueAudioFile;
 import cz.skyba.taglib.wavpack.WavPackFile;
@@ -29,12 +28,18 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16;
+import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Dependency-free consumer used to compare JVM execution with a real Native Image executable.
@@ -1647,7 +1652,7 @@ public final class NativeImageSmoke {
       }
 
       public void setText(String text) {
-        fields = new cz.skyba.taglib.toolkit.TagString(text).data(cz.skyba.taglib.toolkit.TagString.Type.UTF8);
+        fields = ByteVector.fromText(text, UTF_8);
       }
 
       protected void parseFields(ByteVector data) {
@@ -1663,11 +1668,11 @@ public final class NativeImageSmoke {
       }
 
       String field(ByteVector data, int[] position) {
-        return readStringField(data, cz.skyba.taglib.toolkit.TagString.Type.UTF16, position);
+        return readStringField(data, UTF_16, position);
       }
 
-      cz.skyba.taglib.toolkit.TagString.Type encoding() {
-        return checkTextEncoding(List.of("Ž"), cz.skyba.taglib.toolkit.TagString.Type.LATIN1);
+      Charset encoding() {
+        return checkTextEncoding(List.of("Ž"), ISO_8859_1);
       }
     }
     var custom = new Custom();
@@ -1677,7 +1682,7 @@ public final class NativeImageSmoke {
     if (!base.render().equals(new ByteVector(java.util.HexFormat.of().parseHex("583030310000000300006e6577")))
       || !custom.projected().unsupportedData().equals(List.of("X001"))
       || !custom.field(new ByteVector(java.util.HexFormat.of().parseHex("fffe41000000")), position).equals("A")
-      || position[0] != 6 || custom.encoding() != cz.skyba.taglib.toolkit.TagString.Type.UTF8
+      || position[0] != 6 || custom.encoding() != UTF_8
       || !cz.skyba.taglib.id3.v2.Frame.keyToFrameID("title").equals(new ByteVector("TIT2"))
       || !cz.skyba.taglib.id3.v2.Frame.frameIDToKey(new ByteVector("TYER")).equals("DATE"))
       throw new AssertionError("Custom mutable Frame hooks");
@@ -1687,16 +1692,16 @@ public final class NativeImageSmoke {
     var little = new cz.skyba.taglib.id3.v2.TextIdentificationFrame(
       new ByteVector(HexFormat.of().parseHex("54434f4d00000007000004410000004200")));
     if (!little.fieldList().equals(List.of("A", "B"))
-      || little.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.UTF16LE
+      || little.textEncoding() != UTF_16LE
       || !little.asProperties().get("COMPOSER").equals(List.of("A", "B")))
       throw new AssertionError("Mutable UTF16LE text fields");
     little.fieldList().clear();
     little.toStringList().clear();
     var live = little.header();
     little.setText("Ž");
-    little.setTextEncoding(cz.skyba.taglib.toolkit.TagString.Type.LATIN1);
+    little.setTextEncoding(ISO_8859_1);
     little.render();
-    if (live != little.header() || little.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.LATIN1)
+    if (live != little.header() || little.textEncoding() != ISO_8859_1)
       throw new AssertionError("Mutable text encoding/render state");
     var user = new cz.skyba.taglib.id3.v2.UserTextIdentificationFrame();
     if (!user.fieldList().equals(List.of("", "", ""))) throw new AssertionError("Native TXXX default");
@@ -1767,7 +1772,7 @@ public final class NativeImageSmoke {
     picture.picture().clear();
     picture.toStringList().clear();
     var parsed = new cz.skyba.taglib.id3.v2.AttachedPictureFrame(rendered);
-    if (h != picture.header() || picture.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.LATIN1
+    if (h != picture.header() || picture.textEncoding() != ISO_8859_1
       || !parsed.description().equals("雪") || !parsed.mimeType().equals("image/png")
       || parsed.type() != cz.skyba.taglib.id3.v2.AttachedPictureFrame.Type.FrontCover
       || !parsed.picture().equals(new ByteVector(new byte[]{0, 1, (byte) 255, 0}))
@@ -1783,7 +1788,7 @@ public final class NativeImageSmoke {
     object.object().clear();
     object.toStringList().clear();
     var parsedObject = new cz.skyba.taglib.id3.v2.GeneralEncapsulatedObjectFrame(objectBytes);
-    if (objectHeader != object.header() || object.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.LATIN1
+    if (objectHeader != object.header() || object.textEncoding() != ISO_8859_1
       || !parsedObject.fileName().equals("name😀") || !parsedObject.description().equals("description")
       || !parsedObject.object().equals(new ByteVector(new byte[]{0, 2, (byte) 255, 0})))
       throw new AssertionError("Mutable GEOB field/payload ownership");
@@ -1809,7 +1814,7 @@ public final class NativeImageSmoke {
     ownership.toStringList().clear();
     if (header != ownership.header() || !parsed.pricePaid().equals("GBP1.99")
       || !parsed.datePurchased().equals("20120905") || !parsed.seller().equals("Ž")
-      || ownership.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.LATIN1)
+      || ownership.textEncoding() != ISO_8859_1)
       throw new AssertionError("Mutable OWNE encoding/field ownership");
     var rating = new cz.skyba.taglib.id3.v2.PopularimeterFrame();
     rating.setEmail("email");
@@ -1868,7 +1873,7 @@ public final class NativeImageSmoke {
     lyrics.language().clear();
     var lyricsHeader = lyrics.header();
     var parsedLyrics = new cz.skyba.taglib.id3.v2.SynchronizedLyricsFrame(lyrics.render());
-    if (lyricsHeader != lyrics.header() || lyrics.textEncoding() != cz.skyba.taglib.toolkit.TagString.Type.LATIN1
+    if (lyricsHeader != lyrics.header() || lyrics.textEncoding() != ISO_8859_1
       || !parsedLyrics.language().equals(new ByteVector("eng")) || !parsedLyrics.description().equals("description")
       || parsedLyrics.synchedText().getFirst().time() != 3 || !parsedLyrics.synchedText().getFirst().text().equals("雪")
       || parsedLyrics.timestampFormat() != cz.skyba.taglib.id3.v2.SynchronizedLyricsFrame.TimestampFormat.AbsoluteMilliseconds
@@ -1969,7 +1974,7 @@ public final class NativeImageSmoke {
       int calls;
 
       Factory() {
-        setDefaultTextEncoding(TagString.Type.UTF8);
+        setDefaultTextEncoding(UTF_8);
       }
 
       public cz.skyba.taglib.id3.v2.Frame createFrame(ByteVector data, cz.skyba.taglib.id3.v2.Header header) {
@@ -2020,7 +2025,7 @@ public final class NativeImageSmoke {
       int calls;
 
       Factory() {
-        setDefaultTextEncoding(TagString.Type.UTF8);
+        setDefaultTextEncoding(UTF_8);
       }
 
       public cz.skyba.taglib.id3.v2.Frame createFrame(ByteVector data, cz.skyba.taglib.id3.v2.Header header) {
@@ -2097,7 +2102,7 @@ public final class NativeImageSmoke {
       }
     }
     var factory = new Factory();
-    factory.setDefaultTextEncoding(TagString.Type.UTF8);
+    factory.setDefaultTextEncoding(UTF_8);
     var stream = new ByteVectorStream(Files.readAllBytes(corpus.resolve("empty.tta")));
     try (var file = new TrueAudioFile(stream, new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), factory)) {
       if (file.detailedProperties() != null) throw new AssertionError("TrueAudio readProperties");
@@ -2106,7 +2111,7 @@ public final class NativeImageSmoke {
       modern.setTitle("TrueAudio owner");
       file.getOrCreateId3v1Tag().setTitle("legacy owner");
       var frame = modern.frameList().getFirst();
-      if (((cz.skyba.taglib.id3.v2.TextIdentificationFrame) frame).textEncoding() != TagString.Type.UTF8)
+      if (((cz.skyba.taglib.id3.v2.TextIdentificationFrame) frame).textEncoding() != UTF_8)
         throw new AssertionError("TrueAudio custom factory encoding");
       file.save();
       file.save();
@@ -2149,7 +2154,7 @@ public final class NativeImageSmoke {
       }
     }
     var factory = new Factory();
-    factory.setDefaultTextEncoding(TagString.Type.UTF8);
+    factory.setDefaultTextEncoding(UTF_8);
     var stream = new ByteVectorStream(Files.readAllBytes(corpus.resolve("empty10ms.dsf")));
     try (var file = new DsfFile(stream, new ReadOptions(false, ReadStyle.FAST, ReadOptions.DEFAULT.maxMetadataBytes()), factory)) {
       if (file.detailedProperties() == null || file.detailedProperties().sampleCount() != 28224)
@@ -2158,7 +2163,7 @@ public final class NativeImageSmoke {
       var properties = file.detailedProperties();
       tag.setTitle("DSF live owner");
       var frame = tag.frameList().getFirst();
-      if (((cz.skyba.taglib.id3.v2.TextIdentificationFrame) frame).textEncoding() != TagString.Type.UTF8)
+      if (((cz.skyba.taglib.id3.v2.TextIdentificationFrame) frame).textEncoding() != UTF_8)
         throw new AssertionError("DSF custom factory encoding");
       file.save(Version.V3);
       file.save();
@@ -2185,7 +2190,7 @@ public final class NativeImageSmoke {
     var bucket = tag.frameList(new ByteVector("TIT2"));
     if (!missing.isEmpty() || list.size() != 1 || bucket.getFirst() != list.getFirst()
       || !tag.title().equals("owner title")) throw new AssertionError("live ID3v2 owner");
-    var child = new cz.skyba.taglib.id3.v2.TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var child = new cz.skyba.taglib.id3.v2.TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     child.setText("chapter title");
     var chapter = new cz.skyba.taglib.id3.v2.ChapterFrame(new ByteVector("ch"), 3, 5, -1, -1, List.of(child));
     var toc = new cz.skyba.taglib.id3.v2.TableOfContentsFrame(new ByteVector("toc"),
@@ -2221,7 +2226,7 @@ public final class NativeImageSmoke {
       }
     }
     var factory = new Factory();
-    factory.setDefaultTextEncoding(TagString.Type.UTF16);
+    factory.setDefaultTextEncoding(UTF_16);
     var parsed = new cz.skyba.taglib.id3.v2.Tag(file, 0, factory);
     if (!parsed.title().equals("owner title") || factory.calls != 3
       || !cz.skyba.taglib.id3.v2.ChapterFrame.findByElementID(parsed, new ByteVector("ch"))
@@ -2345,11 +2350,11 @@ public final class NativeImageSmoke {
       throw new AssertionError("ID3v1 public tag/genre operations");
     cz.skyba.taglib.id3.v1.Tag.setStringHandler(new cz.skyba.taglib.id3.v1.StringHandler() {
       public String parse(ByteVector bytes) {
-        return new TagString(bytes, TagString.Type.UTF8).toString();
+        return bytes.decodeTerminatedText(UTF_8);
       }
 
       public ByteVector render(String value) {
-        return new TagString(value).data(TagString.Type.UTF8);
+        return ByteVector.fromText(value, UTF_8);
       }
     });
     try {
@@ -2370,8 +2375,7 @@ public final class NativeImageSmoke {
       throw new AssertionError("ByteVector view");
     var parts =
       List.of(vector, new cz.skyba.taglib.toolkit.ByteVector("d"));
-    if (!ByteVector.join(parts).toString().equals("abc d")
-      || new cz.skyba.taglib.toolkit.TagString("a b").split().size() != 2)
+    if (!ByteVector.join(parts).toString().equals("abc d"))
       throw new AssertionError("Toolkit defaults");
     var tag = new cz.skyba.taglib.riff.info.Tag();
     var id = new cz.skyba.taglib.toolkit.ByteVector(new byte[]{'Z', 'Z', 'Z', 'Z'});
@@ -2390,14 +2394,12 @@ public final class NativeImageSmoke {
       new cz.skyba.taglib.riff.info.StringHandler() {
         @Override
         public cz.skyba.taglib.toolkit.ByteVector render(String text) {
-          return new cz.skyba.taglib.toolkit.TagString(text)
-            .data(cz.skyba.taglib.toolkit.TagString.Type.LATIN1);
+          return ByteVector.fromText(text, ISO_8859_1);
         }
 
         @Override
         public String parse(cz.skyba.taglib.toolkit.ByteVector bytes) {
-          return new cz.skyba.taglib.toolkit.TagString(bytes, cz.skyba.taglib.toolkit.TagString.Type.LATIN1)
-            .toString();
+          return bytes.decodeTerminatedText(ISO_8859_1);
         }
       });
     try {
@@ -2450,11 +2452,9 @@ public final class NativeImageSmoke {
     if (!value.equals(
       new cz.skyba.taglib.toolkit.Variant(new cz.skyba.taglib.toolkit.ByteVector(new byte[]{0, 1, 2}))))
       throw new AssertionError("Variant failed");
-    var text = new cz.skyba.taglib.toolkit.TagString("日本語");
-    if (!new cz.skyba.taglib.toolkit.TagString(
-      text.data(cz.skyba.taglib.toolkit.TagString.Type.UTF8),
-      cz.skyba.taglib.toolkit.TagString.Type.UTF8)
-      .equals(text)) throw new AssertionError("Toolkit string encoding failed");
+    String text = "日本語";
+    if (!ByteVector.fromText(text, UTF_8).decodeTerminatedText(UTF_8).equals(text))
+      throw new AssertionError("Toolkit string encoding failed");
     var extended =
       new cz.skyba.taglib.toolkit.ByteVector(HexFormat.of().parseHex("3fff8000000000000001"))
         .toFloat80BE(0);
@@ -2464,7 +2464,7 @@ public final class NativeImageSmoke {
     cz.skyba.taglib.toolkit.Debug.setDebugListener(
       new cz.skyba.taglib.toolkit.DebugListener() {
         @Override
-        public void printMessage(cz.skyba.taglib.toolkit.TagString message) {
+        public void printMessage(String message) {
           diagnostics[0]++;
         }
       });

@@ -6,7 +6,6 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TagOwnerTest {
@@ -28,7 +28,7 @@ class TagOwnerTest {
   }
 
   static TextIdentificationFrame title(String text) {
-    var f = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+    var f = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
     f.setText(text);
     return f;
   }
@@ -302,7 +302,7 @@ class TagOwnerTest {
     assertTrue(g.object().isEmpty());
     assertEquals("", g.description());
     assertEquals("f", g.fileName());
-    assertEquals(TagString.Type.LATIN1, g.textEncoding());
+    assertEquals(ISO_8859_1, g.textEncoding());
     var values = t.complexProperties("generalobject");
     values.getFirst().put("fileName", new Variant("changed"));
     assertEquals("f", g.fileName());
@@ -337,7 +337,7 @@ class TagOwnerTest {
   @Test
   void downgradeCreatesTemporaryDateFramesAndKeepsOriginalOwnership() {
     var t = new Tag();
-    var d = new TextIdentificationFrame(new ByteVector("TDRC"), TagString.Type.UTF8);
+    var d = new TextIdentificationFrame(new ByteVector("TDRC"), UTF_8);
     d.setText("2026-10-05T12:34");
     t.addFrame(d);
     var out = t.render(Tag.Version.V3);
@@ -391,13 +391,13 @@ class TagOwnerTest {
   void factoryDefaultsAreSeparateFromPropertyCreationEncoding() {
     var c = new Factory();
     assertFalse(c.isUsingDefaultTextEncoding());
-    assertEquals(TagString.Type.LATIN1, c.defaultTextEncoding());
-    c.setDefaultTextEncoding(TagString.Type.UTF16);
+    assertEquals(ISO_8859_1, c.defaultTextEncoding());
+    c.setDefaultTextEncoding(UTF_16);
     var raw = wire("TIT2", bytes("00616263"));
     var f = (TextIdentificationFrame) c.createFrame(raw, new Header());
-    assertEquals(TagString.Type.UTF16, f.textEncoding());
+    assertEquals(UTF_16, f.textEncoding());
     var property = (TextIdentificationFrame) c.createFrameForProperty("TITLE", List.of("abc"));
-    assertEquals(TagString.Type.UTF8, property.textEncoding());
+    assertEquals(UTF_8, property.textEncoding());
     assertEquals(bytes("00616263"), raw.mid(10));
   }
 
@@ -418,7 +418,7 @@ class TagOwnerTest {
   void aggregateDateUsesFixedUnicodeDecodingAndKeepsDiscardedFrames() {
     var t = new Tag();
     t.header().setMajorVersion(3);
-    var y = new TextIdentificationFrame(new ByteVector("TDRC"), TagString.Type.LATIN1);
+    var y = new TextIdentificationFrame(new ByteVector("TDRC"), ISO_8859_1);
     y.setText("2026");
     var date = new UnknownFrame(wire("TDAT", bytes("0031303035")));
     var time = new UnknownFrame(wire("TIME", bytes("0031323334")));

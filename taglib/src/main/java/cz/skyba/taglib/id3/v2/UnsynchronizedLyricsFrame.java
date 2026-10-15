@@ -3,10 +3,12 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing USLT language, description and lyrics.
@@ -19,7 +21,7 @@ public class UnsynchronizedLyricsFrame extends Frame {
    * Creates a frame containing USLT language, description and lyrics. The initial text encoding is ISO-8859-1.
    */
   public UnsynchronizedLyricsFrame() {
-    this(TagString.Type.LATIN1);
+    this(ISO_8859_1);
   }
 
   /**
@@ -27,9 +29,9 @@ public class UnsynchronizedLyricsFrame extends Frame {
    *
    * @param encoding the requested text encoding
    */
-  public UnsynchronizedLyricsFrame(TagString.Type encoding) {
+  public UnsynchronizedLyricsFrame(Charset encoding) {
     super(new ByteVector("USLT"));
-    fields.encoding = Objects.requireNonNull(encoding);
+    fields.encoding = Id3Text.requireEncoding(encoding);
   }
 
   /**
@@ -87,12 +89,12 @@ public class UnsynchronizedLyricsFrame extends Frame {
     return fields.text;
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return fields.encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    fields.encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    fields.encoding = Id3Text.requireEncoding(value);
   }
 
   @Override
@@ -145,7 +147,7 @@ public class UnsynchronizedLyricsFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type type = checkTextEncoding(List.of(fields.description, fields.text), fields.encoding);
+    Charset type = checkTextEncoding(List.of(fields.description, fields.text), fields.encoding);
     return fields.render(type);
   }
 }

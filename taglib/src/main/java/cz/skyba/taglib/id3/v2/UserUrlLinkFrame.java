@@ -2,26 +2,30 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable ID3v2 frame containing WXXX description and URL.
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class UserUrlLinkFrame extends UrlLinkFrame {
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private String description = "";
 
   /**
    * Creates a frame containing WXXX description and URL. The initial text encoding is ISO-8859-1.
    */
   public UserUrlLinkFrame() {
-    this(TagString.Type.LATIN1);
+    this(ISO_8859_1);
   }
 
   /**
@@ -29,9 +33,9 @@ public class UserUrlLinkFrame extends UrlLinkFrame {
    *
    * @param encoding the requested text encoding
    */
-  public UserUrlLinkFrame(TagString.Type encoding) {
+  public UserUrlLinkFrame(Charset encoding) {
     super(new ByteVector("WXXX"));
-    this.encoding = Objects.requireNonNull(encoding);
+    this.encoding = Id3Text.requireEncoding(encoding);
   }
 
   /**
@@ -64,12 +68,12 @@ public class UserUrlLinkFrame extends UrlLinkFrame {
     description = Objects.requireNonNull(value);
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   @Override
@@ -120,18 +124,18 @@ public class UserUrlLinkFrame extends UrlLinkFrame {
 
   private void parseUserUrl(ByteVector data, boolean constructing) {
     if (data.size() < 2) {
-      Debug.debug(new TagString("A user URL link frame must contain at least 2 bytes."));
+      Debug.debug("A user URL link frame must contain at least 2 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
     int position = 1;
     int end = data.find(textDelimiter(encoding), position,
-      encoding == TagString.Type.LATIN1 || encoding == TagString.Type.UTF8 ? 1 : 2);
+      ISO_8859_1.equals(encoding) || UTF_8.equals(encoding) ? 1 : 2);
     if (end < position) {
       return;
     }
     // Unlike COMM/USLT/TXXX, native WXXX uses String directly for LATIN1 descriptions.
-    description = new TagString(data.mid(position, end - position), encoding).toString();
+    description = TextBytes.decodeTerminated(data.data(), position, end - position, encoding);
     position = end + textDelimiter(encoding).size();
     String value = Id3Text.fixedLatin1(data.mid(position));
     if (constructing) {
@@ -146,8 +150,8 @@ public class UserUrlLinkFrame extends UrlLinkFrame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type type = checkTextEncoding(List.of(description), encoding);
-    return new ByteVector((byte) type.ordinal()).append(Id3Text.encode(description, type))
-      .append(textDelimiter(type)).append(Id3Text.encode(url(), TagString.Type.LATIN1));
+    Charset type = checkTextEncoding(List.of(description), encoding);
+    return new ByteVector(Id3Text.encodingByte(type)).append(ByteVector.fromText(description, type))
+      .append(textDelimiter(type)).append(ByteVector.fromText(url(), ISO_8859_1));
   }
 }

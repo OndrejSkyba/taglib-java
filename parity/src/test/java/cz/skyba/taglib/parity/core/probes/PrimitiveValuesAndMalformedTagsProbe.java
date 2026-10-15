@@ -2,17 +2,20 @@ package cz.skyba.taglib.parity.core.probes;
 
 import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.ReadOptions;
-import cz.skyba.taglib.parity.support.FileRefAdapter;
-
 import cz.skyba.taglib.id3.v2.FrameFactory;
 import cz.skyba.taglib.id3.v2.Header;
 import cz.skyba.taglib.id3.v2.TextIdentificationFrame;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
+import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Independent Java consumer; output is lossless UTF-8/binary hex.
@@ -222,11 +225,9 @@ public class PrimitiveValuesAndMalformedTagsProbe {
       case "string" -> {
         int at = input.indexOf(':');
         var text =
-          new TagString(
-            unhex(input.substring(at + 1)),
-            TagString.Type.values()[Integer.parseInt(input.substring(0, at))]);
-        binary("text", text.to8Bit(true));
-        binary("utf8", text.data(TagString.Type.UTF8));
+          TextBytes.decodeTerminated(unhex(input.substring(at + 1)).data(), TextCharsets.ALL[Integer.parseInt(input.substring(0, at))]);
+        binary("text", TextBytes.encode(text, UTF_8));
+        binary("utf8", ByteVector.fromText(text, UTF_8));
       }
       case "ape-item" -> {
         var item = new cz.skyba.taglib.ape.Item();
@@ -266,7 +267,7 @@ public class PrimitiveValuesAndMalformedTagsProbe {
         }
       }
       case "id3-encoding" -> {
-        var frame = new TextIdentificationFrame(new ByteVector("TIT2"), TagString.Type.LATIN1);
+        var frame = new TextIdentificationFrame(new ByteVector("TIT2"), ISO_8859_1);
         frame.header().setVersion(Long.parseLong(input));
         frame.setText("图");
         binary("render", frame.render());

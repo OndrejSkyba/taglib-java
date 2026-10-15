@@ -1,13 +1,20 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Provided-header operation comparison, not a substitute for public factory acceptance.
@@ -22,11 +29,11 @@ public class Id3PictureProbe {
   }
 
   static String string(String s) {
-    return TagString.from8Bit(bytes(s).data(), TagString.Type.UTF8).toString();
+    return TextBytes.decode(bytes(s).data(), UTF_8);
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static int b(boolean v) {
@@ -49,7 +56,7 @@ public class Id3PictureProbe {
 
   static class Utf8 extends Latin1StringHandler {
     public String parse(ByteVector data) {
-      return new TagString(data, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(data.data(), UTF_8);
     }
   }
 
@@ -74,7 +81,7 @@ public class Id3PictureProbe {
     String detail;
     if (f instanceof AttachedPictureFrame a)
       detail =
-        a.textEncoding().ordinal()
+        TextCharsets.id(a.textEncoding())
           + ":"
           + text(a.mimeType())
           + ":"
@@ -88,7 +95,7 @@ public class Id3PictureProbe {
     else {
       var o = (GeneralEncapsulatedObjectFrame) f;
       detail =
-        o.textEncoding().ordinal()
+        TextCharsets.id(o.textEncoding())
           + ":"
           + text(o.mimeType())
           + ":"
@@ -129,7 +136,7 @@ public class Id3PictureProbe {
 
   static void mutate(
     Frame f,
-    TagString.Type encoding,
+    Charset encoding,
     String mime,
     String name,
     String description,
@@ -190,7 +197,7 @@ public class Id3PictureProbe {
 
     public String parse(ByteVector data) {
       if (++calls == fail) throw new IllegalArgumentException("callback");
-      return "decoded:" + new TagString(data);
+      return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
     }
   }
 
@@ -230,7 +237,7 @@ public class Id3PictureProbe {
           + "\t"
           + AttachedPictureFrame.typeFromString(s).code()
           + "\t"
-          + AttachedPictureFrame.typeFromString(new TagString(s).upper().toString()).code());
+          + AttachedPictureFrame.typeFromString(Ascii.upper(s)).code());
     }
     var apic = bytes("41504943000000100000006d696d650003646573630064617461");
     var a = new PictureChild(apic);
@@ -249,7 +256,7 @@ public class Id3PictureProbe {
         var frame = create(kind, "B", new ByteVector(), 4);
         mutate(
           frame,
-          TagString.Type.UTF8,
+          UTF_8,
           "old-mime",
           "old-name",
           "old-desc",
@@ -290,7 +297,7 @@ public class Id3PictureProbe {
         state(id + "/reparse", f);
         mutate(
           f,
-          TagString.Type.values()[Integer.parseInt(p[7])],
+          TextCharsets.ALL[Integer.parseInt(p[7])],
           string(p[8]),
           string(p[9]),
           string(p[10]),

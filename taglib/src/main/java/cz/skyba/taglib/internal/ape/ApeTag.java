@@ -9,7 +9,6 @@ import cz.skyba.taglib.ape.Item.ItemType;
 import cz.skyba.taglib.internal.BinaryFile;
 import cz.skyba.taglib.internal.UnsupportedDataRemoval;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.io.IOException;
@@ -17,6 +16,7 @@ import java.util.*;
 
 import static cz.skyba.taglib.internal.Binary.ascii;
 import static cz.skyba.taglib.internal.Binary.u32le;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * APEv2 text, binary, locator, and artwork items.
@@ -126,8 +126,7 @@ public final class ApeTag {
         for (var part :
           new ByteVector(raw.value).split(new ByteVector((byte) 0))) {
           values.add(
-            new TagString(part, TagString.Type.UTF8)
-              .toString());
+            part.decodeTerminatedText(UTF_8));
         }
         item = new cz.skyba.taglib.ape.Item(raw.key, values);
       } else {

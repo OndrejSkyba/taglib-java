@@ -5,9 +5,9 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.internal.WriteGuard;
 import cz.skyba.taglib.internal.codec.AsfCodec;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.io.IOException;
@@ -232,7 +232,7 @@ public class Tag extends TagBase {
   }
 
   public long year() {
-    return contains("WM/Year") ? Integer.toUnsignedLong(new TagString(first("WM/Year").toString()).toInt()) : 0;
+    return contains("WM/Year") ? Integer.toUnsignedLong(TextNumbers.parseInt(first("WM/Year").toString())) : 0;
   }
 
   public void setYear(long value) {
@@ -245,7 +245,7 @@ public class Tag extends TagBase {
   public long track() {
     if (contains("WM/TrackNumber")) {
       var a = first("WM/TrackNumber");
-      return a.type() == Attribute.DWordType ? a.toUnsignedInt() : Integer.toUnsignedLong(new TagString(a.toString()).toInt());
+      return a.type() == Attribute.DWordType ? a.toUnsignedInt() : Integer.toUnsignedLong(TextNumbers.parseInt(a.toString()));
     }
     return contains("WM/Track") ? first("WM/Track").toUnsignedInt() : 0;
   }

@@ -1,12 +1,18 @@
 package cz.skyba.taglib.parity.toolkit.probes;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.internal.TextNumbers;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_16;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ToolkitOperationsProbe {
   static void report(IOStream s, String label, int step) {
@@ -51,9 +57,6 @@ public class ToolkitOperationsProbe {
     var defaultList =
       List.of(new ByteVector("a"), new ByteVector(), new ByteVector("b"));
     System.out.println("default-join=" + ByteVector.join(defaultList).toHex());
-    var defaultSplit = new TagString(" a  b ").split();
-    System.out.println(
-      "default-split=" + defaultSplit.size() + ":" + String.join("|", defaultSplit));
     var aligned = new ByteVector("a::b:").split(new ByteVector(":"), 1);
     System.out.println("default-max=" + aligned.size() + ":" + ByteVector.join(aligned).toHex());
     String[] texts = {"", "a", "abcab", "OggS*OggS*OggS", "....SggO."};
@@ -186,18 +189,18 @@ public class ToolkitOperationsProbe {
     };
     for (int i = 0; i < 7; i++)
       for (int type = 0; type < 5; type++) {
-        var text = new TagString(encodings[i], TagString.Type.values()[type]);
+        var text = TextBytes.decodeTerminated(encodings[i].data(), TextCharsets.ALL[type]);
         System.out.println(
           "string="
             + i
             + ","
             + type
             + ":"
-            + text.size()
+            + text.length()
             + ":"
-            + text.data(TagString.Type.UTF8).toHex()
+            + ByteVector.fromText(text, UTF_8).toHex()
             + ":"
-            + text.data(TagString.Type.UTF16).toHex());
+            + ByteVector.fromText(text, UTF_16).toHex());
       }
     for (String input :
       List.of(
@@ -220,12 +223,12 @@ public class ToolkitOperationsProbe {
         "0x",
         "0b10",
         "xyz")) {
-      var text = new TagString(input);
-      var iv = text.extractInt();
+      String text = input;
+      var iv = TextNumbers.extractInt(text);
       var row = new StringBuilder("integer=" + input + ":" + iv.value() + ":" + b(iv.ok()));
       for (int base : new int[]{0, 10, 16, 36}) {
-        var n = text.extractLong(base);
-        var u = text.extractUnsignedLong(base);
+        var n = TextNumbers.extractLong(text, base);
+        var u = TextNumbers.extractUnsignedLong(text, base);
         row.append(
           ":"
             + n.value()

@@ -5,13 +5,14 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable ID3v2 frame containing CTOC child identifiers and embedded frames.
@@ -268,18 +269,18 @@ public class TableOfContentsFrame extends Frame {
 
   private void parseContents(ByteVector data) {
     if (data.size() < 6) {
-      Debug.debug(new TagString("A CTOC frame must contain at least 6 bytes (1 byte element ID terminated by null, 1 byte flags, 1 byte entry count and 1 byte child element ID terminated by null."));
+      Debug.debug("A CTOC frame must contain at least 6 bytes (1 byte element ID terminated by null, 1 byte flags, 1 byte entry count and 1 byte child element ID terminated by null.");
       return;
     }
-    StringField field = stringField(data, TagString.Type.LATIN1, 0);
-    elementID = Id3Text.encode(field.value(), TagString.Type.LATIN1);
+    StringField field = stringField(data, ISO_8859_1, 0);
+    elementID = ByteVector.fromText(field.value(), ISO_8859_1);
     int position = field.nextPosition();
     topLevel = (data.at(position) & 2) != 0;
     ordered = (data.at(position++) & 1) != 0;
     int count = data.at(position++) & 255;
     for (int i = 0; i < count; i++) {
-      field = stringField(data, TagString.Type.LATIN1, position);
-      children.add(Id3Text.encode(field.value(), TagString.Type.LATIN1));
+      field = stringField(data, ISO_8859_1, position);
+      children.add(ByteVector.fromText(field.value(), ISO_8859_1));
       position = field.nextPosition();
     }
     embedded.parseEmbedded(data, position, tagHeader, this);

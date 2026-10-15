@@ -1,7 +1,7 @@
 package cz.skyba.taglib.id3.v2;
 
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TimedFramesTest {
@@ -83,7 +85,7 @@ class TimedFramesTest {
   @Test
   void lyricsDefaultsAndLanguageClipRemainNativeState() {
     var f = new SynchronizedLyricsFrame();
-    assertEquals(TagString.Type.LATIN1, f.textEncoding());
+    assertEquals(ISO_8859_1, f.textEncoding());
     assertTrue(f.language().isEmpty());
     assertEquals(SynchronizedLyricsFrame.TimestampFormat.AbsoluteMilliseconds, f.timestampFormat());
     assertEquals(SynchronizedLyricsFrame.Type.Lyrics, f.type());
@@ -101,12 +103,12 @@ class TimedFramesTest {
 
   @Test
   void lyricsShortBodyKeepsEveryOldField() {
-    var f = new SynchronizedLyricsFrame(TagString.Type.UTF8);
+    var f = new SynchronizedLyricsFrame(UTF_8);
     f.setLanguage(new ByteVector("eng"));
     f.setDescription("old");
     f.setSynchedText(List.of(new SynchronizedLyricsFrame.SynchedText(7, "old-text")));
     f.setData(wire("SYLT", "006672610108"));
-    assertEquals(TagString.Type.UTF8, f.textEncoding());
+    assertEquals(UTF_8, f.textEncoding());
     assertEquals(new ByteVector("eng"), f.language());
     assertEquals("old", f.description());
     assertEquals(7, f.synchedText().getFirst().time());
@@ -118,7 +120,7 @@ class TimedFramesTest {
     f.setDescription("old");
     f.setSynchedText(List.of(new SynchronizedLyricsFrame.SynchedText(7, "old-text")));
     f.setData(wire("SYLT", "03667261ffff616263"));
-    assertEquals(TagString.Type.UTF8, f.textEncoding());
+    assertEquals(UTF_8, f.textEncoding());
     assertEquals(new ByteVector("fra"), f.language());
     assertEquals(SynchronizedLyricsFrame.TimestampFormat.Unknown, f.timestampFormat());
     assertEquals(SynchronizedLyricsFrame.Type.Other, f.type());
@@ -154,7 +156,7 @@ class TimedFramesTest {
 
   @Test
   void lyricsFailedDescriptorCallbackKeepsOldDescriptionAndListAfterEarlierFieldsChange() {
-    var f = new SynchronizedLyricsFrame(TagString.Type.UTF8);
+    var f = new SynchronizedLyricsFrame(UTF_8);
     f.setDescription("old");
     f.setSynchedText(List.of(new SynchronizedLyricsFrame.SynchedText(7, "old-text")));
     Id3Text.setHandler(new Latin1StringHandler() {
@@ -163,7 +165,7 @@ class TimedFramesTest {
       }
     });
     assertThrows(IllegalArgumentException.class, () -> f.setData(wire("SYLT", "0066726101086400610001020304")));
-    assertEquals(TagString.Type.LATIN1, f.textEncoding());
+    assertEquals(ISO_8859_1, f.textEncoding());
     assertEquals(new ByteVector("fra"), f.language());
     assertEquals(SynchronizedLyricsFrame.TimestampFormat.AbsoluteMpegFrames, f.timestampFormat());
     assertEquals(SynchronizedLyricsFrame.Type.ImageUrls, f.type());
@@ -179,7 +181,7 @@ class TimedFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 3) throw new IllegalArgumentException("third");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
     assertThrows(IllegalArgumentException.class, () -> f.setData(wire("SYLT", "00656e6702016400610001020304620005060708")));
@@ -220,8 +222,8 @@ class TimedFramesTest {
     var h = f.header();
     var parsed = new SynchronizedLyricsFrame(f.render());
     assertSame(h, f.header());
-    assertEquals(TagString.Type.LATIN1, f.textEncoding());
-    assertEquals(TagString.Type.UTF8, parsed.textEncoding());
+    assertEquals(ISO_8859_1, f.textEncoding());
+    assertEquals(UTF_8, parsed.textEncoding());
     assertEquals("雪", parsed.synchedText().getFirst().text());
     f.header().setVersion(3);
     assertEquals(1, f.render().at(10));
@@ -276,7 +278,7 @@ class TimedFramesTest {
     for (var f : List.of(new EventTimingCodesFrame(), new SynchronizedLyricsFrame())) {
       f.setText("ignored");
       assertEquals("", f.toString());
-      assertEquals(List.of(new TagString(f.frameID()).toString()), f.asProperties().unsupportedData());
+      assertEquals(List.of(TextBytes.decodeTerminated(f.frameID().data(), ISO_8859_1)), f.asProperties().unsupportedData());
     }
   }
 
@@ -300,7 +302,7 @@ class TimedFramesTest {
   }
 
   static void assertNativeLyrics(SynchronizedLyricsFrame f, String descriptor) {
-    assertEquals(TagString.Type.LATIN1, f.textEncoding());
+    assertEquals(ISO_8859_1, f.textEncoding());
     assertEquals(new ByteVector("eng"), f.language());
     assertEquals(SynchronizedLyricsFrame.TimestampFormat.AbsoluteMilliseconds, f.timestampFormat());
     assertEquals(SynchronizedLyricsFrame.Type.Lyrics, f.type());
@@ -325,7 +327,7 @@ class TimedFramesTest {
   @Test
   void upstreamRenderSynchronizedLyricsFrame() {
     var f = new SynchronizedLyricsFrame();
-    f.setTextEncoding(TagString.Type.LATIN1);
+    f.setTextEncoding(ISO_8859_1);
     f.setLanguage(new ByteVector("eng"));
     f.setTimestampFormat(SynchronizedLyricsFrame.TimestampFormat.AbsoluteMilliseconds);
     f.setType(SynchronizedLyricsFrame.Type.Lyrics);

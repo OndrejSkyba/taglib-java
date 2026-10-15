@@ -6,10 +6,11 @@ import cz.skyba.taglib.internal.PictureTypes;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.xiph.XiphComment;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Arrays;
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable FLAC picture value with copied image inputs and detached binary exports.
@@ -180,25 +181,25 @@ public class Picture extends MetadataBlock {
   public final boolean parse(byte[] payload) {
     Objects.requireNonNull(payload);
     if (payload.length < 32) {
-      Debug.debug(new TagString("A picture block must contain at least 5 bytes."));
+      Debug.debug("A picture block must contain at least 5 bytes.");
       return false;
     }
     type = typeFromUInt(Binary.u32be(payload, 0));
     long mimeLength = Binary.u32be(payload, 4);
     if (mimeLength > payload.length - 32) {
-      Debug.debug(new TagString("Invalid picture block."));
+      Debug.debug("Invalid picture block.");
       return false;
     }
     int pos = 8;
-    mimeType = TextBytes.terminated(payload, pos, (int) mimeLength, TagString.Type.UTF8);
+    mimeType = TextBytes.decodeTerminated(payload, pos, (int) mimeLength, UTF_8);
     pos += (int) mimeLength;
     long descriptionLength = Binary.u32be(payload, pos);
     pos += 4;
     if (descriptionLength > payload.length - pos - 20) {
-      Debug.debug(new TagString("Invalid picture block."));
+      Debug.debug("Invalid picture block.");
       return false;
     }
-    description = TextBytes.terminated(payload, pos, (int) descriptionLength, TagString.Type.UTF8);
+    description = TextBytes.decodeTerminated(payload, pos, (int) descriptionLength, UTF_8);
     pos += (int) descriptionLength;
     width = (int) Binary.u32be(payload, pos);
     height = (int) Binary.u32be(payload, pos + 4);
@@ -208,7 +209,7 @@ public class Picture extends MetadataBlock {
     long length = Binary.u32be(payload, pos);
     pos += 4;
     if (length > payload.length - pos) {
-      Debug.debug(new TagString("Invalid picture block."));
+      Debug.debug("Invalid picture block.");
       return false;
     }
     data = Arrays.copyOfRange(payload, pos, pos + (int) length);

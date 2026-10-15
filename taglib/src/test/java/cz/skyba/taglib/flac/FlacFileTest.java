@@ -1,9 +1,9 @@
 package cz.skyba.taglib.flac;
 
 import cz.skyba.taglib.*;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static cz.skyba.taglib.UpstreamAudioFixtures.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -444,7 +445,7 @@ class FlacFileTest {
       if (id.equals("iXML")) {
         assertTrue(f.hasiXMLData());
         assertFalse(f.hasBEXTData());
-        assertEquals(new TagString(payload, TagString.Type.UTF8).toString(), f.iXMLData());
+        assertEquals(TextBytes.decodeTerminated(payload.data(), UTF_8), f.iXMLData());
       } else {
         assertTrue(f.hasBEXTData());
         assertFalse(f.hasiXMLData());

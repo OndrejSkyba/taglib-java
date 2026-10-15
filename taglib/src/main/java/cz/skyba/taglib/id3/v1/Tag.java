@@ -3,12 +3,15 @@ package cz.skyba.taglib.id3.v1;
 
 import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.TagBase;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.internal.id3.Id3v1;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Mutable ID3v1 common metadata. Field width and encoding limits apply when rendering.
@@ -94,7 +97,7 @@ public class Tag extends TagBase {
 
   @Override
   public long year() {
-    return Integer.toUnsignedLong(new TagString(year).toInt());
+    return Integer.toUnsignedLong(TextNumbers.parseInt(year));
   }
 
   @Override
@@ -172,7 +175,7 @@ public class Tag extends TagBase {
       if (data.size() == 128 && data.startsWith(fileIdentifier())) {
         parse(data);
       } else {
-        Debug.debug(new TagString("ID3v1 tag is not valid or could not be read at the specified offset."));
+        Debug.debug("ID3v1 tag is not valid or could not be read at the specified offset.");
       }
     }
   }
@@ -195,7 +198,7 @@ public class Tag extends TagBase {
       track = data.get(126) & 255;
     } else {
       // Native v1.0 assigns ByteVector directly to String, bypassing StringHandler.
-      comment = new TagString(data.mid(97, 30), TagString.Type.LATIN1).toString();
+      comment = TextBytes.decodeTerminated(data.data(), 97, 30, ISO_8859_1);
     }
     genre = data.get(127) & 255;
   }

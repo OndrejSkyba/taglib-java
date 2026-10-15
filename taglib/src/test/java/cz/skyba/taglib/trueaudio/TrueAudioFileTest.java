@@ -6,7 +6,6 @@ import cz.skyba.taglib.id3.v2.Tag;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.ByteVectorStream;
 import cz.skyba.taglib.toolkit.FileStream;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,6 +16,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TrueAudioFileTest {
@@ -257,7 +257,7 @@ class TrueAudioFileTest {
     int raw, aggregate;
 
     Factory() {
-      setDefaultTextEncoding(TagString.Type.UTF8);
+      setDefaultTextEncoding(UTF_8);
     }
 
     public Frame createFrame(ByteVector d, Header h) {
@@ -279,7 +279,7 @@ class TrueAudioFileTest {
       assertEquals(1, c.aggregate);
       f.removeTags(Set.of(TrueAudioFile.TagType.values()));
       f.id3v2Tag().setTitle("new");
-      assertEquals(TagString.Type.UTF8, ((TextIdentificationFrame) f.id3v2Tag().frameList().getFirst()).textEncoding());
+      assertEquals(UTF_8, ((TextIdentificationFrame) f.id3v2Tag().frameList().getFirst()).textEncoding());
     }
   }
 

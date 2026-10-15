@@ -1,14 +1,19 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Timed-frame operations and private constructors; public factory acceptance remains open.
@@ -23,11 +28,11 @@ public class Id3TimedProbe {
   }
 
   static String string(String s) {
-    return TagString.from8Bit(bytes(s).data(), TagString.Type.UTF8).toString();
+    return TextBytes.decode(bytes(s).data(), UTF_8);
   }
 
   static String text(String s) {
-    return hex(new TagString(s).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(s, UTF_16BE));
   }
 
   static int b(boolean v) {
@@ -50,7 +55,7 @@ public class Id3TimedProbe {
 
   static class Utf8 extends Latin1StringHandler {
     public String parse(ByteVector data) {
-      return new TagString(data, TagString.Type.UTF8).toString();
+      return TextBytes.decodeTerminated(data.data(), UTF_8);
     }
   }
 
@@ -66,7 +71,7 @@ public class Id3TimedProbe {
       ? (parsed ? new EventTimingCodesFrame(data) : new EventTimingCodesFrame())
       : (parsed
       ? new SynchronizedLyricsFrame(data)
-      : new SynchronizedLyricsFrame(TagString.Type.values()[Integer.parseInt(p[7])]));
+      : new SynchronizedLyricsFrame(TextCharsets.ALL[Integer.parseInt(p[7])]));
   }
 
   static void state(String id, Frame f) {
@@ -80,7 +85,7 @@ public class Id3TimedProbe {
       var s = (SynchronizedLyricsFrame) f;
       var entries = s.synchedText();
       detail
-        .append(s.textEncoding().ordinal())
+        .append(TextCharsets.id(s.textEncoding()))
         .append(':')
         .append(hex(s.language()))
         .append(':')
@@ -141,7 +146,7 @@ public class Id3TimedProbe {
       entries.clear();
     }
     if (f instanceof SynchronizedLyricsFrame s) {
-      s.setTextEncoding(TagString.Type.values()[Integer.parseInt(p[7])]);
+      s.setTextEncoding(TextCharsets.ALL[Integer.parseInt(p[7])]);
       s.setLanguage(bytes(p[11]));
       s.setTimestampFormat(
         SynchronizedLyricsFrame.TimestampFormat.values()[Integer.parseInt(p[8])]);
@@ -196,7 +201,7 @@ public class Id3TimedProbe {
 
     public String parse(ByteVector d) {
       if (++calls == fail) throw new IllegalArgumentException("callback");
-      return "decoded:" + new TagString(d);
+      return "decoded:" + TextBytes.decodeTerminated(d.data(), ISO_8859_1);
     }
   }
 
@@ -323,7 +328,7 @@ public class Id3TimedProbe {
     System.out.println("virtual/S/reparse\t" + s.calls);
     state("virtual/S/state", s);
     for (int fail = 1; fail <= 3; fail++) {
-      var f = new SynchronizedLyricsFrame(TagString.Type.UTF8);
+      var f = new SynchronizedLyricsFrame(UTF_8);
       f.setDescription("old");
       f.setSynchedText(List.of(new SynchronizedLyricsFrame.SynchedText(7, "old-text")));
       var handler = new Throw(fail);

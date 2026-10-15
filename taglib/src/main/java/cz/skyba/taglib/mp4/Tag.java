@@ -2,20 +2,18 @@
 package cz.skyba.taglib.mp4;
 
 import cz.skyba.taglib.*;
-import cz.skyba.taglib.internal.Ascii;
-import cz.skyba.taglib.internal.ByteVectorOutput;
-import cz.skyba.taglib.internal.Mp4Save;
-import cz.skyba.taglib.internal.WriteGuard;
+import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.internal.editor.Mp4Structured;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A mutable collection of MP4 metadata items with optional bound storage.
@@ -311,7 +309,7 @@ public class Tag extends TagBase {
   @Override
   public long year() {
     Item value = items.get("©day");
-    return value == null ? 0 : Integer.toUnsignedLong(new TagString(String.join(" ", value.toStringList())).toInt());
+    return value == null ? 0 : Integer.toUnsignedLong(TextNumbers.parseInt(String.join(" ", value.toStringList())));
   }
 
   @Override
@@ -386,7 +384,7 @@ public class Tag extends TagBase {
   public PropertyMap properties() {
     var values = PropertyMap.builder();
     items.forEach((name, item) -> {
-      var property = factory.itemToProperty(new TagString(name).data(TagString.Type.LATIN1), item);
+      var property = factory.itemToProperty(ByteVector.fromText(name, ISO_8859_1), item);
       if (property.key().isEmpty()) {
         values.addUnsupportedData(name);
       } else {
@@ -406,14 +404,16 @@ public class Tag extends TagBase {
     PropertyMap previous = properties();
     for (String key : previous.asMap().keySet()) {
       if (!values.containsKey(key) || values.get(key).isEmpty()) {
-        items.remove(new TagString(factory.nameForPropertyKey(key)).toString());
+        var name = factory.nameForPropertyKey(key);
+        items.remove(name.decodeTerminatedText(ISO_8859_1));
       }
     }
     var rejected = PropertyMap.builder();
     for (var entry : values.asMap().entrySet()) {
       var parsed = factory.itemFromProperty(entry.getKey(), entry.getValue());
       if (parsed.item().isValid()) {
-        setItem(new TagString(parsed.name()).toString(), parsed.item());
+        var name = parsed.name();
+        setItem(name.decodeTerminatedText(ISO_8859_1), parsed.item());
       } else {
         rejected.put(entry.getKey(), entry.getValue());
       }

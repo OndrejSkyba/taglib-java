@@ -6,11 +6,13 @@ import cz.skyba.taglib.TagLibException;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.internal.FileOwnerStream;
 import cz.skyba.taglib.internal.Mp4Save;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable Nero chapter list with explicit storage read, write and removal operations.
@@ -58,7 +60,7 @@ public class NeroChapterList extends ChapterHolder {
       int size = data.at(pos++) & 255;
       String text = "";
       if (size > 0 && size <= data.size() - pos) {
-        text = new TagString(data.mid(pos, size), TagString.Type.UTF8).toString();
+        text = TextBytes.decodeTerminated(data.data(), pos, size, UTF_8);
         pos += size;
       }
       chapterList.add(new Chapter(text, time / 10_000));
@@ -104,7 +106,7 @@ public class NeroChapterList extends ChapterHolder {
     for (int i = 0; i < Math.min(chapterList.size(), 255); i++) {
       Chapter chapter = chapterList.get(i);
       long time = Math.multiplyExact(chapter.startTime(), 10_000);
-      ByteVector title = new TagString(chapter.title()).data(TagString.Type.UTF8);
+      ByteVector title = ByteVector.fromText(chapter.title(), UTF_8);
       int size = Math.min(title.size(), 255);
       data.append(ByteVector.fromLong(time)).append((byte) size).append(title.mid(0, size));
     }

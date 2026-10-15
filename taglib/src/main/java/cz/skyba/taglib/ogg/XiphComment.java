@@ -5,15 +5,14 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.flac.Picture;
-import cz.skyba.taglib.internal.Ascii;
-import cz.skyba.taglib.internal.ByteVectorOutput;
-import cz.skyba.taglib.internal.PictureProperties;
+import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Debug;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Mutable Vorbis-style text comments and picture blocks.
@@ -110,7 +109,7 @@ public class XiphComment extends TagBase {
     if (values.isEmpty()) {
       values = values(alternate);
     }
-    return values.isEmpty() ? 0 : Integer.toUnsignedLong(new TagString(values.getFirst()).toInt());
+    return values.isEmpty() ? 0 : Integer.toUnsignedLong(TextNumbers.parseInt(values.getFirst()));
   }
 
   @Override
@@ -398,13 +397,13 @@ public class XiphComment extends TagBase {
    */
   public final ByteVector render(boolean framing) {
     var data = new ByteVectorOutput();
-    var vendorData = new TagString(vendor).data(TagString.Type.UTF8);
+    var vendorData = ByteVector.fromText(vendor, UTF_8);
     data.append(ByteVector.fromUnsignedInt(vendorData.size(), false)).append(vendorData).append(ByteVector.fromUnsignedInt(fieldCount(), false));
     for (var entry : fields.entrySet()) {
       for (var value : entry.getValue()) {
-        var field = new TagString(entry.getKey()).data(TagString.Type.UTF8)
+        var field = ByteVector.fromText(entry.getKey(), UTF_8)
           .append(new ByteVector("="))
-          .append(new TagString(value).data(TagString.Type.UTF8));
+          .append(ByteVector.fromText(value, UTF_8));
         data.append(ByteVector.fromUnsignedInt(field.size(), false)).append(field);
       }
     }
@@ -437,7 +436,7 @@ public class XiphComment extends TagBase {
       debug("parse() - Vendor ID exceeds comment data.");
       return;
     }
-    vendor = new TagString(data.mid(4, (int) vendorLength), TagString.Type.UTF8).toString();
+    vendor = TextBytes.decodeTerminated(data.data(), 4, (int) vendorLength, UTF_8);
     int pos = 4 + (int) vendorLength;
     if (data.size() - pos < 4) {
       debug("parse() - Missing comment field count.");
@@ -465,7 +464,7 @@ public class XiphComment extends TagBase {
         debug("parse() - Discarding a field. Separator not found.");
         continue;
       }
-      String key = upper(new TagString(entry.mid(0, sep), TagString.Type.UTF8).toString());
+      String key = upper(TextBytes.decodeTerminated(entry.data(), 0, sep, UTF_8));
       if (!checkKey(key)) {
         debug("parse() - Discarding a field. Invalid key.");
         continue;
@@ -489,12 +488,12 @@ public class XiphComment extends TagBase {
         }
         pictures.add(picture);
       } else {
-        addField(key, new TagString(entry.mid(sep + 1), TagString.Type.UTF8).toString(), false);
+        addField(key, TextBytes.decodeTerminated(entry.data(), sep + 1, entry.size() - sep - 1, UTF_8), false);
       }
     }
   }
 
   private static void debug(String text) {
-    Debug.debug(new TagString("Ogg::XiphComment::" + text));
+    Debug.debug("Ogg::XiphComment::" + text);
   }
 }

@@ -165,7 +165,7 @@ public class DsfFile extends FileBase {
   }
 
   private InvalidAudioFileException invalid(String message) {
-    Debug.debug(new TagString("DSF::File::read() -- " + message));
+    Debug.debug("DSF::File::read() -- " + message);
     return new InvalidAudioFileException("DSF " + message + ": " + name());
   }
 

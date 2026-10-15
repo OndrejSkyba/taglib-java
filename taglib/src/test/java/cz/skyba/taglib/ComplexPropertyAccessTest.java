@@ -6,7 +6,6 @@ import cz.skyba.taglib.id3.v2.GeneralEncapsulatedObjectFrame;
 import cz.skyba.taglib.mp4.CoverArt;
 import cz.skyba.taglib.ogg.XiphComment;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ComplexPropertyAccessTest {
@@ -192,7 +192,7 @@ class ComplexPropertyAccessTest {
     var t = new cz.skyba.taglib.ape.Tag();
     assertFalse(t.itemListMap().containsKey("COVER ART (FRONT)"));
     tagSetGetPicture(t, p);
-    assertEquals(new TagString(p.get("description").toText()).data(TagString.Type.UTF8).append((byte) 0).append(p.get("data").toByteVector()), t.itemListMap().get("COVER ART (FRONT)").binaryData());
+    assertEquals(ByteVector.fromText(p.get("description").toText(), UTF_8).append((byte) 0).append(p.get("data").toByteVector()), t.itemListMap().get("COVER ART (FRONT)").binaryData());
   }
 
   @Test

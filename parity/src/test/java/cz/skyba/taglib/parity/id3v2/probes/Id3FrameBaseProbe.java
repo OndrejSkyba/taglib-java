@@ -3,13 +3,18 @@ package cz.skyba.taglib.parity.id3v2.probes;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.id3.v2.Frame;
 import cz.skyba.taglib.id3.v2.UnknownFrame;
+import cz.skyba.taglib.internal.TextBytes;
+import cz.skyba.taglib.parity.TextCharsets;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Id3FrameBaseProbe {
   static ByteVector bytes(String s) {
@@ -21,7 +26,7 @@ public class Id3FrameBaseProbe {
   }
 
   static String text(String v) {
-    return hex(new TagString(v).data(TagString.Type.UTF16BE));
+    return hex(ByteVector.fromText(v, UTF_16BE));
   }
 
   static int b(boolean v) {
@@ -101,11 +106,11 @@ public class Id3FrameBaseProbe {
       setHeader(h);
     }
 
-    String stringField(ByteVector data, TagString.Type type, int[] pos) {
+    String stringField(ByteVector data, Charset type, int[] pos) {
       return readStringField(data, type, pos);
     }
 
-    TagString.Type check(List<String> fields, TagString.Type type) {
+    Charset check(List<String> fields, Charset type) {
       return checkTextEncoding(fields, type);
     }
 
@@ -138,7 +143,7 @@ public class Id3FrameBaseProbe {
     }
 
     public void setText(String s) {
-      fields = new TagString(s).data(TagString.Type.UTF8);
+      fields = ByteVector.fromText(s, UTF_8);
     }
 
     public List<String> toStringList() {
@@ -240,7 +245,7 @@ public class Id3FrameBaseProbe {
           case "R" -> {
             var r = new Raw(new ByteVector("X001"), 4);
             int[] position = {(int) number};
-            var type = TagString.Type.values()[(int) version];
+            var type = TextCharsets.ALL[(int) version];
             var value = r.stringField(data, type, position);
             System.out.println(
               id
@@ -257,20 +262,20 @@ public class Id3FrameBaseProbe {
             var r = new Raw(new ByteVector("X001"), number);
             var fields =
               List.of(
-                new TagString(data, TagString.Type.UTF8).toString(),
-                new TagString(other, TagString.Type.UTF8).toString());
-            var type = TagString.Type.values()[(int) version];
+                TextBytes.decodeTerminated(data.data(), UTF_8),
+                TextBytes.decodeTerminated(other.data(), UTF_8));
+            var type = TextCharsets.ALL[(int) version];
             System.out.println(
               id
                 + "/encoding\t"
-                + r.check(fields, type).ordinal()
+                + TextCharsets.id(r.check(fields, type))
                 + "\t"
                 + hex(Frame.textDelimiter(type)));
           }
           case "K" -> System.out.println(
             id
               + "/mapping\t"
-              + hex(Frame.keyToFrameID(new TagString(data, TagString.Type.UTF8).toString()))
+              + hex(Frame.keyToFrameID(TextBytes.decodeTerminated(data.data(), UTF_8)))
               + "\t"
               + text(Frame.frameIDToKey(other)));
           default -> throw new IllegalArgumentException(line);

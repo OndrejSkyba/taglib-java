@@ -8,7 +8,6 @@ import cz.skyba.taglib.internal.ebml.DeferredBinaryElement;
 import cz.skyba.taglib.matroska.*;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +19,9 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * EBML metadata parsing and native default Compact updates.
@@ -626,15 +628,15 @@ public final class MatroskaCodec implements Codec {
 
   private static String text(BinaryFile f, Element e, ReadOptions options) throws IOException {
     // EBML ASCII/Latin-1 fields are distinct from UTF-8 names and titles upstream.
-    var type = e.id == 0x4282 || e.id == 0x447a || e.id == 0x4660 || e.id == 0x86
-      || e.id == 0x437c ? TagString.Type.LATIN1 : TagString.Type.UTF8;
+    var charset = e.id == 0x4282 || e.id == 0x447a || e.id == 0x4660 || e.id == 0x86
+      || e.id == 0x437c ? ISO_8859_1 : UTF_8;
     byte[] bytes = data(f, e, options);
     int length = 0;
     while (length < bytes.length && bytes[length] != 0) {
       length++;
     }
     // EBML::StringElement truncates the raw bytes before TagLib's strict decoding.
-    return TextBytes.terminated(bytes, 0, length, type);
+    return TextBytes.decodeTerminated(bytes, 0, length, charset);
   }
 
   private static String key(String name, int target) {

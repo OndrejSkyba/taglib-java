@@ -1,13 +1,14 @@
 package cz.skyba.taglib.id3.v2;
 
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HexFormat;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PictureObjectFramesTest {
@@ -29,7 +30,7 @@ class PictureObjectFramesTest {
   @Test
   void pictureDefaultsRenderFourFieldsDespiteFiveByteParseMinimum() {
     var p = new AttachedPictureFrame();
-    assertEquals(TagString.Type.LATIN1, p.textEncoding());
+    assertEquals(ISO_8859_1, p.textEncoding());
     assertEquals(AttachedPictureFrame.Type.Other, p.type());
     assertEquals(wire("APIC", "00000000"), p.render());
     assertEquals(List.of("", ""), p.toStringList());
@@ -43,9 +44,9 @@ class PictureObjectFramesTest {
     p.setDescription("old-desc");
     p.setType(AttachedPictureFrame.Type.BackCover);
     p.setPicture(new ByteVector("old-body"));
-    p.setTextEncoding(TagString.Type.UTF16);
+    p.setTextEncoding(UTF_16);
     p.setData(wire("APIC", "03616263"));
-    assertEquals(TagString.Type.UTF16, p.textEncoding());
+    assertEquals(UTF_16, p.textEncoding());
     assertEquals("old", p.mimeType());
     assertEquals("old-desc", p.description());
     assertEquals(AttachedPictureFrame.Type.BackCover, p.type());
@@ -59,7 +60,7 @@ class PictureObjectFramesTest {
     p.setType(AttachedPictureFrame.Type.BackCover);
     p.setPicture(new ByteVector("old-body"));
     p.setData(wire("APIC", "0361626300"));
-    assertEquals(TagString.Type.UTF8, p.textEncoding());
+    assertEquals(UTF_8, p.textEncoding());
     assertEquals("abc", p.mimeType());
     assertEquals("old-desc", p.description());
     assertEquals(AttachedPictureFrame.Type.BackCover, p.type());
@@ -104,7 +105,7 @@ class PictureObjectFramesTest {
     var p = new AttachedPictureFrame(original);
     p.picture().clear();
     original.clear();
-    assertEquals(TagString.Type.UTF16LE, p.textEncoding());
+    assertEquals(UTF_16LE, p.textEncoding());
     assertEquals("A", p.description());
     assertEquals(bytes("00ff"), p.picture());
     p.toStringList().set(0, "detached");
@@ -121,7 +122,7 @@ class PictureObjectFramesTest {
     p.setDescription("Ž");
     var rendered = p.render();
     assertSame(h, p.header());
-    assertEquals(TagString.Type.LATIN1, p.textEncoding());
+    assertEquals(ISO_8859_1, p.textEncoding());
     var parsed = new AttachedPictureFrame(rendered);
     assertEquals("Ž", parsed.description());
     assertEquals(bytes("000102ff00"), parsed.picture());
@@ -145,7 +146,7 @@ class PictureObjectFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 2) throw new IllegalArgumentException("second");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
     var p = new AttachedPictureFrame();
@@ -223,9 +224,9 @@ class PictureObjectFramesTest {
     o.setFileName("name");
     o.setDescription("desc");
     o.setObject(new ByteVector("old-body"));
-    o.setTextEncoding(TagString.Type.UTF8);
+    o.setTextEncoding(UTF_8);
     o.setData(wire("GEOB", "000102"));
-    assertEquals(TagString.Type.UTF8, o.textEncoding());
+    assertEquals(UTF_8, o.textEncoding());
     assertEquals("old", o.mimeType());
     assertEquals("name", o.fileName());
     assertEquals("desc", o.description());
@@ -238,7 +239,7 @@ class PictureObjectFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 2) throw new IllegalArgumentException("second");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
     var o = new GeneralEncapsulatedObjectFrame();
@@ -258,7 +259,7 @@ class PictureObjectFramesTest {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
         if (++calls[0] == 3) throw new IllegalArgumentException("third");
-        return "decoded:" + new TagString(data);
+        return "decoded:" + TextBytes.decodeTerminated(data.data(), ISO_8859_1);
       }
     });
     var o = new GeneralEncapsulatedObjectFrame();
@@ -275,7 +276,7 @@ class PictureObjectFramesTest {
   void objectMimetypeAndLatinTextUseTheSameGlobalHandler() {
     Id3Text.setHandler(new Latin1StringHandler() {
       public String parse(ByteVector data) {
-        return new TagString(data, TagString.Type.UTF8).toString();
+        return TextBytes.decodeTerminated(data.data(), UTF_8);
       }
     });
     var o = new GeneralEncapsulatedObjectFrame(wire("GEOB", "00c3a900c3a900c3a90000ff"));
@@ -307,7 +308,7 @@ class PictureObjectFramesTest {
     var h = o.header();
     var rendered = o.render();
     assertSame(h, o.header());
-    assertEquals(TagString.Type.LATIN1, o.textEncoding());
+    assertEquals(ISO_8859_1, o.textEncoding());
     var parsed = new GeneralEncapsulatedObjectFrame(rendered);
     assertEquals("雪", parsed.fileName());
     assertEquals("desc", parsed.description());
@@ -398,7 +399,7 @@ class PictureObjectFramesTest {
   @Test
   void upstreamRenderApic() {
     var p = new AttachedPictureFrame();
-    p.setTextEncoding(TagString.Type.UTF8);
+    p.setTextEncoding(UTF_8);
     p.setMimeType("image/png");
     p.setType(AttachedPictureFrame.Type.BackCover);
     p.setDescription("Description");
@@ -417,7 +418,7 @@ class PictureObjectFramesTest {
   @Test
   void upstreamRenderGeob() {
     var o = new GeneralEncapsulatedObjectFrame();
-    o.setTextEncoding(TagString.Type.LATIN1);
+    o.setTextEncoding(ISO_8859_1);
     o.setMimeType("application/octet-stream");
     o.setFileName("test.bin");
     o.setDescription("Description");

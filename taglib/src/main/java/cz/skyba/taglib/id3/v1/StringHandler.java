@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.id3.v1;
 
+import cz.skyba.taglib.internal.Ascii;
+import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * A replaceable decoder and encoder for ID3v1 text. The default encoding is ISO-8859-1.
@@ -15,7 +18,7 @@ public class StringHandler {
    * @return decoded text
    */
   public String parse(ByteVector data) {
-    return new TagString(data, TagString.Type.LATIN1).stripWhiteSpace().toString();
+    return Ascii.stripWhiteSpace(data.decodeTerminatedText(ISO_8859_1));
   }
 
   /**
@@ -25,7 +28,6 @@ public class StringHandler {
    * @return encoded bytes
    */
   public ByteVector render(String value) {
-    var text = new TagString(value);
-    return text.isLatin1() ? text.data(TagString.Type.LATIN1) : new ByteVector();
+    return TextBytes.isLatin1(value) ? ByteVector.fromText(value, ISO_8859_1) : new ByteVector();
   }
 }

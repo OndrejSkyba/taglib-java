@@ -4,10 +4,13 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.id3.v1.Genres;
 import cz.skyba.taglib.internal.ByteVectorOutput;
+import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
+import java.nio.charset.Charset;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * A mutable ID3v2 frame containing text identification values.
@@ -20,7 +23,7 @@ public class TextIdentificationFrame extends Frame {
     "DJMIXER", "DJ-MIX", "MIXER", "MIX");
   private static final Map<String, String> REVERSE_ROLES = reverseRoles();
   private static final Map<String, String> PEOPLE = Collections.unmodifiableMap(new TreeMap<>(ROLES));
-  private TagString.Type encoding = TagString.Type.LATIN1;
+  private Charset encoding = ISO_8859_1;
   private List<String> fields = new ArrayList<>();
 
   private static Map<String, String> reverseRoles() {
@@ -40,9 +43,9 @@ public class TextIdentificationFrame extends Frame {
    * @param type     the frame identifier to copy
    *                 The encoding can be adjusted when rendered to represent the field values.
    */
-  public TextIdentificationFrame(ByteVector type, TagString.Type encoding) {
+  public TextIdentificationFrame(ByteVector type, Charset encoding) {
     super(type);
-    this.encoding = Objects.requireNonNull(encoding);
+    this.encoding = Id3Text.requireEncoding(encoding);
   }
 
   /**
@@ -110,12 +113,12 @@ public class TextIdentificationFrame extends Frame {
     return fields.size();
   }
 
-  public final TagString.Type textEncoding() {
+  public final Charset textEncoding() {
     return encoding;
   }
 
-  public final void setTextEncoding(TagString.Type value) {
-    encoding = Objects.requireNonNull(value);
+  public final void setTextEncoding(Charset value) {
+    encoding = Id3Text.requireEncoding(value);
   }
 
   /**
@@ -180,7 +183,7 @@ public class TextIdentificationFrame extends Frame {
     for (int i = 0; i < values.size(); i++) {
       String value = values.get(i);
       if (key.equals("GENRE")) {
-        var number = new TagString(value).extractInt();
+        var number = TextNumbers.extractInt(value);
         if (number.ok()) {
           values.set(i, Genres.genre(number.value()));
         }
@@ -232,7 +235,7 @@ public class TextIdentificationFrame extends Frame {
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
-    int alignment = encoding == TagString.Type.LATIN1 || encoding == TagString.Type.UTF8 ? 1 : 2;
+    int alignment = ISO_8859_1.equals(encoding) || UTF_8.equals(encoding) ? 1 : 2;
     int length = data.size() - 1;
     while (length > 0 && data.at(length) == 0) {
       length--;
@@ -248,17 +251,17 @@ public class TextIdentificationFrame extends Frame {
       if (part.isEmpty() && !(i == 0 && frameID().equals(new ByteVector("TXXX")))) {
         continue;
       }
-      TagString.Type type = encoding;
-      if (type == TagString.Type.UTF16) {
+      Charset type = encoding;
+      if (UTF_16.equals(type)) {
         if (i == 0) {
           firstBom = part.toUnsignedShort();
         } else {
           int bom = part.toUnsignedShort();
           if (bom != 0xfeff && bom != 0xfffe) {
             if (firstBom == 0xfeff) {
-              type = TagString.Type.UTF16BE;
+              type = UTF_16BE;
             } else if (firstBom == 0xfffe) {
-              type = TagString.Type.UTF16LE;
+              type = UTF_16LE;
             }
           }
         }
@@ -272,14 +275,14 @@ public class TextIdentificationFrame extends Frame {
    */
   @Override
   protected ByteVector renderFields() {
-    TagString.Type type = checkTextEncoding(fields, encoding);
+    Charset type = checkTextEncoding(fields, encoding);
     var result = new ByteVectorOutput();
-    result.append((byte) type.ordinal());
+    result.append(Id3Text.encodingByte(type));
     for (int i = 0; i < fields.size(); i++) {
       if (i > 0) {
         result.append(textDelimiter(type));
       }
-      result.append(Id3Text.encode(fields.get(i), type));
+      result.append(ByteVector.fromText(fields.get(i), type));
     }
     return result.toByteVector();
   }

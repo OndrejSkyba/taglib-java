@@ -6,7 +6,6 @@ import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.internal.id3.Id3v2;
 import cz.skyba.taglib.riff.wav.Properties;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.TagString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +16,8 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * RIFF WAVE/RF64/BW64 and IFF AIFF/AIFC, with bounded metadata reads.
@@ -449,7 +450,7 @@ public final class RiffCodec implements Codec {
     }
     byte[] type = format.length >= 23 ? data.mid(18, 4).toByteArray() : new byte[0];
     String name = format.length >= 23
-      ? new TagString(data.mid(23, format[22] & 255)).toString() : "";
+      ? TextBytes.decodeTerminated(format, 23, Math.min(format[22] & 255, format.length - 23), ISO_8859_1) : "";
     // Lossless is the existing Java common-property extension, separate from isAiffC.
     String compression = format.length >= 22 ? Binary.ascii(format, 18, 4) : "NONE";
     boolean lossless = LOSSLESS_AIFF_COMPRESSION.contains(compression);
