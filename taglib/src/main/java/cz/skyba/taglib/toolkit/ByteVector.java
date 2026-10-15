@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * A mutable byte sequence with copying constructors, binary searches and numeric conversions.
  * Constructor inputs and extracted ranges are copied. {@link #data()} exposes live storage;
@@ -15,6 +17,8 @@ import java.util.*;
  * to big-endian order, and incomplete integer fields are read from the bytes available.
  */
 public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> {
+  private static final System.Logger LOG = System.getLogger(ByteVector.class.getName());
+
   private byte[] data;
 
   /**
@@ -750,7 +754,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
 
   private long number(int offset, int length, boolean bigEndian) {
     if (offset < 0 || offset >= size()) {
-      Debug.debug("toNumber<T>() -- No data to convert. Returning 0.");
+      LOG.log(DEBUG, "No data available for numeric conversion; returning zero.");
       return 0;
     }
     int count = Math.min(length, size() - offset);
@@ -830,7 +834,7 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
    */
   public long toUnsignedInt(int offset, int length, boolean bigEndian) {
     if (offset < 0 || offset >= size()) {
-      Debug.debug("toNumber<T>() -- No data to convert. Returning 0.");
+      LOG.log(DEBUG, "No data available for numeric conversion; returning zero.");
       return 0;
     }
     int count = Math.clamp(length, 0, size() - offset), result = 0;
@@ -1091,13 +1095,13 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
 
   private Float80 toFloat80(int offset, boolean bigEndian) {
     if (!available(offset, 10)) {
-      Debug.debug("toFloat80() - offset is out of range. Returning 0.");
+      LOG.log(DEBUG, "Not enough data for an 80-bit float at the requested offset; returning zero.");
       return Float80.ZERO;
     }
     int header = toUnsignedShort(offset + (bigEndian ? 0 : 8), bigEndian);
     int exponent = header & 0x7fff;
     if (exponent == 0x7fff) {
-      Debug.debug("toFloat80() - can't handle the infinity or NaN. Returning 0.");
+      LOG.log(DEBUG, "Infinity and NaN are unsupported for 80-bit floats; returning zero.");
       return Float80.ZERO;
     }
     return Float80.fromNativeFields((header & 0x8000) != 0, exponent,

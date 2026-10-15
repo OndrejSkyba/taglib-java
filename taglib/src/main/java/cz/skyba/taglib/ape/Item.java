@@ -4,13 +4,13 @@ package cz.skyba.taglib.ape;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -20,6 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * operations clear the other payload. Binary inputs and exports are copied.
  */
 public final class Item {
+  private static final System.Logger LOG = System.getLogger(Item.class.getName());
+
   /**
    * The encoded APE item kind.
    */
@@ -214,7 +216,7 @@ public final class Item {
 
   void parse(ByteVector data, int start) {
     if (data.size() - start < 11) {
-      Debug.debug("APE::Item::parse() -- no data in item");
+      LOG.log(DEBUG, "Not enough data for an APE item.");
       return;
     }
     long length = data.toUnsignedInt(start, false), flags = data.toUnsignedInt(start + 4, false);

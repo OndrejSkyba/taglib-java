@@ -10,12 +10,12 @@ import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -24,6 +24,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Editing and rendering operate in memory; an owning audio file persists the result on save.
  */
 public class Tag extends TagBase {
+  private static final System.Logger LOG = System.getLogger(Tag.class.getName());
+
   private static final Variant EMPTY_VARIANT = new Variant();
 
   private static final String FRONT = "COVER ART (FRONT)", BACK = "COVER ART (BACK)";
@@ -189,7 +191,7 @@ public class Tag extends TagBase {
     if (checkKey(key)) {
       items.put(upper(key), new Item(item));
     } else {
-      Debug.debug("APE::Tag::setItem() - Couldn't set an item due to an invalid key.");
+      LOG.log(DEBUG, "Cannot set an item with an invalid key.");
     }
   }
 
@@ -490,19 +492,19 @@ public class Tag extends TagBase {
     long position = 0;
     for (long i = 0; i < footer.itemCount() && position <= data.size() - 11L; i++) {
       if (i >= 50000) {
-        Debug.debug("APE::Tag::parse() - Maximum item count exceeded. Stopped parsing.");
+        LOG.log(DEBUG, "Maximum item count exceeded; stopping parsing.");
         return;
       }
       int start = (int) position;
       int zero = data.find((byte) 0, start + 8);
       if (zero < 0) {
-        Debug.debug("APE::Tag::parse() - Couldn't find a key/value separator. Stopped parsing.");
+        LOG.log(DEBUG, "Missing key/value separator; stopping parsing.");
         return;
       }
       int keyLength = zero - start - 8;
       long valueLength = data.toUnsignedInt(start, false);
       if (valueLength >= data.size() || position > data.size() - valueLength) {
-        Debug.debug("APE::Tag::parse() - Invalid val length. Stopped parsing.");
+        LOG.log(DEBUG, "Invalid item value length; stopping parsing.");
         return;
       }
       String key = TextBytes.decodeTerminated(data.data(), start + 8, keyLength, ISO_8859_1);
@@ -511,7 +513,7 @@ public class Tag extends TagBase {
         item.parse(data, start);
         items.put(upper(item.key()), item);
       } else {
-        Debug.debug("APE::Tag::parse() - Skipped an item due to an invalid key.");
+        LOG.log(DEBUG, "Skipping an item with an invalid key.");
       }
       position += keyLength + valueLength + 9;
     }

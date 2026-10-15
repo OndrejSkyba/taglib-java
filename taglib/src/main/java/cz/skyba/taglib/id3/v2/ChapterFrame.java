@@ -4,12 +4,12 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -17,6 +17,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class ChapterFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(ChapterFrame.class.getName());
+
   private final cz.skyba.taglib.id3.v2.Header tagHeader;
   private final FrameCollection embedded = new FrameCollection();
   private ByteVector elementID = new ByteVector();
@@ -235,7 +237,7 @@ public class ChapterFrame extends Frame {
 
   private void parseChapter(ByteVector data) {
     if (data.size() < 18) {
-      Debug.debug("A CHAP frame must contain at least 18 bytes (1 byte element ID terminated by null and 4x4 bytes for start and end time and offset).");
+      LOG.log(DEBUG, "A chapter frame must contain at least 18 bytes.");
       return;
     }
     StringField field = stringField(data, ISO_8859_1, 0);

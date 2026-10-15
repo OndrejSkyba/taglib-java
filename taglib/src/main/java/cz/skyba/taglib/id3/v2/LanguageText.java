@@ -2,10 +2,10 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -13,13 +13,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Shared COMM/USLT wire fields; parsing retains each completed field before later failures.
  */
 final class LanguageText {
+  private static final System.Logger LOG = System.getLogger(LanguageText.class.getName());
+
   Charset encoding = ISO_8859_1;
   ByteVector language = new ByteVector();
   String description = "", text = "";
 
   void parse(ByteVector data, String shortFrameMessage) {
     if (data.size() < 5) {
-      Debug.debug(shortFrameMessage);
+      LOG.log(DEBUG, shortFrameMessage);
       return;
     }
     encoding = Id3Text.encoding(data.at(0));

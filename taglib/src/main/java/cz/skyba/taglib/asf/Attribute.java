@@ -3,13 +3,12 @@ package cz.skyba.taglib.asf;
 
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 /**
@@ -18,6 +17,8 @@ import static java.nio.charset.StandardCharsets.UTF_16LE;
  * and exported as detached bytes. Named views can share the stored value state.
  */
 public final class Attribute {
+  private static final System.Logger LOG = System.getLogger(Attribute.class.getName());
+
   public static final int UnicodeType = 0, BytesType = 1, BoolType = 2, DWordType = 3, QWordType = 4, WordType = 5, GuidType = 6;
 
   private static final class State {
@@ -287,14 +288,16 @@ public final class Attribute {
       parsedName = readText(file, nameLength);
     }
     if (kind != 2 && size > 65535) {
-      Debug.debug("ASF::Attribute::parse() -- Value larger than 64kB");
+      LOG.log(DEBUG, "Attribute value exceeds 64 KiB.");
     }
     switch (dataType) {
       case WordType, BoolType, DWordType, QWordType -> state.number = readNumeric(file, kind, dataType);
       case UnicodeType -> state.text = readText(file, size);
       case BytesType, GuidType -> state.bytes = new ByteVector(file.readBlock(size));
       default -> {
-        Debug.debug(String.format(Locale.ROOT, "ASF::Attribute::parse() -- Unknown data type 0x%x", dataType));
+        if (LOG.isLoggable(DEBUG)) {
+          LOG.log(DEBUG, "Unknown attribute data type 0x" + Integer.toHexString(dataType));
+        }
         return "";
       }
     }

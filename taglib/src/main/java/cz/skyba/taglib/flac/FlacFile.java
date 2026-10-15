@@ -9,6 +9,7 @@ import cz.skyba.taglib.toolkit.*;
 import java.nio.file.Path;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -18,6 +19,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
  */
 public class FlacFile extends FileBase {
+  private static final System.Logger LOG = System.getLogger(FlacFile.class.getName());
+
   /**
    * Tag families supported by this format's removal operations.
    */
@@ -155,7 +158,7 @@ public class FlacFile extends FileBase {
   }
 
   private InvalidAudioFileException invalid(String reason) {
-    Debug.debug("FLAC::File::scan() -- " + reason);
+    LOG.log(DEBUG, reason);
     return new InvalidAudioFileException("FLAC " + reason + ": " + name());
   }
 
@@ -197,14 +200,14 @@ public class FlacFile extends FileBase {
           commentData = data;
           blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
         } else {
-          Debug.debug("FLAC::File::scan() -- multiple Vorbis Comment blocks found, discarding");
+          LOG.log(DEBUG, "Discarding an additional Vorbis comment block.");
         }
       } else if (code == 6) {
         var picture = new Picture();
         if (picture.parse(data.toByteArray())) {
           blocks.add(picture);
         } else {
-          Debug.debug("FLAC::File::scan() -- invalid picture found, discarding");
+          LOG.log(DEBUG, "Discarding an invalid picture block.");
         }
       } else if (code != 1) {
         var inner = recognized(data);
@@ -218,9 +221,9 @@ public class FlacFile extends FileBase {
             bext = payload;
             hasBext = true;
           } else {
-            Debug.debug(
-              "FLAC::File::scan() -- multiple " + (inner.equals("iXML") ? "iXML" : "BEXT")
-                + " blocks found, discarding");
+            LOG.log(DEBUG, () ->
+              "Discarding an additional " + (inner.equals("iXML") ? "iXML" : "BEXT")
+                + " block.");
           }
         } else {
           blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
@@ -595,7 +598,7 @@ public class FlacFile extends FileBase {
     for (int i = 0; i < blocks.size(); ) {
       byte[] payload = blocks.get(i).render();
       if (payload.length > 0xffffff) {
-        Debug.debug("FLAC::File::save() -- Removing too large block.");
+        LOG.log(DEBUG, "Removing a metadata block that exceeds the 24-bit size limit.");
         blocks.remove(i);
         continue;
       }

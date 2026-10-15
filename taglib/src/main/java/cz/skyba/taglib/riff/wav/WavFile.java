@@ -7,7 +7,6 @@ import cz.skyba.taglib.internal.FailureSupport;
 import cz.skyba.taglib.internal.TagUtils;
 import cz.skyba.taglib.riff.RiffFile;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.FileStream;
 import cz.skyba.taglib.toolkit.IOStream;
 
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -24,6 +24,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
  */
 public class WavFile extends RiffFile {
+  private static final System.Logger LOG = System.getLogger(WavFile.class.getName());
+
   private static final int ID3v2 = 1, Info = 2, AllTags = 65535;
 
   /**
@@ -154,7 +156,7 @@ public class WavFile extends RiffFile {
           tags.set(0, new cz.skyba.taglib.id3.v2.Tag(this, chunkOffset(i), factory));
           hasID3 = true;
         } else {
-          debug("read() - Duplicate ID3v2 tag found.");
+          LOG.log(DEBUG, "Duplicate ID3v2 tag found.");
         }
       } else if (name.equals(LIST)) {
         var data = chunkData(i);
@@ -163,7 +165,7 @@ public class WavFile extends RiffFile {
             tags.set(1, new cz.skyba.taglib.riff.info.Tag(data));
             hasInfo = true;
           } else {
-            debug("read() - Duplicate INFO tag found.");
+            LOG.log(DEBUG, "Duplicate INFO tag found.");
           }
         }
       } else if (name.equals(new ByteVector("iXML"))) {
@@ -316,32 +318,28 @@ public class WavFile extends RiffFile {
         if (fmt.isEmpty()) {
           fmt = chunkData(i);
         } else {
-          propertiesDebug("Duplicate 'fmt ' chunk found.");
+          LOG.log(DEBUG, "Duplicate 'fmt ' chunk found.");
         }
       } else if (name.equals(new ByteVector("data"))) {
         if (data == 0) {
           data = Math.addExact(chunkDataSize64(i), chunkPadding(i));
         } else {
-          propertiesDebug("Duplicate 'data' chunk found.");
+          LOG.log(DEBUG, "Duplicate 'data' chunk found.");
         }
       } else if (name.equals(new ByteVector("fact"))) {
         if (fact == 0) {
           fact = chunkData(i).toUnsignedInt(false);
         } else {
-          propertiesDebug("Duplicate 'fact' chunk found.");
+          LOG.log(DEBUG, "Duplicate 'fact' chunk found.");
         }
       }
     }
     if (fmt.size() < 16) {
-      propertiesDebug("'fmt ' chunk not found or too short.");
+      LOG.log(DEBUG, "'fmt ' chunk not found or too short.");
     } else if (data == 0) {
-      propertiesDebug("'data' chunk not found.");
+      LOG.log(DEBUG, "'data' chunk not found.");
     }
     return Properties.fromChunks(fmt.toByteArray(), data, fact);
-  }
-
-  private static void propertiesDebug(String message) {
-    Debug.debug("RIFF::WAV::Properties::read() - " + message);
   }
 
   private void removeTagChunks(int mask) {
@@ -452,9 +450,5 @@ public class WavFile extends RiffFile {
         hasInfo = true;
       }
     }
-  }
-
-  private static void debug(String value) {
-    Debug.debug("RIFF::WAV::File::" + value);
   }
 }

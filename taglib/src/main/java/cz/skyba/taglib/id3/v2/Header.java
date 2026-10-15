@@ -2,14 +2,17 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.Objects;
+
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * Mutable ID3v2 tag header fields for parsing and serialization.
  */
 public class Header {
+  private static final System.Logger LOG = System.getLogger(Header.class.getName());
+
   private long majorVersion = 4, revisionNumber, tagSize;
   private boolean unsynchronisation, extendedHeader, experimentalIndicator, footerPresent;
 
@@ -119,13 +122,13 @@ public class Header {
     for (int i = 6; i < 10; i++) {
       if ((data.at(i) & 255) >= 128) {
         tagSize = 0;
-        Debug.debug("TagLib::ID3v2::Header::parse() - One of the size bytes in the ID3v2 header was greater than the allowed 128.");
+        LOG.log(DEBUG, "Invalid tag size: each sync-safe size byte must be below 128.");
         return;
       }
     }
     if ((data.at(3) & 255) == 255 || (data.at(4) & 255) == 255) {
       tagSize = 0;
-      Debug.debug("TagLib::ID3v2::Header::parse() - The version or revision in the ID3v2 header was 0xFF.");
+      LOG.log(DEBUG, "Invalid tag version or revision: 0xFF is reserved.");
       return;
     }
     // Pinned Linux char is signed before promotion to native unsigned int.

@@ -5,13 +5,13 @@ import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.Ascii;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
 /**
@@ -25,6 +25,8 @@ import static java.nio.charset.StandardCharsets.*;
  * Unsupported charsets are rejected with {@link IllegalArgumentException}.
  */
 public abstract class Frame {
+  private static final System.Logger LOG = System.getLogger(Frame.class.getName());
+
   public static final String instrumentPrefix = "PERFORMER:";
   public static final String commentPrefix = "COMMENT:";
   public static final String lyricsPrefix = "LYRICS:";
@@ -205,24 +207,24 @@ public abstract class Frame {
     if (!header.compression() && data.size() >= headerSize
       && ((offset + length) & UINT_MASK) > data.size()) {
       if (offset > data.size()) {
-        Debug.debug("Invalid frame data length");
+        LOG.log(DEBUG, "Invalid frame data length.");
         return new ByteVector();
       }
       length = data.size() - offset;
     }
     if (header.compression() && !header.encryption()) {
       if (data.size() <= offset) {
-        Debug.debug("Compressed frame doesn't have enough data to decode");
+        LOG.log(DEBUG, "Compressed frame has no payload to decode.");
         return new ByteVector();
       }
       ByteVector compressed = mid(data, offset, data.size());
       if (length > MAX_COMPRESSED_OUTPUT || length > (long) compressed.size() * 64) {
-        Debug.debug("Compressed frame exceeds decompression limit");
+        LOG.log(DEBUG, "Compressed frame exceeds the decompression limit.");
         return new ByteVector();
       }
       var decoded = FrameCompression.decompress(compressed, (int) length);
       if (!decoded.isEmpty() && length != decoded.size()) {
-        Debug.debug("frameDataLength does not match the data length returned by zlib");
+        LOG.log(DEBUG, "Decompressed frame size differs from the declared size.");
       }
       return decoded;
     }
@@ -297,8 +299,8 @@ public abstract class Frame {
     }
     for (String field : fields) {
       if (!TextBytes.isLatin1(field)) {
-        Debug.debug(header.version() == 4
-          ? "Frame::checkEncoding() -- Rendering using UTF8." : "Frame::checkEncoding() -- Rendering using UTF16.");
+        LOG.log(DEBUG, header.version() == 4
+          ? "Text is not representable in Latin-1; encoding it as UTF-8." : "Text is not representable in Latin-1; encoding it as UTF-16.");
         return header.version() == 4 ? UTF_8 : UTF_16;
       }
     }
@@ -555,7 +557,7 @@ public abstract class Frame {
       version = newVersion & UINT_MASK;
       int idSize = version <= 2 ? 3 : 4;
       if (data.size() - offset < idSize) {
-        Debug.debug("You must at least specify a frame ID.");
+        LOG.log(DEBUG, "Not enough data for a frame ID.");
         return;
       }
       frameID = data.mid(offset, idSize);

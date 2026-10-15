@@ -7,11 +7,11 @@ import cz.skyba.taglib.TagBase;
 import cz.skyba.taglib.flac.Picture;
 import cz.skyba.taglib.internal.*;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -21,6 +21,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * the owner.
  */
 public class XiphComment extends TagBase {
+  private static final System.Logger LOG = System.getLogger(XiphComment.class.getName());
+
   private final NavigableMap<String, List<String>> fields = new TreeMap<>();
   private final List<Picture> pictures = new ArrayList<>();
   private String vendor = "", commentField = "";
@@ -295,7 +297,7 @@ public class XiphComment extends TagBase {
   public final void addField(String key, String value, boolean replace) {
     Objects.requireNonNull(value);
     if (!checkKey(key)) {
-      debug("addField() - Invalid key. Field not added.");
+      LOG.log(DEBUG, "Ignoring a field with an invalid key.");
       return;
     }
     String upper = upper(key);
@@ -428,24 +430,24 @@ public class XiphComment extends TagBase {
 
   private void parseData(ByteVector data) {
     if (data.size() < 8) {
-      debug("parse() - Comment data is too short.");
+      LOG.log(DEBUG, "Comment data is too short.");
       return;
     }
     long vendorLength = data.toUnsignedInt(0, false);
     if (vendorLength > data.size() - 4L) {
-      debug("parse() - Vendor ID exceeds comment data.");
+      LOG.log(DEBUG, "Vendor ID exceeds comment data.");
       return;
     }
     vendor = TextBytes.decodeTerminated(data.data(), 4, (int) vendorLength, UTF_8);
     int pos = 4 + (int) vendorLength;
     if (data.size() - pos < 4) {
-      debug("parse() - Missing comment field count.");
+      LOG.log(DEBUG, "Missing comment field count.");
       return;
     }
     long count = data.toUnsignedInt(pos, false);
     pos += 4;
     if (count > 50_000 || count > (data.size() - 8L) / 4) {
-      debug("parse() - Maximum comment field count exceeded.");
+      LOG.log(DEBUG, "Maximum comment field count exceeded.");
       return;
     }
     for (int i = 0; i < count; i++) {
@@ -461,24 +463,24 @@ public class XiphComment extends TagBase {
       pos += (int) length;
       int sep = entry.find(new ByteVector("="));
       if (sep < 1) {
-        debug("parse() - Discarding a field. Separator not found.");
+        LOG.log(DEBUG, "Discarding a field without a key/value separator.");
         continue;
       }
       String key = upper(TextBytes.decodeTerminated(entry.data(), 0, sep, UTF_8));
       if (!checkKey(key)) {
-        debug("parse() - Discarding a field. Invalid key.");
+        LOG.log(DEBUG, "Discarding a field with an invalid key.");
         continue;
       }
       if (key.equals("METADATA_BLOCK_PICTURE") || key.equals("COVERART")) {
         var bytes = ByteVector.fromBase64(entry.mid(sep + 1));
         if (bytes.isEmpty()) {
-          debug("parse() - Discarding a field. Invalid base64 data");
+          LOG.log(DEBUG, "Discarding a picture field with invalid Base64 data.");
           continue;
         }
         var picture = new Picture();
         if (key.charAt(0) == 'M') {
           if (!picture.parse(bytes.toByteArray())) {
-            debug("parse() - Failed to decode FLAC Picture block");
+            LOG.log(DEBUG, "Discarding an invalid FLAC picture field.");
             continue;
           }
         } else {
@@ -491,9 +493,5 @@ public class XiphComment extends TagBase {
         addField(key, TextBytes.decodeTerminated(entry.data(), sep + 1, entry.size() - sep - 1, UTF_8), false);
       }
     }
-  }
-
-  private static void debug(String text) {
-    Debug.debug("Ogg::XiphComment::" + text);
   }
 }

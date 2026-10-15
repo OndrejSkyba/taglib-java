@@ -3,15 +3,18 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
+
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * Bounded native-compatible zlib frame decoding.
  */
 final class FrameCompression {
+  private static final System.Logger LOG = System.getLogger(FrameCompression.class.getName());
+
   private FrameCompression() {
   }
 
@@ -24,19 +27,19 @@ final class FrameCompression {
       do {
         count = inflater.inflate(chunk);
         if (inflater.needsDictionary()) {
-          Debug.debug("zlib::decompress() - Error reading compressed stream.");
+          LOG.log(DEBUG, "Cannot decompress the frame payload.");
           return new ByteVector();
         }
         int retained = Math.min(count, limit - out.size());
         out.append(chunk, 0, retained);
         if ((long) out.size() + count - retained > limit) {
-          Debug.debug("zlib::decompress() - Too long compressed stream.");
+          LOG.log(DEBUG, "Decompressed frame payload exceeds the size limit; truncating it.");
           break;
         }
       } while (count == chunk.length);
       return out.toByteVector();
     } catch (DataFormatException invalid) {
-      Debug.debug("zlib::decompress() - Error reading compressed stream.");
+      LOG.log(DEBUG, "Cannot decompress the frame payload.");
       return new ByteVector();
     }
   }

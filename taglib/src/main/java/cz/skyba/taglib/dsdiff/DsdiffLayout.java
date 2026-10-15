@@ -246,7 +246,7 @@ final class DsdiffLayout {
 
   void setRoot(String id, byte[] data) {
     if (roots.isEmpty()) {
-      target.debug("DSDIFF::File::setRootChunkData('" + id + "') - No valid chunks found.");
+      target.debug("Cannot set root chunk '" + id + "': no valid chunks are available.");
       return;
     }
     int i = index(roots, id);
@@ -335,7 +335,7 @@ final class DsdiffLayout {
       }
     }
     if (offset == 0) {
-      target.debug("DSDIFF::File::setChildChunkData - No valid chunks found.");
+      target.debug("Cannot set child chunk data: no valid chunks are available.");
       return;
     }
     Chunk container = roots.get(state.parentIndex(roots));

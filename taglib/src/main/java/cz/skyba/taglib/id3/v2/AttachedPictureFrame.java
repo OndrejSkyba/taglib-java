@@ -3,13 +3,13 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.internal.PictureTypes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -17,6 +17,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class AttachedPictureFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(AttachedPictureFrame.class.getName());
+
   private static final Type[] TYPE_VALUES = Type.values();
 
   /**
@@ -163,7 +165,7 @@ public class AttachedPictureFrame extends Frame {
 
   private void parsePicture(ByteVector data) {
     if (data.size() < 5) {
-      Debug.debug("A picture frame must contain at least 5 bytes.");
+      LOG.log(DEBUG, "A picture frame must contain at least 5 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
@@ -171,7 +173,7 @@ public class AttachedPictureFrame extends Frame {
     mimeType = field.value();
     int position = field.nextPosition();
     if (position + 1 >= data.size()) {
-      Debug.debug("Truncated picture frame.");
+      LOG.log(DEBUG, "Truncated picture frame.");
       return;
     }
     type = typeFromByte(data.at(position++));
@@ -184,7 +186,7 @@ public class AttachedPictureFrame extends Frame {
   // restricted to that package-owned implementation, without exposing mutable field values.
   final void parsePictureV22(ByteVector data) {
     if (data.size() < 5) {
-      Debug.debug("A picture frame must contain at least 5 bytes.");
+      LOG.log(DEBUG, "A picture frame must contain at least 5 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
@@ -193,7 +195,7 @@ public class AttachedPictureFrame extends Frame {
       case "JPG" -> "image/jpeg";
       case "PNG" -> "image/png";
       default -> {
-        Debug.debug("probably unsupported image type");
+        LOG.log(DEBUG, "Unrecognized image format; deriving the MIME type from its identifier.");
         yield "image/" + format;
       }
     };

@@ -5,17 +5,19 @@ import cz.skyba.taglib.internal.Binary;
 import cz.skyba.taglib.internal.PictureTypes;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.xiph.XiphComment;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A mutable FLAC picture value with copied image inputs and detached binary exports.
  */
 public class Picture extends MetadataBlock {
+  private static final System.Logger LOG = System.getLogger(Picture.class.getName());
+
   private static final Type[] TYPE_VALUES = Type.values();
 
   /**
@@ -181,13 +183,13 @@ public class Picture extends MetadataBlock {
   public final boolean parse(byte[] payload) {
     Objects.requireNonNull(payload);
     if (payload.length < 32) {
-      Debug.debug("A picture block must contain at least 5 bytes.");
+      LOG.log(DEBUG, "A picture block must contain at least 32 bytes.");
       return false;
     }
     type = typeFromUInt(Binary.u32be(payload, 0));
     long mimeLength = Binary.u32be(payload, 4);
     if (mimeLength > payload.length - 32) {
-      Debug.debug("Invalid picture block.");
+      LOG.log(DEBUG, "Invalid picture block.");
       return false;
     }
     int pos = 8;
@@ -196,7 +198,7 @@ public class Picture extends MetadataBlock {
     long descriptionLength = Binary.u32be(payload, pos);
     pos += 4;
     if (descriptionLength > payload.length - pos - 20) {
-      Debug.debug("Invalid picture block.");
+      LOG.log(DEBUG, "Invalid picture block.");
       return false;
     }
     description = TextBytes.decodeTerminated(payload, pos, (int) descriptionLength, UTF_8);
@@ -209,7 +211,7 @@ public class Picture extends MetadataBlock {
     long length = Binary.u32be(payload, pos);
     pos += 4;
     if (length > payload.length - pos) {
-      Debug.debug("Invalid picture block.");
+      LOG.log(DEBUG, "Invalid picture block.");
       return false;
     }
     data = Arrays.copyOfRange(payload, pos, pos + (int) length);

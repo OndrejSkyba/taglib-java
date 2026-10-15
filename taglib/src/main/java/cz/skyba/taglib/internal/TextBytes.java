@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.internal;
 
-import cz.skyba.taglib.toolkit.Debug;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
 /**
@@ -20,6 +19,8 @@ import static java.nio.charset.StandardCharsets.*;
  * Returned strings and encoded bytes own their storage.
  */
 public final class TextBytes {
+  private static final System.Logger LOG = System.getLogger(TextBytes.class.getName());
+
   private TextBytes() {
   }
 
@@ -62,9 +63,7 @@ public final class TextBytes {
       try {
         return UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes, offset, length)).toString();
       } catch (CharacterCodingException invalid) {
-        if (Debug.mode() != Debug.Mode.RELEASE) {
-          Debug.debug("String::copyFromUTF8() - UTF8-CPP error: " + utf8Error(bytes, offset, length));
-        }
+        LOG.log(DEBUG, "Malformed UTF-8 text; returning an empty string.");
         return "";
       }
     }
@@ -73,13 +72,13 @@ public final class TextBytes {
     boolean big = UTF_16BE.equals(charset);
     if (UTF_16.equals(charset)) {
       if (length < 2) {
-        Debug.debug("String::copyFromUTF16() - Invalid UTF16 string. Too short to have a BOM.");
+        LOG.log(DEBUG, "UTF-16 text is too short to contain a byte-order mark; returning an empty string.");
         return "";
       }
       if (bytes[offset] == (byte) 0xfe && bytes[offset + 1] == (byte) 0xff) {
         big = true;
       } else if (bytes[offset] != (byte) 0xff || bytes[offset + 1] != (byte) 0xfe) {
-        Debug.debug("String::copyFromUTF16() - Invalid UTF16 string. BOM is broken.");
+        LOG.log(DEBUG, "UTF-16 text has an invalid byte-order mark; returning an empty string.");
         return "";
       }
       start += 2;
@@ -105,9 +104,7 @@ public final class TextBytes {
         encoded.get(result);
         return result;
       } catch (CharacterCodingException invalid) {
-        if (Debug.mode() != Debug.Mode.RELEASE) {
-          Debug.debug("String::data() - UTF8-CPP error: Invalid UTF-16");
-        }
+        LOG.log(DEBUG, "Cannot encode malformed UTF-16 as UTF-8; returning an empty byte array.");
         return new byte[0];
       }
     }
@@ -140,28 +137,4 @@ public final class TextBytes {
       throw new IllegalArgumentException("Unsupported metadata charset: " + charset);
     }
   }
-
-  /**
-   * Classifies the first error as pinned UTF8-CPP does, without changing JDK decoding.
-   */
-  private static String utf8Error(byte[] bytes, int offset, int count) {
-    for (int i = offset; i < offset + count; ) {
-      int lead = bytes[i] & 255;
-      int length = lead < 128 ? 1 : (lead & 0xe0) == 0xc0 ? 2
-        : (lead & 0xf0) == 0xe0 ? 3 : (lead & 0xf8) == 0xf0 ? 4 : 0;
-      if (length == 0) return "Invalid UTF-8";
-      for (int j = 1; j < length; j++) {
-        if (i + j >= offset + count) return "Not enough space";
-        if ((bytes[i + j] & 0xc0) != 0x80) return "Invalid UTF-8";
-      }
-      int second = length > 1 ? bytes[i + 1] & 255 : 0;
-      if (length == 2 && lead < 0xc2 || length == 3 && lead == 0xe0 && second < 0xa0
-        || length == 4 && lead == 0xf0 && second < 0x90) return "Invalid UTF-8";
-      if (length == 3 && lead == 0xed && second > 0x9f
-        || length == 4 && (lead > 0xf4 || lead == 0xf4 && second > 0x8f)) return "Invalid code point";
-      i += length;
-    }
-    return "Invalid UTF-8";
-  }
-
 }

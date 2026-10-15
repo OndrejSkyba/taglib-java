@@ -11,6 +11,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * A file-backed byte stream that owns its file channel.
  * Path opening attempts read/write access and falls back to read-only access unless read-only
@@ -19,6 +21,8 @@ import java.util.Objects;
  * position. Closing never saves audio metadata.
  */
 public class FileStream extends IOStream {
+  private static final System.Logger LOG = System.getLogger(FileStream.class.getName());
+
   private static final int BUFFER_SIZE = 1024;
   private static final int COPY_BUFFER_SIZE = 64 * 1024;
   private final Path path;
@@ -125,10 +129,6 @@ public class FileStream extends IOStream {
     return path == null ? "" : path.toString();
   }
 
-  private static void message(String text) {
-    Debug.debug(text);
-  }
-
   @Override
   public boolean readOnly() {
     return readOnly;
@@ -154,7 +154,7 @@ public class FileStream extends IOStream {
       throw new IllegalArgumentException("Negative block length");
     }
     if (!isOpen()) {
-      message("FileStream::readBlock() -- invalid file.");
+      LOG.log(DEBUG, "Cannot read from a closed stream.");
       return new ByteVector();
     }
     if (count == 0) {
@@ -203,11 +203,11 @@ public class FileStream extends IOStream {
   @Override
   public void writeBlock(ByteVector data) {
     if (!isOpen()) {
-      message("FileStream::writeBlock() -- invalid file.");
+      LOG.log(DEBUG, "Cannot write to a closed stream.");
       return;
     }
     if (readOnly()) {
-      message("FileStream::writeBlock() -- read only file.");
+      LOG.log(DEBUG, "Cannot write to a read-only stream.");
       return;
     }
     writeRaw(data);
@@ -246,11 +246,11 @@ public class FileStream extends IOStream {
   @Override
   public void insert(ByteVector data, long start, long replace) {
     if (!isOpen()) {
-      message("FileStream::insert() -- invalid file.");
+      LOG.log(DEBUG, "Cannot insert data into a closed stream.");
       return;
     }
     if (readOnly()) {
-      message("FileStream::insert() -- read only file.");
+      LOG.log(DEBUG, "Cannot insert data into a read-only stream.");
       return;
     }
     if (start < 0 || replace < 0) {
@@ -303,7 +303,7 @@ public class FileStream extends IOStream {
   @Override
   public void removeBlock(long start, long count) {
     if (!isOpen()) {
-      message("FileStream::removeBlock() -- invalid file.");
+      LOG.log(DEBUG, "Cannot remove data from a closed stream.");
       return;
     }
     if (start < 0 || count < 0) {
@@ -340,7 +340,7 @@ public class FileStream extends IOStream {
   @Override
   public void seek(long offset, Position origin) {
     if (!isOpen()) {
-      message("FileStream::seek() -- invalid file.");
+      LOG.log(DEBUG, "Cannot seek in a closed stream.");
       return;
     }
     try {
@@ -382,7 +382,7 @@ public class FileStream extends IOStream {
 
   private long fileLength() {
     if (!isOpen()) {
-      message("FileStream::length() -- invalid file.");
+      LOG.log(DEBUG, "Cannot determine the length of a closed stream.");
       return 0;
     }
     long original = tell();

@@ -4,15 +4,18 @@ package cz.skyba.taglib.dsdiff.diin;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.PropertyUpdateResult;
 import cz.skyba.taglib.TagBase;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.MutablePropertyMap;
 
 import java.util.Objects;
+
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * Mutable DSDIFF Edited Master information. Only title and artist retain values.
  */
 public class Tag extends TagBase {
+  private static final System.Logger LOG = System.getLogger(Tag.class.getName());
+
   private String title = "", artist = "";
 
   @Override
@@ -62,31 +65,31 @@ public class Tag extends TagBase {
 
   @Override
   public void setAlbum(String value) {
-    ignored("setAlbum");
+    ignored("album");
   }
 
   @Override
   public void setComment(String value) {
-    ignored("setComment");
+    ignored("comment");
   }
 
   @Override
   public void setGenre(String value) {
-    ignored("setGenre");
+    ignored("genre");
   }
 
   @Override
   public void setYear(long value) {
-    ignored("setYear");
+    ignored("year");
   }
 
   @Override
   public void setTrack(long value) {
-    ignored("setTrack");
+    ignored("track");
   }
 
-  private static void ignored(String operation) {
-    Debug.debug("DSDIFF::DIIN::Tag::" + operation + "() -- Ignoring unsupported tag.");
+  private static void ignored(String field) {
+    LOG.log(DEBUG, () -> "Ignoring unsupported " + field + " field.");
   }
 
   /**

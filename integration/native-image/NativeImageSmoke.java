@@ -2460,20 +2460,6 @@ public final class NativeImageSmoke {
         .toFloat80BE(0);
     if (extended.toBigDecimal().compareTo(java.math.BigDecimal.ONE) <= 0
       || extended.doubleValue() != 1.0) throw new AssertionError("Exact Float80 failed");
-    int[] diagnostics = {0};
-    cz.skyba.taglib.toolkit.Debug.setDebugListener(
-      new cz.skyba.taglib.toolkit.DebugListener() {
-        @Override
-        public void printMessage(String message) {
-          diagnostics[0]++;
-        }
-      });
-    try {
-      cz.skyba.taglib.toolkit.Debug.debug(text);
-      if (diagnostics[0] != 0) throw new AssertionError("Release diagnostics were enabled");
-    } finally {
-      cz.skyba.taglib.toolkit.Debug.setDebugListener(null);
-    }
     var ape = new cz.skyba.taglib.ape.Tag();
     ape.setTitle("日本語");
     ape.setData("BINARY", new cz.skyba.taglib.toolkit.ByteVector(new byte[]{1, 0, 3}));

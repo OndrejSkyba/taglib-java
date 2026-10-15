@@ -9,7 +9,6 @@ import cz.skyba.taglib.internal.TagUtils;
 import cz.skyba.taglib.internal.codec.RiffCodec;
 import cz.skyba.taglib.riff.RiffFile;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 import cz.skyba.taglib.toolkit.FileStream;
 import cz.skyba.taglib.toolkit.IOStream;
 
@@ -17,12 +16,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * An editable AIFF/AIFC file with live metadata and format-specific audio properties.
  * Path construction owns storage; stream construction borrows it. Metadata edits require
  * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
  */
 public class AiffFile extends RiffFile {
+  private static final System.Logger LOG = System.getLogger(AiffFile.class.getName());
+
   private static final ByteVector ID3 = new ByteVector("ID3 "), LOWER_ID3 = new ByteVector("id3 ");
   private Tag tag;
   private Properties details;
@@ -126,7 +129,7 @@ public class AiffFile extends RiffFile {
           tag = new Tag(this, chunkOffset(i), selectedFactory);
           hasID3 = true;
         } else {
-          Debug.debug("RIFF::AIFF::File::read() - Duplicate ID3v2 tag found.");
+          LOG.log(DEBUG, "Duplicate ID3v2 tag found.");
         }
       }
     }
@@ -200,20 +203,20 @@ public class AiffFile extends RiffFile {
         if (data.isEmpty()) {
           data = chunkData(i);
         } else {
-          Debug.debug("RIFF::AIFF::Properties::read() - Duplicate 'COMM' chunk found.");
+          LOG.log(DEBUG, "Duplicate 'COMM' chunk found.");
         }
       } else if (name.equals(new ByteVector("SSND"))) {
         if (streamLength == 0) {
           streamLength = (chunkDataSize(i) + chunkPadding(i)) & 0xffff_ffffL;
         } else {
-          Debug.debug("RIFF::AIFF::Properties::read() - Duplicate 'SSND' chunk found.");
+          LOG.log(DEBUG, "Duplicate 'SSND' chunk found.");
         }
       }
     }
     if (data.size() < 18) {
-      Debug.debug("RIFF::AIFF::Properties::read() - 'COMM' chunk not found or too short.");
+      LOG.log(DEBUG, "'COMM' chunk not found or too short.");
     } else if (streamLength == 0) {
-      Debug.debug("RIFF::AIFF::Properties::read() - 'SSND' chunk not found.");
+      LOG.log(DEBUG, "'SSND' chunk not found.");
     }
     return RiffCodec.aiffFromChunks(data.toByteArray(), streamLength);
   }

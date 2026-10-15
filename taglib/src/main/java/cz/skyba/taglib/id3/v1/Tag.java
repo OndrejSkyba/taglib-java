@@ -7,10 +7,10 @@ import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.internal.id3.Id3v1;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -18,6 +18,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Values remain editable in memory; the owning file writes the rendered tag on save.
  */
 public class Tag extends TagBase {
+  private static final System.Logger LOG = System.getLogger(Tag.class.getName());
+
   private final FileBase file;
   private final long tagOffset;
   private String title = "", artist = "", album = "", year = "", comment = "";
@@ -175,7 +177,7 @@ public class Tag extends TagBase {
       if (data.size() == 128 && data.startsWith(fileIdentifier())) {
         parse(data);
       } else {
-        Debug.debug("ID3v1 tag is not valid or could not be read at the specified offset.");
+        LOG.log(DEBUG, "ID3v1 tag is not valid or could not be read at the specified offset.");
       }
     }
   }

@@ -4,12 +4,12 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -18,6 +18,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class UserUrlLinkFrame extends UrlLinkFrame {
+  private static final System.Logger LOG = System.getLogger(UserUrlLinkFrame.class.getName());
+
   private Charset encoding = ISO_8859_1;
   private String description = "";
 
@@ -124,7 +126,7 @@ public class UserUrlLinkFrame extends UrlLinkFrame {
 
   private void parseUserUrl(ByteVector data, boolean constructing) {
     if (data.size() < 2) {
-      Debug.debug("A user URL link frame must contain at least 2 bytes.");
+      LOG.log(DEBUG, "A user URL link frame must contain at least 2 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));

@@ -9,10 +9,14 @@ import cz.skyba.taglib.toolkit.*;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * Ogg codec metadata with a live comment view and staged packet persistence.
  */
 public abstract class OggCommentFile extends OggFile {
+  private static final System.Logger LOG = System.getLogger(OggCommentFile.class.getName());
+
   private static final long FLAC_PACKET_MAX = (1L << 24) + 17;
   private final IOStream source;
   private final boolean owned;
@@ -74,22 +78,22 @@ public abstract class OggCommentFile extends OggFile {
       selectStream(new ByteVector("\u0001vorbis"));
       data = metadataPacket(1, 0xffff_ffffL);
       if (!data.startsWith(new ByteVector("\u0003vorbis"))) {
-        debug("Vorbis::File::read() - Could not find the Vorbis comment header.");
+        LOG.log(DEBUG, "Vorbis comment header is missing.");
         throw new InvalidAudioFileException("Vorbis comment header is missing: " + name());
       }
       data = data.mid(7);
     } else {
       boolean opus = format == Format.OGG_OPUS;
       if (!metadataPacket(0, 0xffff_ffffL).startsWith(new ByteVector(opus ? "OpusHead" : "Speex   "))) {
-        debug(opus
-          ? "Opus::File::read() -- invalid Opus identification header"
-          : "Speex::File::read() -- invalid Speex identification header");
+        LOG.log(DEBUG, opus
+          ? "Invalid Opus identification header."
+          : "Invalid Speex identification header.");
         throw new InvalidAudioFileException("Ogg identification header is invalid: " + name());
       }
       data = metadataPacket(1, 0xffff_ffffL);
       if (opus) {
         if (!data.startsWith(new ByteVector("OpusTags"))) {
-          debug("Opus::File::read() -- invalid Opus tags header");
+          LOG.log(DEBUG, "Invalid Opus tags header.");
           throw new InvalidAudioFileException("Opus tags header is invalid: " + name());
         }
         data = data.mid(8);
@@ -140,7 +144,7 @@ public abstract class OggCommentFile extends OggFile {
     }
     var header = data.mid(0, 4);
     if (header.size() != 4) {
-      debug("Ogg::FLAC::File::scan() -- Invalid Ogg/FLAC metadata header");
+      LOG.log(DEBUG, "Invalid Ogg FLAC metadata header.");
       return;
     }
     int type = header.at(0) & 127;
@@ -149,13 +153,13 @@ public abstract class OggCommentFile extends OggFile {
     overhead = Math.addExact(overhead, size);
     retained = Math.addExact(retained, data.size());
     if (type != 0) {
-      debug("Ogg::FLAC::File::scan() -- Invalid Ogg/FLAC stream");
+      LOG.log(DEBUG, "Ogg FLAC stream does not start with a stream-info block.");
       return;
     }
     streamInfo = data.mid(4, (int) size);
     while (!last) {
       if (count++ >= 1024) {
-        debug("Ogg::FLAC::File::scan() -- Maximum metadata block count exceeded");
+        LOG.log(DEBUG, "Maximum Ogg FLAC metadata block count exceeded.");
         return;
       }
       data = metadataPacket(++index, FLAC_PACKET_MAX);
@@ -165,12 +169,12 @@ public abstract class OggCommentFile extends OggFile {
       }
       header = data.mid(0, 4);
       if (header.size() != 4) {
-        debug("Ogg::FLAC::File::scan() -- Invalid Ogg/FLAC metadata header");
+        LOG.log(DEBUG, "Invalid Ogg FLAC metadata header.");
         return;
       }
       if ((header.at(0) & 255) == 255 && (header.at(1) & 255) == 248) {
         index--;
-        debug("Ogg::FLAC::File::scan() -- Found frame sync marker, possibly missing last block marker");
+        LOG.log(DEBUG, "Found an audio frame before the last Ogg FLAC metadata block marker.");
         break;
       }
       type = header.at(0) & 127;
@@ -182,9 +186,9 @@ public abstract class OggCommentFile extends OggFile {
         hasComment = true;
         commentPacket = index;
       } else if (type == 127) {
-        debug("Ogg::FLAC::File::scan() -- Forbidden block type found");
+        LOG.log(DEBUG, "Forbidden Ogg FLAC metadata block type.");
       } else if (type > 6) {
-        debug("Ogg::FLAC::File::scan() -- Unknown metadata block");
+        LOG.log(DEBUG, "Unknown Ogg FLAC metadata block type.");
       }
     }
     lastHeaderPacket = index;
@@ -249,7 +253,7 @@ public abstract class OggCommentFile extends OggFile {
           if (commentData.size() > 0xffffff) {
             throw new TagLibException("Ogg FLAC comment exceeds the 24-bit metadata size limit: " + name());
           }
-          debug("Ogg::FLAC::File::save() -- Metadata block is too large, pictures removed.");
+          LOG.log(DEBUG, "Ogg FLAC metadata block is too large; removing pictures.");
         }
         data = ByteVector.fromUnsignedInt(commentData.size(), true);
         data.set(0, (byte) (commentPacket == lastHeaderPacket ? 132 : 4));
@@ -291,9 +295,5 @@ public abstract class OggCommentFile extends OggFile {
   protected static boolean supported(IOStream stream, String marker) {
     var data = TagUtils.readHeader(stream, 1024, false);
     return data.find(new ByteVector("OggS")) >= 0 && data.find(new ByteVector(marker)) >= 0;
-  }
-
-  private static void debug(String message) {
-    Debug.debug(message);
   }
 }

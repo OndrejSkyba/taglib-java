@@ -5,12 +5,12 @@ import cz.skyba.taglib.id3.v1.Genres;
 import cz.skyba.taglib.internal.TextBytes;
 import cz.skyba.taglib.internal.TextNumbers;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -20,6 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * is also used when decoding embedded frames, independently of an outer tag's custom factory.
  */
 public class FrameFactory {
+  private static final System.Logger LOG = System.getLogger(FrameFactory.class.getName());
+
   /**
    * The result of frame-header preparation.
    *
@@ -104,7 +106,7 @@ public class FrameFactory {
     }
     // The pure Java runtime has the same available-zlib branch through java.util.zip.
     if (header.encryption()) {
-      Debug.debug("Encrypted frames are currently not supported.");
+      LOG.log(DEBUG, "Encrypted frames are currently not supported.");
       return new Preparation(header, false);
     }
     if (!updateFrame(header)) {
@@ -155,7 +157,7 @@ public class FrameFactory {
   static Frame createEmbeddedFrame(ByteVector data, int offset, Header tagHeader) {
     int depth = EMBEDDED_DEPTH.get();
     if (depth >= 64) {
-      Debug.debug("ID3v2: Maximum embedded frame nesting depth exceeded");
+      LOG.log(DEBUG, "Maximum embedded frame nesting depth exceeded.");
       return null;
     }
     EMBEDDED_DEPTH.set(depth + 1);
@@ -254,7 +256,7 @@ public class FrameFactory {
     Frame.Header header, String id, Set<String> discarded, Map<String, String> conversions
   ) {
     if (discarded.contains(id)) {
-      Debug.debug("ID3v2.4 no longer supports the frame type " + id + ".  It will be discarded from the tag.");
+      LOG.log(DEBUG, () -> "Discarding unsupported frame type " + id + ".");
       return false;
     }
     String converted = conversions.get(id);

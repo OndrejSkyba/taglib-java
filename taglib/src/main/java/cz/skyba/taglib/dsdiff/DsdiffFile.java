@@ -17,6 +17,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -25,6 +26,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
  */
 public class DsdiffFile extends FileBase {
+  private static final System.Logger LOG = System.getLogger(DsdiffFile.class.getName());
+
   static final int DIIN = 1, ID3v2 = 2;
 
   /**
@@ -285,7 +288,7 @@ public class DsdiffFile extends FileBase {
   }
 
   private void invalid(String message) {
-    Debug.debug("DSDIFF::File::read() -- " + message);
+    LOG.log(DEBUG, message);
     setValid(false);
   }
 
@@ -650,7 +653,7 @@ public class DsdiffFile extends FileBase {
     }
 
     public void debug(String message) {
-      Debug.debug(message);
+      LOG.log(DEBUG, message);
     }
   }
 

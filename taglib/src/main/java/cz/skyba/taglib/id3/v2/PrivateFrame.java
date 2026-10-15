@@ -2,10 +2,10 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -13,6 +13,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class PrivateFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(PrivateFrame.class.getName());
+
   private String owner = "";
   private ByteVector data = new ByteVector();
 
@@ -69,7 +71,7 @@ public class PrivateFrame extends Frame {
 
   private void parsePrivate(ByteVector value) {
     if (value.size() < 2) {
-      Debug.debug("A private frame must contain at least 2 bytes.");
+      LOG.log(DEBUG, "A private frame must contain at least 2 bytes.");
       return;
     }
     int end = value.find(textDelimiter(ISO_8859_1));

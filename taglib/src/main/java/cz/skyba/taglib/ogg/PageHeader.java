@@ -10,12 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * Mutable Ogg page flags, serial number, granule position and packet lacing.
  * Parsed size and validity describe the last read header; setters do not recalculate them.
  * Rendering creates a header with a zero checksum for the page renderer to fill.
  */
 public final class PageHeader {
+  private static final System.Logger LOG = System.getLogger(PageHeader.class.getName());
+
   private boolean valid, firstContinued, lastCompleted, firstPage, lastPage;
   private long granule, serial;
   private int sequence = -1, size, dataSize;
@@ -202,7 +206,7 @@ public final class PageHeader {
     stream.seek(offset);
     byte[] data = stream.readBlock(27).toByteArray();
     if (data.length != 27 || !Binary.ascii(data, 0, 4).equals("OggS")) {
-      Debug.debug("Ogg::PageHeader::read() -- error reading page header");
+      LOG.log(DEBUG, "Ogg page header is incomplete or has an invalid capture pattern.");
       return;
     }
     firstContinued = (data[5] & 1) != 0;

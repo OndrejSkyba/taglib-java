@@ -4,7 +4,6 @@ package cz.skyba.taglib.id3.v2;
 import cz.skyba.taglib.PropertyMap;
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -19,6 +19,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class TableOfContentsFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(TableOfContentsFrame.class.getName());
+
   private final cz.skyba.taglib.id3.v2.Header tagHeader;
   private final FrameCollection embedded = new FrameCollection();
   private ByteVector elementID = new ByteVector();
@@ -269,7 +271,7 @@ public class TableOfContentsFrame extends Frame {
 
   private void parseContents(ByteVector data) {
     if (data.size() < 6) {
-      Debug.debug("A CTOC frame must contain at least 6 bytes (1 byte element ID terminated by null, 1 byte flags, 1 byte entry count and 1 byte child element ID terminated by null.");
+      LOG.log(DEBUG, "A table-of-contents frame must contain at least 6 bytes.");
       return;
     }
     StringField field = stringField(data, ISO_8859_1, 0);

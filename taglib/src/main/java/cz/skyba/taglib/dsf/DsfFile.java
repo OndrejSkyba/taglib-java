@@ -12,6 +12,8 @@ import cz.skyba.taglib.toolkit.*;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
  * An editable DSF file with live metadata and format-specific audio properties.
  * Path construction owns storage; stream construction borrows it. Metadata edits require
@@ -19,6 +21,8 @@ import java.util.Objects;
  * Audio properties are parsed even when optional property reading is disabled.
  */
 public class DsfFile extends FileBase {
+  private static final System.Logger LOG = System.getLogger(DsfFile.class.getName());
+
   private final IOStream source;
   private final boolean owned;
   private final int metadataLimit;
@@ -165,7 +169,7 @@ public class DsfFile extends FileBase {
   }
 
   private InvalidAudioFileException invalid(String message) {
-    Debug.debug("DSF::File::read() -- " + message);
+    LOG.log(DEBUG, message);
     return new InvalidAudioFileException("DSF " + message + ": " + name());
   }
 

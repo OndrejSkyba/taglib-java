@@ -3,13 +3,13 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.internal.ByteVectorOutput;
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
 /**
@@ -17,6 +17,8 @@ import static java.nio.charset.StandardCharsets.*;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class SynchronizedLyricsFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(SynchronizedLyricsFrame.class.getName());
+
   private static final TimestampFormat[] TIMESTAMP_FORMATS = TimestampFormat.values();
   private static final Type[] TYPES = Type.values();
 
@@ -186,7 +188,7 @@ public class SynchronizedLyricsFrame extends Frame {
   private void parseLyrics(ByteVector data) {
     int end = data.size();
     if (end < 7) {
-      Debug.debug("A synchronized lyrics frame must contain at least 7 bytes.");
+      LOG.log(DEBUG, "A synchronized lyrics frame must contain at least 7 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));

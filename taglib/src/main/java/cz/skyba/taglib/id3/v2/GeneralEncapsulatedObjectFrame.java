@@ -2,13 +2,13 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
-import cz.skyba.taglib.toolkit.Debug;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
@@ -16,6 +16,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * Editing a frame does not write a file; use the owning file's save operation to persist changes.
  */
 public class GeneralEncapsulatedObjectFrame extends Frame {
+  private static final System.Logger LOG = System.getLogger(GeneralEncapsulatedObjectFrame.class.getName());
+
   private Charset encoding = ISO_8859_1;
   private String mimeType = "", fileName = "", description = "";
   private ByteVector object = new ByteVector();
@@ -115,7 +117,7 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
 
   private void parseObject(ByteVector data) {
     if (data.size() < 4) {
-      Debug.debug("An object frame must contain at least 4 bytes.");
+      LOG.log(DEBUG, "An object frame must contain at least 4 bytes.");
       return;
     }
     encoding = Id3Text.encoding(data.at(0));
