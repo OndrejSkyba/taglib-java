@@ -10,7 +10,7 @@
   <artifactId>taglib</artifactId>
   <name>TagLib Audio Metadata Library</name>
   <description>Java adaptation of TagLib, an established C++ library for reading and editing metadata in popular audio formats.</description>
-  <url>https://github.com/ondrej-skyba/taglib-java</url>
+  <url>https://github.com/OndrejSkyba/taglib-java</url>
   <licenses>
     <license>
       <name>GNU Lesser General Public License 2.1</name>
@@ -27,9 +27,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://github.com/ondrej-skyba/taglib-java.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/ondrej-skyba/taglib-java.git</developerConnection>
-    <url>https://github.com/ondrej-skyba/taglib-java</url>
+    <connection>scm:git:https://github.com/OndrejSkyba/taglib-java.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/OndrejSkyba/taglib-java.git</developerConnection>
+    <url>https://github.com/OndrejSkyba/taglib-java</url>
   </scm>
   <dependencies>
     <dependency>
