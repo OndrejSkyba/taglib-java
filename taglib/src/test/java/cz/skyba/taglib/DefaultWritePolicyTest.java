@@ -135,8 +135,7 @@ class DefaultWritePolicyTest {
         .orElseThrow();
     document.apply(
       List.of(
-        new MetadataChange(
-          "update", title.id(), title.key(), List.of("Updated title"), false)));
+        new MetadataChange.Update(title.id(), title.key(), List.of("Updated title"))));
     return document;
   }
 

@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,7 +40,9 @@ class TagDocumentTest {
     var title = document.entries().stream().filter(e -> e.block().equals("APE") && e.key().equals("TITLE")).findFirst().orElseThrow();
     var removed = document.entries().stream().filter(e -> e.block().equals("APE") && e.key().equals("REMOVE")).findFirst().orElseThrow();
     String replacement = "Changed title ".repeat(100);
-    document.apply(List.of(update(title, List.of(replacement)), new MetadataChange("remove", removed.id(), null, null, false)));
+    document.apply(List.of(
+      update(title, List.of(replacement)),
+      new MetadataChange.Remove(removed.id())));
     document.save();
     expected.setTitle(replacement);
     expected.removeItem("REMOVE");
@@ -85,7 +88,7 @@ class TagDocumentTest {
     var revised = MetadataDocument.open(file);
     revised.apply(
       List.of(
-        new MetadataChange("remove", revised.entries().getFirst().id(), null, null, false),
+        new MetadataChange.Remove(revised.entries().getFirst().id()),
         add("TITLE", "new")));
     revised.save();
     assertEquals("new", TagLib.read(file).properties().first("TITLE"));
@@ -153,7 +156,7 @@ class TagDocumentTest {
         .orElseThrow();
     doc.apply(
       List.of(
-        new MetadataChange("update", entry.id(), "RENAMED", List.of("three", "four"), false)));
+        new MetadataChange.Update(entry.id(), "RENAMED", List.of("three", "four"))));
     doc.save();
     byte[] saved = Files.readAllBytes(file);
     assertArrayEquals(legacy, Arrays.copyOf(saved, legacy.length));
@@ -257,6 +260,43 @@ class TagDocumentTest {
   }
 
   @Test
+  void editRequestsKeepTheirValuesWhenTheCallerChangesTheList() throws Exception {
+    Path file = temporary.resolve("request-values.mp3");
+    Files.write(file, join(tag(4, frame(4, "TIT2", 0, utf8("\u0003Original"))), audio()));
+    var doc = MetadataDocument.open(file);
+    var title = doc.entries().getFirst();
+    var values = new ArrayList<>(List.of("Requested"));
+    var update = new MetadataChange.Update(title.id(), title.key(), values);
+    var add = new MetadataChange.Add("ALBUM", values, false);
+    values.set(0, "Changed after construction");
+
+    doc.apply(List.of(update, add));
+    doc.save();
+
+    var properties = TagLib.read(file).properties();
+    assertEquals("Requested", properties.first("TITLE"));
+    assertEquals("Requested", properties.first("ALBUM"));
+  }
+
+  @Test
+  void updatingAndRemovingTheSameEntryRejectsTheBatchInEitherOrder() throws Exception {
+    Path file = temporary.resolve("duplicate-edit.mp3");
+    byte[] before = join(tag(4, frame(4, "TIT2", 0, utf8("\u0003Original"))), audio());
+    Files.write(file, before);
+    for (boolean removeFirst : List.of(false, true)) {
+      var doc = MetadataDocument.open(file);
+      var title = doc.entries().getFirst();
+      var update = new MetadataChange.Update(title.id(), title.key(), List.of("Changed"));
+      var remove = new MetadataChange.Remove(title.id());
+      var changes = removeFirst ? List.of(remove, update) : List.of(update, remove);
+
+      assertThrows(MetadataEditException.class, () -> doc.apply(changes));
+      assertThrows(MetadataEditException.class, doc::save);
+      assertArrayEquals(before, Files.readAllBytes(file));
+    }
+  }
+
+  @Test
   void aSecondEditBatchInvalidatesTheSessionInsteadOfReusingStaleEntryIds() throws Exception {
     Path file = temporary.resolve("batch.mp3");
     Files.write(file, join(tag(4, frame(4, "TIT2", 0, utf8("\u0003Original"))), audio()));
@@ -308,11 +348,11 @@ class TagDocumentTest {
   }
 
   private static MetadataChange update(MetadataEntry e, List<String> values) {
-    return new MetadataChange("update", e.id(), e.key(), values, false);
+    return new MetadataChange.Update(e.id(), e.key(), values);
   }
 
   private static MetadataChange add(String key, String value) {
-    return new MetadataChange("add", null, key, List.of(value), false);
+    return new MetadataChange.Add(key, List.of(value), false);
   }
 
   private static byte[] utf8(String value) {

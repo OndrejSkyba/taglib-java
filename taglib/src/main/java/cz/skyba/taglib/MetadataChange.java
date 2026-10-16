@@ -6,22 +6,44 @@ import java.util.List;
 /**
  * A requested edit to a physical metadata entry.
  * IDs refer to one document session. Values are copied when non-null. Validation is performed
- * by {@link MetadataDocument#apply(List)}; removal does not require a key or values.
- *
- * @param action {@code add}, {@code update} or {@code remove}
- * @param id     the target entry ID for update or removal; unused for addition
- * @param key    the text field key for addition or update
- * @param values replacement text values for addition or update
- * @param custom whether an addition uses a format-specific field name
+ * by {@link MetadataDocument#apply(List)}.
  */
-public record MetadataChange(
-  String action, String id, String key, List<String> values, boolean custom) {
+public sealed interface MetadataChange {
   /**
-   * Creates an edit request, copying the value list when it is non-null.
+   * Adds a text field.
+   *
+   * @param key the text field key
+   * @param values the text values
+   * @param custom whether the key is a format-specific field name
    */
-  public MetadataChange {
-    if (values != null) {
-      values = List.copyOf(values);
+  record Add(String key, List<String> values, boolean custom) implements MetadataChange {
+    public Add {
+      if (values != null) {
+        values = List.copyOf(values);
+      }
     }
+  }
+
+  /**
+   * Replaces an existing text field's key and values.
+   *
+   * @param id the target entry ID
+   * @param key the replacement text field key
+   * @param values the replacement text values
+   */
+  record Update(String id, String key, List<String> values) implements MetadataChange {
+    public Update {
+      if (values != null) {
+        values = List.copyOf(values);
+      }
+    }
+  }
+
+  /**
+   * Removes an existing entry.
+   *
+   * @param id the target entry ID
+   */
+  record Remove(String id) implements MetadataChange {
   }
 }

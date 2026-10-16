@@ -128,7 +128,7 @@ class Mp4DocumentTest {
       byte[] before = Files.readAllBytes(path);
       assertThrows(
         MetadataEditException.class,
-        () -> doc.apply(List.of(new MetadataChange("update", "0", "mdta:Count", values, false))));
+        () -> doc.apply(List.of(new MetadataChange.Update("0", "mdta:Count", values))));
       assertThrows(MetadataEditException.class, doc::save);
       assertArrayEquals(before, Files.readAllBytes(path));
     }
@@ -157,7 +157,7 @@ class Mp4DocumentTest {
     doc.apply(
       List.of(
         update(doc.entries().get(2), "trkn", "4", "10"),
-        new MetadataChange("add", null, "TITLE", List.of("Title"), false)));
+        new MetadataChange.Add("TITLE", List.of("Title"), false)));
     doc.save();
     assertContains(Files.readAllBytes(path), freeform);
     assertContains(Files.readAllBytes(path), unknown);
@@ -200,7 +200,7 @@ class Mp4DocumentTest {
     assertTrue(doc.entries().get(1).projected());
     assertEquals("MP4 mdta · Track 2", doc.entries().get(1).block());
     assertEquals("MP4 mdta", doc.defaultBlock());
-    doc.apply(List.of(new MetadataChange("add", null, "TITLE", List.of("Global"), false)));
+    doc.apply(List.of(new MetadataChange.Add("TITLE", List.of("Global"), false)));
     doc.save();
     assertContains(Files.readAllBytes(path), video);
     assertContains(Files.readAllBytes(path), audio);
@@ -225,7 +225,7 @@ class Mp4DocumentTest {
     Path path = raw(movie);
     long before = Files.size(path);
     var doc = MetadataDocument.open(path);
-    doc.apply(List.of(new MetadataChange("add", null, "Large", List.of("x".repeat(10000)), true)));
+    doc.apply(List.of(new MetadataChange.Add("Large", List.of("x".repeat(10000)), true)));
     doc.save();
     var tree = new Mp4Tree(path);
     assertEquals(16, tree.movie.header());
@@ -243,7 +243,7 @@ class Mp4DocumentTest {
     assertFalse(doc.readOnlyReason().isEmpty());
     assertThrows(
       MetadataEditException.class,
-      () -> doc.apply(List.of(new MetadataChange("add", null, "TITLE", List.of("no"), false))));
+      () -> doc.apply(List.of(new MetadataChange.Add("TITLE", List.of("no"), false))));
     Path malformed = file(box("meta", new byte[4], box("keys", new byte[4], number(1000, 4))));
     assertThrows(MetadataReadException.class, () -> MetadataDocument.open(malformed));
     for (String marker : List.of("mvex", "iloc", "saio", "cmov")) {
@@ -271,7 +271,7 @@ class Mp4DocumentTest {
     assertEquals("mdta:0xff", entry.key());
     assertFalse(entry.editable());
     assertEquals(List.of("kept"), document.entries().getLast().values());
-    document.apply(List.of(new MetadataChange("remove", entry.id(), null, List.of(), false)));
+    document.apply(List.of(new MetadataChange.Remove(entry.id())));
     document.save();
     var remaining = MetadataDocument.open(path).entries();
     assertEquals(1, remaining.size());
@@ -370,11 +370,11 @@ class Mp4DocumentTest {
   }
 
   private static MetadataChange update(MetadataEntry entry, String key, String... values) {
-    return new MetadataChange("update", entry.id(), key, List.of(values), false);
+    return new MetadataChange.Update(entry.id(), key, List.of(values));
   }
 
   private static MetadataChange remove(MetadataEntry entry) {
-    return new MetadataChange("remove", entry.id(), null, null, false);
+    return new MetadataChange.Remove(entry.id());
   }
 
   private static void assertContains(byte[] data, byte[] fragment) {

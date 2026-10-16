@@ -117,7 +117,7 @@ class MetadataPaddingTest {
           .findFirst()
           .orElseThrow();
       document.apply(
-        List.of(new MetadataChange("update", entry.id(), entry.key(), List.of(title), false)));
+        List.of(new MetadataChange.Update(entry.id(), entry.key(), List.of(title))));
       document.save();
     } else if (path.toString().endsWith("flac"))
       new FlacCodec().write(path, properties(title));

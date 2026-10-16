@@ -28,34 +28,6 @@ public abstract class AbstractDocument extends MetadataDocument {
     OPEN, APPLIED, SAVED, FAILED
   }
 
-  private enum Action {
-    ADD,
-    UPDATE,
-    REMOVE;
-
-    static Action parse(String value) throws MetadataEditException {
-      Objects.requireNonNull(value);
-      return switch (value) {
-        case "add" -> ADD;
-        case "update" -> UPDATE;
-        case "remove" -> REMOVE;
-        default -> throw new MetadataEditException("Unknown metadata action.");
-      };
-    }
-  }
-
-  private sealed interface PendingChange {
-  }
-
-  private record AddChange(String key, List<String> values, boolean custom) implements PendingChange {
-  }
-
-  private record UpdateChange(String id, String key, List<String> values) implements PendingChange {
-  }
-
-  private record RemoveChange(String id) implements PendingChange {
-  }
-
   protected AbstractDocument(Path path) throws IOException {
     this.path = path.toRealPath();
     original = Files.readAttributes(this.path, BasicFileAttributes.class);
@@ -143,7 +115,7 @@ public abstract class AbstractDocument extends MetadataDocument {
   }
 
   @Override
-  public final void apply(List<MetadataChange> changes) {
+  public final void apply(List<? extends MetadataChange> changes) {
     if (changes.isEmpty()) {
       return;
     }
@@ -159,49 +131,32 @@ public abstract class AbstractDocument extends MetadataDocument {
       }
       var touched = new HashSet<String>();
       var removed = new HashSet<String>();
-      var pending = new ArrayList<PendingChange>(changes.size());
+      var pending = new ArrayList<MetadataChange>(changes.size());
       for (var change : changes) {
-        Action action = Action.parse(change.action());
-        if (action != Action.REMOVE) {
-          if (change.key() == null || change.key().isEmpty() || change.key().indexOf('\0') >= 0) {
-            throw new MetadataEditException(
-              "A nonempty metadata key without NUL characters is required.");
+        switch (change) {
+          case MetadataChange.Add(var key, var values, _) -> validateText(key, values);
+          case MetadataChange.Update(var id, var key, var values) -> {
+            validateText(key, values);
+            var entry = entryToChange(id, touched);
+            if (entry.edit == null || entry.requiresRemoval) {
+              throw new MetadataEditException("This entry cannot be edited safely.");
+            }
+            if (!entry.renameable && !entry.key.equals(key)) {
+              throw new MetadataEditException("This entry cannot be renamed.");
+            }
+            if (!entry.multipleValues && values.size() != entry.constraints.valueCount()) {
+              throw new MetadataEditException("This field accepts one value.");
+            }
           }
-          if (change.values() == null
-            || change.values().isEmpty()
-            || change.values().stream().anyMatch(v -> v.indexOf('\0') >= 0)) {
-            throw new MetadataEditException(
-              "Nonempty text values without NUL characters are required.");
+          case MetadataChange.Remove(var id) -> {
+            var entry = entryToChange(id, touched);
+            if (entry.remove == null) {
+              throw new MetadataEditException("This entry cannot be removed safely.");
+            }
+            removed.add(entry.id);
           }
         }
-        if (action == Action.ADD) {
-          pending.add(new AddChange(change.key(), change.values(), change.custom()));
-          continue;
-        }
-        MutableEntry entry = lookup(change.id());
-        if (!touched.add(entry.id)) {
-          throw new MetadataEditException("A metadata entry may only be edited once in a batch.");
-        }
-        if (action == Action.REMOVE) {
-          if (entry.remove == null) {
-            throw new MetadataEditException("This entry cannot be removed safely.");
-          }
-          removed.add(entry.id);
-          pending.add(new RemoveChange(change.id()));
-        } else {
-          if (entry.edit == null || entry.requiresRemoval) {
-            throw new MetadataEditException("This entry cannot be edited safely.");
-          }
-          if (!entry.renameable && !entry.key.equals(change.key())) {
-            throw new MetadataEditException("This entry cannot be renamed.");
-          }
-          if (!entry.multipleValues
-            && change.values().size()
-            != entry.constraints.valueCount()) {
-            throw new MetadataEditException("This field accepts one value.");
-          }
-          pending.add(new UpdateChange(change.id(), change.key(), change.values()));
-        }
+        pending.add(change);
       }
       for (var entry : entries) {
         if (entry.requiresRemoval && !removed.contains(entry.id)) {
@@ -212,9 +167,9 @@ public abstract class AbstractDocument extends MetadataDocument {
       for (var operation : pending) {
         // Resolve IDs at execution time, preserving callbacks that change the entry registry.
         switch (operation) {
-          case AddChange(var key, var values, boolean custom) -> add(key, values, custom);
-          case UpdateChange(var id, var key, var values) -> lookup(id).edit.update(key, values);
-          case RemoveChange(var id) -> lookup(id).remove.remove();
+          case MetadataChange.Add(var key, var values, boolean custom) -> add(key, values, custom);
+          case MetadataChange.Update(var id, var key, var values) -> lookup(id).edit.update(key, values);
+          case MetadataChange.Remove(var id) -> lookup(id).remove.remove();
         }
       }
     } catch (IOException e) {
@@ -224,6 +179,25 @@ public abstract class AbstractDocument extends MetadataDocument {
       lifecycle = Lifecycle.FAILED;
       throw e;
     }
+  }
+
+  private static void validateText(String key, List<String> values) {
+    if (key == null || key.isEmpty() || key.indexOf('\0') >= 0) {
+      throw new MetadataEditException(
+        "A nonempty metadata key without NUL characters is required.");
+    }
+    if (values == null || values.isEmpty() || values.stream().anyMatch(v -> v.indexOf('\0') >= 0)) {
+      throw new MetadataEditException(
+        "Nonempty text values without NUL characters are required.");
+    }
+  }
+
+  private MutableEntry entryToChange(String id, Set<String> touched) {
+    var entry = lookup(id);
+    if (!touched.add(entry.id)) {
+      throw new MetadataEditException("A metadata entry may only be edited once in a batch.");
+    }
+    return entry;
   }
 
   private MutableEntry lookup(String id) throws MetadataEditException {

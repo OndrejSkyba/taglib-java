@@ -231,9 +231,8 @@ class XiphCodecTest {
       document.apply(
         List.of(
           existing.isEmpty()
-            ? new MetadataChange("add", null, "TITLE", List.of(title), false)
-            : new MetadataChange(
-            "update", existing.get().id(), "TITLE", List.of(title), false)));
+            ? new MetadataChange.Add("TITLE", List.of(title), false)
+            : new MetadataChange.Update(existing.get().id(), "TITLE", List.of(title))));
       document.save();
       byte[] saved = Files.readAllBytes(file);
       assertArrayEquals(

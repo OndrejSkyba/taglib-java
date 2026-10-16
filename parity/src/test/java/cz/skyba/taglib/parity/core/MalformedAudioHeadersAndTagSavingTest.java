@@ -187,7 +187,7 @@ final class MalformedAudioHeadersAndTagSavingTest {
             .filter(x -> x.standardKey().equals("TITLE"))
             .findFirst()
             .orElseThrow();
-        d.apply(List.of(new MetadataChange("update", e.id(), e.key(), List.of("Changed"), false)));
+        d.apply(List.of(new MetadataChange.Update(e.id(), e.key(), List.of("Changed"))));
         d.save();
       } else {
         TagLib.write(p, PropertyMap.builder().put("TITLE", "Changed").build());

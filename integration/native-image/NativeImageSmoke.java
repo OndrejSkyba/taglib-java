@@ -2501,7 +2501,7 @@ public final class NativeImageSmoke {
           case "mdta:gain" -> "-2.5";
           default -> throw new AssertionError("Unexpected synthetic entry: " + entry.key());
         };
-      changes.add(new MetadataChange("update", entry.id(), entry.key(), List.of(value), false));
+      changes.add(new MetadataChange.Update(entry.id(), entry.key(), List.of(value)));
     }
     if (changes.size() != 3) throw new AssertionError("Incomplete synthetic metadata");
     document.apply(changes);
@@ -2539,8 +2539,7 @@ public final class NativeImageSmoke {
     try {
       updated.apply(
         List.of(
-          new MetadataChange(
-            "update", counter.id(), counter.key(), List.of("18446744073709551616"), false)));
+          new MetadataChange.Update(counter.id(), counter.key(), List.of("18446744073709551616"))));
       throw new AssertionError("Out-of-range UInt64 edit accepted");
     } catch (MetadataEditException expected) {
       /* Validation must reject before touching the file. */
@@ -2556,8 +2555,7 @@ public final class NativeImageSmoke {
     var custom = MetadataDocument.open(path);
     custom.apply(
       List.of(
-        new MetadataChange(
-          "add", null, "mdta:PrivateNativeTest", List.of("Custom text"), true)));
+        new MetadataChange.Add("mdta:PrivateNativeTest", List.of("Custom text"), true)));
     custom.save();
     var remove = MetadataDocument.open(path);
     var privateEntry =
@@ -2565,7 +2563,7 @@ public final class NativeImageSmoke {
         .filter(e -> e.key().equals("mdta:PrivateNativeTest"))
         .findFirst()
         .orElseThrow();
-    remove.apply(List.of(new MetadataChange("remove", privateEntry.id(), null, null, false)));
+    remove.apply(List.of(new MetadataChange.Remove(privateEntry.id())));
     remove.save();
     var artwork = MetadataDocument.open(path);
     artwork.replacePictures(PICTURES);
@@ -2609,8 +2607,7 @@ public final class NativeImageSmoke {
     switch (operation) {
       case "editor-add" -> document.apply(
         List.of(
-          new MetadataChange(
-            "add", null, "TITLE", List.of("Native physical title"), false)));
+          new MetadataChange.Add("TITLE", List.of("Native physical title"), false)));
       case "editor-update" -> {
         var entry =
           document.entries().stream()
@@ -2620,8 +2617,7 @@ public final class NativeImageSmoke {
         var field = entry.orElseThrow();
         document.apply(
           List.of(
-            new MetadataChange(
-              "update", field.id(), field.key(), List.of("Native physical update"), false)));
+            new MetadataChange.Update(field.id(), field.key(), List.of("Native physical update"))));
       }
       case "editor-remove" -> {
         var entry =
@@ -2630,7 +2626,7 @@ public final class NativeImageSmoke {
             .findFirst();
         if (entry.isEmpty()) return false;
         document.apply(
-          List.of(new MetadataChange("remove", entry.orElseThrow().id(), null, null, false)));
+          List.of(new MetadataChange.Remove(entry.orElseThrow().id())));
       }
       case "editor-artwork" -> document.replacePictures(PICTURES);
       default -> throw new AssertionError(operation);

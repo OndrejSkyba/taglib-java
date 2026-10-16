@@ -89,7 +89,7 @@ public abstract class MetadataDocument {
    * @throws MetadataEditException if a change is invalid, unsupported, duplicated, or the session cannot be edited
    * @throws UncheckedIOException  if reading or staging metadata fails
    */
-  public abstract void apply(List<MetadataChange> changes);
+  public abstract void apply(List<? extends MetadataChange> changes);
 
   /**
    * Stages complete artwork replacement; an empty list requests removal.
