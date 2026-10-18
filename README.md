@@ -22,7 +22,7 @@ The library requires Java 25 at runtime.
 <dependency>
   <groupId>cz.skyba</groupId>
   <artifactId>taglib</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
