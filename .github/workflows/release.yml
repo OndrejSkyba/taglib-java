@@ -1,0 +1,54 @@
+name: Stage Maven Central release
+on: [workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_TOKEN_USERNAME
+          server-password: CENTRAL_TOKEN_PASSWORD
+      - name: Check release version
+        id: version
+        shell: bash
+        run: |
+          version=$(./mvnw -q -pl taglib help:evaluate -Dexpression=project.version -DforceStdout)
+          if [[ -z "$version" || "$version" == *SNAPSHOT* ]]; then
+            echo '::error::Set a non-SNAPSHOT version in the project POMs before staging a release.'
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Build, sign and upload to Maven Central for manual publication
+        run: >-
+          ./mvnw -B -pl taglib -Prelease,sign,central -Dmaven.test.skip=true -Dgpg.signer=bc
+          "-DdeploymentName=taglib-$RELEASE_VERSION-$GITHUB_SHA" deploy
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      - name: Record staged release
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "Staged cz.skyba:taglib:$RELEASE_VERSION from commit $GITHUB_SHA."
+            echo
+            echo 'Review validation and publish the deployment in the [Central Portal](https://central.sonatype.com/publishing/deployments).'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staged-release
+          path: taglib/target/central-publishing/central-bundle.zip
