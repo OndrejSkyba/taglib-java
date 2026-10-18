@@ -62,7 +62,7 @@ public class ByteVectorStream extends IOStream {
     if (end > data.size()) {
       truncate(end);
     }
-    System.arraycopy(source, 0, data.data(), start, source.length);
+    data.set(start, source);
     position = end;
   }
 

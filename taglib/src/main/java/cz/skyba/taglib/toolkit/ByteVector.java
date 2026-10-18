@@ -214,6 +214,17 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
   }
 
   /**
+   * Copies bytes into an existing range without resizing this vector.
+   *
+   * @param index the starting byte index
+   * @param value the bytes to copy
+   * @throws IndexOutOfBoundsException if the complete value does not fit
+   */
+  public void set(int index, byte[] value) {
+    System.arraycopy(value, 0, data, index, value.length);
+  }
+
+  /**
    * Replaces this vector with a copy of the supplied bytes.
    *
    * @param value the source bytes

@@ -529,8 +529,7 @@ public class Tag extends TagBase {
     var data = output.toByteVector((int) padding);
     header.setMajorVersion(version.code());
     header.setTagSize(data.size() - Header.size());
-    byte[] renderedHeader = header.render().data();
-    System.arraycopy(renderedHeader, 0, data.data(), 0, renderedHeader.length);
+    data.set(0, header.render().data());
     return data;
   }
 
