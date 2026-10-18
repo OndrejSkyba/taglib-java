@@ -13,7 +13,7 @@ public final class ByteVectorOutput {
   private static final class Buffer extends ByteArrayOutputStream {
     ByteVector vector(int padding) {
       var result = new ByteVector(Math.addExact(count, padding));
-      System.arraycopy(buf, 0, result.data(), 0, count);
+      result.set(0, buf, 0, count);
       return result;
     }
   }

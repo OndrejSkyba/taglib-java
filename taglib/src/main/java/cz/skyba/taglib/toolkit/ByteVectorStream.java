@@ -89,12 +89,8 @@ public class ByteVectorStream extends IOStream {
       }
       int old = data.size();
       truncate(Math.addExact(length(), difference));
-      System.arraycopy(
-        data.data(),
-        Math.toIntExact(start + replace),
-        data.data(),
-        Math.toIntExact(start + value.size()),
-        Math.toIntExact(old - start - replace));
+      data.set(Math.toIntExact(start + value.size()), data.data(),
+        Math.toIntExact(start + replace), Math.toIntExact(old - start - replace));
     }
     seek(start);
     writeBlock(value);
@@ -117,12 +113,7 @@ public class ByteVectorStream extends IOStream {
     long read = Math.addExact(start, count), write = start;
     if (read < length()) {
       long amount = length() - read;
-      System.arraycopy(
-        data.data(),
-        Math.toIntExact(read),
-        data.data(),
-        Math.toIntExact(write),
-        Math.toIntExact(amount));
+      data.set(Math.toIntExact(write), data.data(), Math.toIntExact(read), Math.toIntExact(amount));
       write += amount;
     }
     position = write;

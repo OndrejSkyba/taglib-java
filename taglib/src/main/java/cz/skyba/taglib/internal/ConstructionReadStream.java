@@ -133,7 +133,7 @@ public final class ConstructionReadStream extends IOStream {
       windowStart = position;
     }
     var result = new ByteVector((int) count);
-    System.arraycopy(window, (int) (position - windowStart), result.data(), 0, (int) count);
+    result.set(0, window, (int) (position - windowStart), (int) count);
     source.seek(position + count);
     return result;
   }
