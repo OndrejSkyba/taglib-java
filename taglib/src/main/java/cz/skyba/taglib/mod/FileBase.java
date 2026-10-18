@@ -137,11 +137,7 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
     if (end >= 0) {
       bytes.resize(end);
     }
-    for (int i = 0; i < bytes.size(); i++) {
-      if (bytes.data()[i] == (byte) 0xff) {
-        bytes.data()[i] = ' ';
-      }
-    }
+    bytes.replace((byte) 0xff, (byte) ' ');
     output.accept(bytes.decodeTerminatedText(ISO_8859_1));
     return true;
   }

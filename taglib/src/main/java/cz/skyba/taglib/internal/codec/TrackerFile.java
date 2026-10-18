@@ -343,11 +343,7 @@ public abstract class TrackerFile extends FileBase {
       if (nul >= 0) {
         data.resize(nul);
       }
-      for (int i = 0; i < data.size(); i++) {
-        if (data.data()[i] == '\r') {
-          data.data()[i] = '\n';
-        }
-      }
+      data.replace((byte) '\r', (byte) '\n');
       message = data.decodeTerminatedText(ISO_8859_1);
     }
     seek(64);
