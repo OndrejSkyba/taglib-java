@@ -106,7 +106,7 @@ public final class NativeImageSmoke {
     trackerMutablePropertiesCheck();
     partialXmPropertiesCheck(scratch.resolve("partial-properties.xm"));
     liveTrackerTagsAndHelpersCheck(scratch);
-    System.out.println("# TagLib Java " + TagLib.UPSTREAM_VERSION + " JVM/Native Image parity v3");
+    System.out.println("# TagLib Java JVM/Native Image parity v3");
     System.out.println("# write-policy upstream-compatible in-place");
     for (Path file : files) {
       String name = corpus.relativize(file).toString().replace('\\', '/');

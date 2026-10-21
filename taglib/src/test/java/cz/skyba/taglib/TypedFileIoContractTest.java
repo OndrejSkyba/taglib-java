@@ -149,7 +149,7 @@ class TypedFileIoContractTest {
   @TestFactory
   Stream<DynamicTest> openingPreservesStorageFailureAndBorrowedLifetime() {
     return FORMATS.stream().map(format -> DynamicTest.dynamicTest(format.fixture(), () -> {
-      Path path = Files.copy(UpstreamAudioFixtures.fixture(format.fixture()), directory.resolve(format.fixture()));
+      Path path = Files.copy(AudioFixtures.fixture(format.fixture()), directory.resolve(format.fixture()));
       try (var channel = new FileStreamIoFailureTest.FaultChannel(path); var stream = new FileStream(channel)) {
         channel.failAt = FileStreamIoFailureTest.Operation.READ;
         assertSame(channel.failure, assertThrows(UncheckedIOException.class, () -> format.open().apply(stream)).getCause());
@@ -161,7 +161,7 @@ class TypedFileIoContractTest {
   @TestFactory
   Stream<DynamicTest> savingReadOnlyFilesThrowsAndPreservesBytes() {
     return FORMATS.stream().map(format -> DynamicTest.dynamicTest(format.fixture(), () -> {
-      Path path = UpstreamAudioFixtures.fixture(format.fixture());
+      Path path = AudioFixtures.fixture(format.fixture());
       byte[] original = Files.readAllBytes(path);
       try (var stream = new FileStream(path, true); var file = format.open().apply(stream)) {
         file.tag().setTitle("changed");
@@ -180,7 +180,7 @@ class TypedFileIoContractTest {
   Stream<DynamicTest> savingPreservesStorageFailureAndBorrowedLifetime() {
     return FORMATS.stream().filter(format -> !format.fixture().endsWith(".shn"))
       .map(format -> DynamicTest.dynamicTest(format.fixture(), () -> {
-        Path path = Files.copy(UpstreamAudioFixtures.fixture(format.fixture()), directory.resolve(format.fixture()));
+        Path path = Files.copy(AudioFixtures.fixture(format.fixture()), directory.resolve(format.fixture()));
         try (var channel = new FileStreamIoFailureTest.FaultChannel(path);
              var stream = new FileStream(channel); var file = format.open().apply(stream)) {
           file.tag().setTitle("changed");
@@ -194,7 +194,7 @@ class TypedFileIoContractTest {
   @TestFactory
   Stream<DynamicTest> savingClosedFilesThrowsBeforeWriting() {
     return FORMATS.stream().map(format -> DynamicTest.dynamicTest(format.fixture(), () -> {
-      Path path = UpstreamAudioFixtures.fixture(format.fixture());
+      Path path = AudioFixtures.fixture(format.fixture());
       try (var stream = new FileStream(path, true); var file = format.open().apply(stream)) {
         stream.close();
         assertThrows(IllegalStateException.class, file::save);

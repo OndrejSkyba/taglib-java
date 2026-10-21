@@ -105,7 +105,7 @@ class FileRefContentEdgeCaseTest {
     tag.setTitle("Leading ID3 title");
     var prefix = tag.render();
     assertTrue(prefix.size() > 1024, "FLAC signature must lie beyond the initial prefix window");
-    return prefix.append(new ByteVector(Files.readAllBytes(UpstreamAudioFixtures.fixture("no-tags.flac"))));
+    return prefix.append(new ByteVector(Files.readAllBytes(AudioFixtures.fixture("no-tags.flac"))));
   }
 
   private static void assertPrefixedFlac(AudioFile reference) {

@@ -21,10 +21,7 @@ class Id3v1RiffInfoAndApeOwnerMutationTest {
   Path directory;
 
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    return UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
+    return AudioFixtures.fixture(name);
   }
 
   @Test
@@ -89,9 +86,7 @@ class Id3v1RiffInfoAndApeOwnerMutationTest {
 
   @Test
   void testID3v1Collision() throws Exception {
-    // This pinned registration names an absent fixture. Its native copy helper
-    // creates an empty file; retain that exact case and qualify a real APE below.
-    assertFalse(Files.exists(fixture("no-tags.mpc")));
+    // Saving an APE tag to an empty file must not create an ID3v1 footer.
     Path path = Files.write(directory.resolve("no-tags.mpc"), new byte[0]);
     try (var f = new ApeFile(path)) {
       f.getOrCreateApeTag().setArtist("Filltointersect    ");

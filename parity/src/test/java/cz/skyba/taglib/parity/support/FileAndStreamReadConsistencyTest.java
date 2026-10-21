@@ -68,7 +68,7 @@ final class FileAndStreamReadConsistencyTest {
     }
     assertEquals(
       files.size() * 4, accepted + rejected, "Every selected source fixture must be visited");
-    if (corpus.equals(root.resolve("work/upstream/verified/taglib-" + TagLib.UPSTREAM_VERSION + "/tests/data"))) {
+    if (corpus.equals(root.resolve("work/upstream/verified/taglib-" + Parity.defaultUpstreamVersion() + "/tests/data"))) {
       assertEquals(123 * 4, accepted + rejected, "Default release corpus changed");
       assertEquals(116 * 4, accepted, "Valid default corpus changed");
     }

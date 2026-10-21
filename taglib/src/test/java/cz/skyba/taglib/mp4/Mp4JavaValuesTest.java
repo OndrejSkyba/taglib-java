@@ -1,7 +1,7 @@
 package cz.skyba.taglib.mp4;
 
 import cz.skyba.taglib.ReadOptions;
-import cz.skyba.taglib.UpstreamAudioFixtures;
+import cz.skyba.taglib.AudioFixtures;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -83,7 +83,7 @@ class Mp4JavaValuesTest {
 
   @Test
   void standardJavaValuesSurviveSavingAndReopening() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "no-tags.m4a");
+    Path path = AudioFixtures.copy(directory, "no-tags.m4a");
     var text = List.of("first", "žluťoučký 🎵");
     byte[] binary = {0, 1, (byte) 255, 0};
     byte[] image = {(byte) 137, 80, 78, 71, 13, 10, 26, 10};

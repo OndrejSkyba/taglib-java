@@ -46,7 +46,7 @@ class PublicExceptionContractTest {
       assertEquals("lambda", file.tag().title());
       assertTrue(stream.isOpen());
     }
-    assertTrue(properties.apply(UpstreamAudioFixtures.fixture("lame_cbr.mp3")).sampleRate() > 0);
+    assertTrue(properties.apply(AudioFixtures.fixture("lame_cbr.mp3")).sampleRate() > 0);
     assertEquals(List.of("lambda"), List.of(path).stream().map(TagLib::read)
       .map(metadata -> metadata.tag().title()).toList());
     var document = MetadataDocument.open(path);

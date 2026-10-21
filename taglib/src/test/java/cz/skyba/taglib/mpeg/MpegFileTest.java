@@ -25,12 +25,7 @@ class MpegFileTest {
   Path directory;
 
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    Path p = UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
-    assertTrue(Files.isRegularFile(p));
-    return p;
+    return AudioFixtures.fixture(name);
   }
 
   Path copy(String name) throws Exception {

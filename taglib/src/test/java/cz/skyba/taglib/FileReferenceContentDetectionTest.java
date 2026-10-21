@@ -22,7 +22,6 @@ import cz.skyba.taglib.trueaudio.TrueAudioFile;
 import cz.skyba.taglib.wavpack.WavPackFile;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,10 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FileReferenceContentDetectionTest {
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    return UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
+    return AudioFixtures.fixture(name);
   }
 
   @Test

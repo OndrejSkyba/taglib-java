@@ -2,7 +2,7 @@
 package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.ReadOptions;
-import cz.skyba.taglib.UpstreamAudioFixtures;
+import cz.skyba.taglib.AudioFixtures;
 import cz.skyba.taglib.mpeg.MpegFile;
 import cz.skyba.taglib.mpeg.MpegSaveOptions;
 import cz.skyba.taglib.toolkit.ByteVector;
@@ -27,12 +27,7 @@ class Id3TagVersionsAndTypedFrameValuesTest {
   Path directory;
 
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    Path path = UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
-    assertTrue(Files.isRegularFile(path));
-    return path;
+    return AudioFixtures.fixture(name);
   }
 
   Path copy(String name) throws Exception {

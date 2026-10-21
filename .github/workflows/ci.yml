@@ -10,11 +10,11 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-      - run: ./parity/run fixtures
       - run: ./mvnw -B clean verify
       - run: ./mvnw -B -pl taglib -Prelease verify
       - name: Verify native-image consumer on the JVM
         run: |
+          ./parity/run fixtures
           classes=integration/native-image/target/classes
           mkdir -p "$classes"
           artifact=$(./mvnw -q -pl taglib help:evaluate -Dexpression=project.build.finalName -DforceStdout)

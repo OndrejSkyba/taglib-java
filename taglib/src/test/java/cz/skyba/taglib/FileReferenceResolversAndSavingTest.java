@@ -45,10 +45,7 @@ class FileReferenceResolversAndSavingTest {
   }
 
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    return UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
+    return AudioFixtures.fixture(name);
   }
 
   @Test

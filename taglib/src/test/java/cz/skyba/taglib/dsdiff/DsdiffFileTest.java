@@ -40,12 +40,7 @@ class DsdiffFileTest {
   }
 
   static Path fixture() {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    Path result = UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/empty10ms.dff");
-    assertTrue(Files.isRegularFile(result));
-    return result;
+    return AudioFixtures.fixture("empty10ms.dff");
   }
 
   Path copy(String name) throws Exception {

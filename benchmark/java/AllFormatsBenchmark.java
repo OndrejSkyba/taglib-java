@@ -29,8 +29,7 @@ public final class AllFormatsBenchmark {
     }
     int warmup = Integer.parseInt(args[3]), samples = Integer.parseInt(args[4]);
     if (cases.isEmpty() || warmup < 0 || samples < 1) throw new IllegalArgumentException("Invalid settings");
-    System.out.println("{\"kind\":\"environment\",\"version\":" + quote(TagLib.UPSTREAM_VERSION)
-      + ",\"javaVersion\":" + quote(System.getProperty("java.version"))
+    System.out.println("{\"kind\":\"environment\",\"javaVersion\":" + quote(System.getProperty("java.version"))
       + ",\"vmName\":" + quote(System.getProperty("java.vm.name")) + "}");
     if (args[0].equals("read")) {
       for (int sample = -warmup; sample < samples; sample++) {

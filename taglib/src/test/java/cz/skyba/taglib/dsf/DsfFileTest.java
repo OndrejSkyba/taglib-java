@@ -42,12 +42,7 @@ class DsfFileTest {
   }
 
   static Path fixture() {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    Path p = UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/empty10ms.dsf");
-    assertTrue(Files.isRegularFile(p));
-    return p;
+    return AudioFixtures.fixture("empty10ms.dsf");
   }
 
   @Test

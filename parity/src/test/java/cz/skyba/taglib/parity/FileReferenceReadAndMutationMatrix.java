@@ -93,7 +93,6 @@ public final class FileReferenceReadAndMutationMatrix {
     if (files.isEmpty()) throw new IOException("Empty upstream corpus: " + corpus);
     var report = Snapshots.JSON.createObjectNode();
     report.put("upstreamVersion", Snapshots.upstreamVersion());
-    report.put("javaTargetVersion", TagLib.UPSTREAM_VERSION);
     report.put(
       "contract",
       "native FileRef open/read styles/properties/common tag/audio/pictures; isolated"

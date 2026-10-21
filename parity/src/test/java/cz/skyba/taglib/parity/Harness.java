@@ -129,7 +129,6 @@ public final class Harness {
     var report = Snapshots.JSON.createObjectNode();
     report
       .put("upstreamVersion", Snapshots.upstreamVersion())
-      .put("javaTargetVersion", TagLib.UPSTREAM_VERSION)
       .put("generatedAt", Instant.now().toString())
       .put("corpus", corpus.toString());
     var rows = report.putArray("files");

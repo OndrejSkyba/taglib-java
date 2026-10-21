@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static cz.skyba.taglib.UpstreamAudioFixtures.*;
+import static cz.skyba.taglib.AudioFixtures.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +28,7 @@ class FlacFileTest {
   Path dir;
 
   Path copy(String name) throws Exception {
-    return UpstreamAudioFixtures.copy(dir, name);
+    return AudioFixtures.copy(dir, name);
   }
 
   static Picture newPicture() {

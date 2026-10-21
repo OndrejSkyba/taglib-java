@@ -199,7 +199,7 @@ class Mp4BoundaryTest {
       }
     }
     var pending = List.of(new Chapter("Pending", 0));
-    byte[] before = Files.readAllBytes(UpstreamAudioFixtures.fixture("no-tags.m4a"));
+    byte[] before = Files.readAllBytes(AudioFixtures.fixture("no-tags.m4a"));
     for (boolean qt : new boolean[]{false, true}) {
       var stream = new ReadOnlyStream(before);
       try (var file = new Mp4File(stream, ReadOptions.TAGS_ONLY)) {
@@ -219,7 +219,7 @@ class Mp4BoundaryTest {
   @Test
   void pathSaveUsesSameOwnerAndPreservesOriginalOnCallbackFailure() throws Exception {
     Path path = directory.resolve("input.m4a");
-    Files.copy(UpstreamAudioFixtures.fixture("no-tags.m4a"), path);
+    Files.copy(AudioFixtures.fixture("no-tags.m4a"), path);
     byte[] before = Files.readAllBytes(path);
     try (var f = new Mp4File(path, ReadOptions.TAGS_ONLY)) {
       var tag = f.tag();
@@ -256,7 +256,7 @@ class Mp4BoundaryTest {
         return true;
       }
     }
-    var bytes = Files.readAllBytes(UpstreamAudioFixtures.fixture("no-tags.m4a"));
+    var bytes = Files.readAllBytes(AudioFixtures.fixture("no-tags.m4a"));
     var s = new ReadOnly(bytes);
     try (var f = new Mp4File(s, ReadOptions.TAGS_ONLY)) {
       assertNull(f.audioProperties());

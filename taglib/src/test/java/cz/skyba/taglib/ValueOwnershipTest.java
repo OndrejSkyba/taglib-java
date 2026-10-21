@@ -33,7 +33,7 @@ class ValueOwnershipTest {
 
   @Test
   void ownerItemReferencesRemainLiveAndSaveTheirEdits() throws Exception {
-    var stream = new ByteVectorStream(Files.readAllBytes(UpstreamAudioFixtures.fixture("no-tags.m4a")));
+    var stream = new ByteVectorStream(Files.readAllBytes(AudioFixtures.fixture("no-tags.m4a")));
     String key = "----:org.Test:LIVE";
     var item = new Item(List.of(new ByteVector("payload")));
     var type = new AtomDataType(253);
@@ -66,7 +66,7 @@ class ValueOwnershipTest {
 
   @Test
   void independentItemCopiesSaveTheirOwnAtomTypes() throws Exception {
-    var stream = new ByteVectorStream(Files.readAllBytes(UpstreamAudioFixtures.fixture("no-tags.m4a")));
+    var stream = new ByteVectorStream(Files.readAllBytes(AudioFixtures.fixture("no-tags.m4a")));
     var original = new Item(List.of(new ByteVector("payload")));
     original.setAtomDataType(new AtomDataType(253));
     var copy = new Item(original);
@@ -106,7 +106,7 @@ class ValueOwnershipTest {
 
   @Test
   void namedAttributeViewsKeepLiveScopeAndPictureEdits() throws Exception {
-    var stream = new ByteVectorStream(Files.readAllBytes(UpstreamAudioFixtures.fixture("silence-1.wma")));
+    var stream = new ByteVectorStream(Files.readAllBytes(AudioFixtures.fixture("silence-1.wma")));
     var picture = new Picture();
     picture.setMimeType("image/png");
     picture.setDescription("original");
@@ -152,7 +152,7 @@ class ValueOwnershipTest {
 
   @Test
   void pictureConstructorAndAttributeCopiesSaveIndependentValues() throws Exception {
-    var stream = new ByteVectorStream(Files.readAllBytes(UpstreamAudioFixtures.fixture("silence-1.wma")));
+    var stream = new ByteVectorStream(Files.readAllBytes(AudioFixtures.fixture("silence-1.wma")));
     var picture = new Picture();
     picture.setType(Picture.Type.FrontCover);
     picture.setMimeType("image/png");

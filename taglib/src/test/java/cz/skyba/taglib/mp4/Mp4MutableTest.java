@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static cz.skyba.taglib.UpstreamAudioFixtures.fixture;
+import static cz.skyba.taglib.AudioFixtures.fixture;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

@@ -161,12 +161,4 @@ class ToolkitListAndMapOperationsTest {
     assertFalse(a.compareTo(d) >= 0);
     assertEquals("2.1.0", a.toString());
   }
-
-  @Test
-  void testRuntimeVersion() {
-    var v = VersionNumber.runtimeVersion();
-    assertTrue(v.compareTo(new VersionNumber(2, 3)) >= 0);
-    assertTrue(v.compareTo(new VersionNumber(2, 3, 2)) >= 0);
-    assertEquals(new VersionNumber(2, 3, 2), v);
-  }
 }

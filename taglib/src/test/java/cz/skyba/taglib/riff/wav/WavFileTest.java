@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 
-import static cz.skyba.taglib.UpstreamAudioFixtures.fixture;
+import static cz.skyba.taglib.AudioFixtures.fixture;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -27,7 +27,7 @@ class WavFileTest {
   Path dir;
 
   Path copy(String name) throws Exception {
-    return UpstreamAudioFixtures.copy(dir, name);
+    return AudioFixtures.copy(dir, name);
   }
 
   static void audio(Properties p, long ms, int bitrate, int channels, int rate, int bits, long frames, int format) {

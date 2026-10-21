@@ -280,7 +280,6 @@ class ByteStringAndCollectionBehaviorTest {
 
   @Test
   void versionSegmentsAreMaskedLikeNative() {
-    assertEquals("2.3.2", VersionNumber.runtimeVersion().toString());
     assertEquals(new VersionNumber(1, 2, 3), new VersionNumber(257, 258, 259));
     assertEquals(0x010203, new VersionNumber(1, 2, 3).combinedVersion());
     assertTrue(new VersionNumber(2, 0).compareTo(new VersionNumber(1, 255, 255)) > 0);

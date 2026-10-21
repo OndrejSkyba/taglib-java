@@ -22,12 +22,7 @@ class AiffFileTest {
   Path directory;
 
   static Path fixture(String name) {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    var path = UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name);
-    assertTrue(Files.isRegularFile(path));
-    return path;
+    return AudioFixtures.fixture(name);
   }
 
   Path copy(String name) throws Exception {

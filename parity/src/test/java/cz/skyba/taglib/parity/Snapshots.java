@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.skyba.taglib.AudioMetadata;
-import cz.skyba.taglib.TagLib;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ public final class Snapshots {
     try {
       return cz.skyba.taglib.parity.support.Parity.upstream().getProperty("version");
     } catch (java.io.IOException e) {
-      return TagLib.UPSTREAM_VERSION;
+      return cz.skyba.taglib.parity.support.Parity.defaultUpstreamVersion();
     }
   }
 
@@ -34,7 +33,8 @@ public final class Snapshots {
       return java.nio.file.Path.of(
         cz.skyba.taglib.parity.support.Parity.upstream().getProperty("source"));
     } catch (java.io.IOException e) {
-      return project.resolve("work/upstream/verified/taglib-" + TagLib.UPSTREAM_VERSION);
+      return project.resolve("work/upstream/verified/taglib-"
+        + cz.skyba.taglib.parity.support.Parity.defaultUpstreamVersion());
     }
   }
 

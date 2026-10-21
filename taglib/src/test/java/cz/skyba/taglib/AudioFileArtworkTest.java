@@ -33,7 +33,7 @@ class AudioFileArtworkTest {
         "silence-1.wma", "empty.wav", "noise.aif", "mac-399.ape", "click.wv", "click.mpc",
         "tagged.tta", "empty10ms.dsf", "empty10ms.dff", "no-tags.mka")
       .map(name -> DynamicTest.dynamicTest(name, () -> {
-        Path path = Files.copy(UpstreamAudioFixtures.fixture(name), directory.resolve(name));
+        Path path = Files.copy(AudioFixtures.fixture(name), directory.resolve(name));
         byte[] original = Files.readAllBytes(path);
         var picture = picture();
         List<Picture> snapshot;
@@ -64,7 +64,7 @@ class AudioFileArtworkTest {
 
   @Test
   void picturesInLaterTagsAreVisibleWithoutChangingKeyPrecedence() throws Exception {
-    Path path = Files.copy(UpstreamAudioFixtures.fixture("lame_cbr.mp3"), directory.resolve("mixed.mp3"));
+    Path path = Files.copy(AudioFixtures.fixture("lame_cbr.mp3"), directory.resolve("mixed.mp3"));
     var picture = picture();
     try (var owner = new AudioFile(new MpegFile(path, ReadOptions.TAGS_ONLY))) {
       var file = (MpegFile) owner.file();
@@ -84,7 +84,7 @@ class AudioFileArtworkTest {
 
   @Test
   void capabilityIsIndependentOfPresenceAndStorageWritability() throws Exception {
-    Path path = UpstreamAudioFixtures.fixture("no-tags.flac");
+    Path path = AudioFixtures.fixture("no-tags.flac");
     byte[] original = Files.readAllBytes(path);
     try (var stream = new FileStream(path, true); var file = new AudioFile(stream, ReadOptions.TAGS_ONLY)) {
       assertTrue(file.complexPropertyKeys().isEmpty());
@@ -99,7 +99,7 @@ class AudioFileArtworkTest {
   @Test
   void unsupportedFormatsRejectReplacementAndRemoval() {
     for (var name : List.of("test.mod", "test.s3m", "test.it", "test.xm", "2sec-silence.shn")) {
-      try (var file = new AudioFile(UpstreamAudioFixtures.fixture(name), ReadOptions.TAGS_ONLY)) {
+      try (var file = new AudioFile(AudioFixtures.fixture(name), ReadOptions.TAGS_ONLY)) {
         assertFalse(file.supportsPictureEditing());
         assertTrue(file.pictures().isEmpty());
         assertThrows(UnsupportedOperationException.class, () -> file.replacePictures(List.of(picture())));
@@ -110,7 +110,7 @@ class AudioFileArtworkTest {
 
   @Test
   void invalidReplacementDoesNotDiscardExistingPicturesAndClosedOwnerRejectsAccess() throws Exception {
-    Path path = Files.copy(UpstreamAudioFixtures.fixture("no-tags.flac"), directory.resolve("null.flac"));
+    Path path = Files.copy(AudioFixtures.fixture("no-tags.flac"), directory.resolve("null.flac"));
     var picture = picture();
     var file = new AudioFile(path, ReadOptions.TAGS_ONLY);
     try (file) {

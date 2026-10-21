@@ -33,7 +33,7 @@ class TagLibEditTest {
     values.set(0, "Changed input");
     builder.set("TITLE", "Changed builder").clear("ARTIST");
     assertFalse(Files.exists(path));
-    Files.copy(UpstreamAudioFixtures.fixture("lame_cbr.mp3"), path);
+    Files.copy(AudioFixtures.fixture("lame_cbr.mp3"), path);
     TagLib.write(path, PropertyMap.builder().put("ALBUM", "Keep album").put("COMMENT", "Remove comment").build());
 
     request.save();
@@ -51,7 +51,7 @@ class TagLibEditTest {
 
   @Test
   void lastOperationWins() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "lame_cbr.mp3");
+    Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
     TagLib.edit(path).set("TITLE", "First").clear("title").set("Title", "Last")
       .set("ARTIST", "Remove").clear("artist").save();
     assertEquals("Last", TagLib.read(path).properties().first("TITLE"));
@@ -60,7 +60,7 @@ class TagLibEditTest {
 
   @Test
   void savingUsesOneFileSession() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "lame_cbr.mp3");
+    Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
     var opens = new AtomicInteger();
     AudioFile.addFileTypeResolver((name, options) -> {
       assertEquals(path, name);
@@ -79,7 +79,7 @@ class TagLibEditTest {
 
   @Test
   void concurrentEditsToTheSameFilePreserveBothChanges() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "lame_cbr.mp3");
+    Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
     TagLib.write(path, PropertyMap.builder().put("TITLE", "Original").put("ARTIST", "Original").build());
     var firstSaving = new CountDownLatch(1);
     var releaseFirst = new CountDownLatch(1);
@@ -147,7 +147,7 @@ class TagLibEditTest {
     "no-tags.mka"
   })
   void savingMatchesTheExistingReplacementApi(String fixture) throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, fixture);
+    Path path = AudioFixtures.copy(directory, fixture);
     Path expected = directory.resolve("expected-" + fixture);
     Files.copy(path, expected);
     var replacement = TagLib.read(expected, ReadOptions.TAGS_ONLY).properties().toBuilder()
@@ -162,7 +162,7 @@ class TagLibEditTest {
   @ValueSource(strings = {"lame_cbr.mp3", "sinewave.flac", "has-tags.m4a", "empty.ogg",
     "silence-1.wma", "no-tags.mka", "empty10ms.dsf", "empty10ms.dff"})
   void editsPreserveArtworkAccordingToTheReplacementApi(String fixture) throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, fixture);
+    Path path = AudioFixtures.copy(directory, fixture);
     var picture = new Picture(3, "image/png", "cover", new byte[]{(byte) 137, 80, 78, 71, 1, 2, 3});
     TagLib.write(path, PropertyMap.builder().put("TITLE", "Original").put("COMMENT", "Remove too").build(), List.of(picture));
     var before = TagLib.read(path);
@@ -179,7 +179,7 @@ class TagLibEditTest {
 
   @Test
   void clearRemovesDescribedId3Comments() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "lame_cbr.mp3");
+    Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
     TagLib.write(path, PropertyMap.builder().put("COMMENT:OTHER", "Remove too").build());
     assertEquals("Remove too", TagLib.read(path).properties().first("COMMENT:OTHER"));
 
@@ -191,7 +191,7 @@ class TagLibEditTest {
   @ParameterizedTest
   @CsvSource({"has-tags.m4a,1INVALID", "silence-1.wma,ZZZ_UNSUPPORTED", "test.it,ARTIST"})
   void rejectedValuesPreventSavingEarlierClearsOrSets(String fixture, String key) throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, fixture);
+    Path path = AudioFixtures.copy(directory, fixture);
     byte[] before = Files.readAllBytes(path);
 
     var failure = assertThrows(MetadataEditException.class,
@@ -215,7 +215,7 @@ class TagLibEditTest {
     assertThrows(NullPointerException.class, () -> builder.set("TITLE", (String) null));
     assertThrows(NullPointerException.class, () -> builder.set(null, "value"));
 
-    Path path = UpstreamAudioFixtures.copy(directory, "has-tags.m4a");
+    Path path = AudioFixtures.copy(directory, "has-tags.m4a");
     Path expected = directory.resolve("expected.m4a");
     Files.copy(path, expected);
     TagLib.write(expected, TagLib.read(expected, ReadOptions.TAGS_ONLY).properties().toBuilder().put("TITLE", "").build());
@@ -237,7 +237,7 @@ class TagLibEditTest {
 
   @Test
   void shortenRetainsTheReplacementApisReadOnlyBehavior() throws Exception {
-    Path path = UpstreamAudioFixtures.copy(directory, "2sec-silence.shn");
+    Path path = AudioFixtures.copy(directory, "2sec-silence.shn");
     byte[] before = Files.readAllBytes(path);
     assertThrows(UnsupportedOperationException.class, () -> TagLib.edit(path).clear("TITLE").save());
     assertArrayEquals(before, Files.readAllBytes(path));

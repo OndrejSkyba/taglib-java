@@ -29,8 +29,6 @@ import java.util.Objects;
 /// supplied stream and leave it open. Writes update storage in place and can leave partial
 /// changes if an operation fails.
 public final class TagLib {
-  public static final String UPSTREAM_VERSION = "2.3.2";
-
   private TagLib() {
   }
 

@@ -3,6 +3,7 @@ package cz.skyba.taglib.parity.support;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -72,6 +73,15 @@ public final class Parity {
       properties.load(input);
     }
     return properties;
+  }
+
+  public static String defaultUpstreamVersion() {
+    try (var lines = Files.lines(ROOT.resolve("parity/native/upstream.env"))) {
+      return lines.filter(line -> line.startsWith("TAGLIB_VERSION="))
+        .findFirst().orElseThrow().substring("TAGLIB_VERSION=".length());
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   public static boolean defaultUpstream() throws IOException {

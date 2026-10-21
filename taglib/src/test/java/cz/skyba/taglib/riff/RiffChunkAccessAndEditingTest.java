@@ -2,17 +2,15 @@ package cz.skyba.taglib.riff;
 
 import cz.skyba.taglib.AudioProperties;
 import cz.skyba.taglib.TagBase;
-import cz.skyba.taglib.UpstreamAudioFixtures;
+import cz.skyba.taglib.AudioFixtures;
 import cz.skyba.taglib.toolkit.ByteVector;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class RiffChunkAccessAndEditingTest {
   @TempDir
@@ -37,10 +35,7 @@ class RiffChunkAccessAndEditingTest {
   }
 
   Path copy(String name) throws Exception {
-    Path root = Path.of("").toAbsolutePath();
-    while (root != null && !Files.isDirectory(root.resolve("taglib/src"))) root = root.getParent();
-    assertNotNull(root);
-    return Files.copy(UpstreamAudioFixtures.upstreamSource(root).resolve("tests/data/" + name), directory.resolve(name));
+    return AudioFixtures.copy(directory, name);
   }
 
   @Test

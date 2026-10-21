@@ -23,8 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static cz.skyba.taglib.UpstreamAudioFixtures.copy;
-import static cz.skyba.taglib.UpstreamAudioFixtures.fixture;
+import static cz.skyba.taglib.AudioFixtures.copy;
+import static cz.skyba.taglib.AudioFixtures.fixture;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
