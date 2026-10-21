@@ -24,8 +24,9 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Reads immutable audio metadata snapshots and writes complete metadata replacements.
- * Path operations open and close their own file handles. Stream operations borrow the
+ * High-level API for reading and editing audio metadata.
+ *
+ * <p>Path operations open and close their own file handles. Stream operations borrow the
  * supplied stream and leave it open. Writes update storage in place and can leave partial
  * changes if an operation fails.
  */
@@ -230,6 +231,58 @@ public final class TagLib {
       throw new InvalidAudioFileException("Unrecognized or unsupported audio container: " + name);
     }
     return selected;
+  }
+
+  /**
+   * Builds common text edits without opening the file. Use {@code set} to replace values
+   * and {@code clear} to remove a property. Saving merges the edits into the file's current
+   * properties and uses the replacement and default save behavior of {@link #write(Path, PropertyMap)}.
+   * Changes are applied only by {@code save()}; {@code build()} creates an immutable request
+   * for later saving.
+   *
+   * <pre>{@code
+   * TagLib.edit(path)
+   *   .set("TITLE", "New title")
+   *   .set("ARTIST", "Artist A", "Artist B")
+   *   .clear("COMMENT")
+   *   .save();
+   * }</pre>
+   *
+   * @param path the audio file to edit when saving
+   * @return a mutable builder for text edits
+   * @throws NullPointerException if the path is null
+   * @see MetadataEdit
+   */
+  public static MetadataEdit.Builder edit(Path path) {
+    return new MetadataEdit.Builder(path);
+  }
+
+  static void applyEdits(Path path, PropertyMap updates) {
+    if (updates.isEmpty()) {
+      return;
+    }
+    try {
+      WriteGuard.run(path, () -> {
+        try (var file = new AudioFile(path, ReadOptions.TAGS_ONLY)) {
+          var properties = file.properties().toBuilder();
+          updates.asMap().forEach((key, values) -> {
+            if (values.isEmpty()) {
+              properties.remove(key);
+            } else {
+              properties.put(key, values);
+            }
+          });
+          var result = file.replaceProperties(properties.build());
+          if (!result.rejected().isEmpty()) {
+            throw new MetadataEditException("Unsupported metadata values for properties: "
+              + result.rejected().asMap().keySet());
+          }
+          file.save();
+        }
+      });
+    } catch (IOException failure) {
+      throw new UncheckedIOException("Cannot update audio metadata: " + path, failure);
+    }
   }
 
   /**

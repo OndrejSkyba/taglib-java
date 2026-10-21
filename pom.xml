@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cz.skyba</groupId>
   <artifactId>taglib-parent</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>TagLib Java</name>
   <description>Library for reading and editing audio metadata, ID3 tags and album art in MP3, FLAC, MP4, Ogg, Opus, WAV and more.</description>
