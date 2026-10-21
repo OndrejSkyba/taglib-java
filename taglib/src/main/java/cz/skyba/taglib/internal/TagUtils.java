@@ -6,9 +6,7 @@ import cz.skyba.taglib.id3.v2.Header;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
 
-/**
- * Tag finders without payload reads.
- */
+/// Tag finders without payload reads.
 public final class TagUtils {
   // Matching methods only read these private patterns; no mutable storage escapes.
   private static final ByteVector ID3V2_IDENTIFIER = new ByteVector("ID3");
@@ -59,9 +57,7 @@ public final class TagUtils {
     return file.readBlock(8).equals(APE_IDENTIFIER) ? position : -1;
   }
 
-  /**
-   * Header parsing retains default body/flags when the native Header rejects its data.
-   */
+  /// Header parsing retains default body/flags when the native Header rejects its data.
   public static long completeID3v2Size(ByteVector header) {
     return new Header(header).completeTagSize();
   }
@@ -70,9 +66,7 @@ public final class TagUtils {
     return readHeaderWithOffset(stream, length, skipID3v2).data();
   }
 
-  /**
-   * Retains the native output offset without rereading a header or invoking a decoder twice.
-   */
+  /// Retains the native output offset without rereading a header or invoking a decoder twice.
   public record HeaderRead(ByteVector data, long offset) {
   }
 

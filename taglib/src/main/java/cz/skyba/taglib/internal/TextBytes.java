@@ -10,14 +10,12 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * Metadata text conversion over borrowed byte ranges and immutable Java strings.
- * Supports the standard Latin-1, UTF-8 and UTF-16 charsets with TagLib's conversion rules:
- * UTF-8 is strict; Latin-1 encoding keeps low bytes; UTF-16 preserves raw code units
- * and drops odd trailing bytes. UTF_16 requires a BOM when decoding and emits a
- * little-endian BOM when encoding. These differ from the JDK's replacement/BOM defaults.
- * Returned strings and encoded bytes own their storage.
- */
+/// Metadata text conversion over borrowed byte ranges and immutable Java strings.
+/// Supports the standard Latin-1, UTF-8 and UTF-16 charsets with TagLib's conversion rules:
+/// UTF-8 is strict; Latin-1 encoding keeps low bytes; UTF-16 preserves raw code units
+/// and drops odd trailing bytes. UTF_16 requires a BOM when decoding and emits a
+/// little-endian BOM when encoding. These differ from the JDK's replacement/BOM defaults.
+/// Returned strings and encoded bytes own their storage.
 public final class TextBytes {
   private static final System.Logger LOG = System.getLogger(TextBytes.class.getName());
 
@@ -37,9 +35,7 @@ public final class TextBytes {
     return decodeTerminated(bytes, 0, bytes.length, charset);
   }
 
-  /**
-   * Decodes the entire range before truncating at the first decoded NUL.
-   */
+  /// Decodes the entire range before truncating at the first decoded NUL.
   public static String decodeTerminated(byte[] bytes, int offset, int length, Charset charset) {
     if (length == 0) {
       if (!ISO_8859_1.equals(charset) && !UTF_8.equals(charset)) requireUtf16(charset);
@@ -91,10 +87,8 @@ public final class TextBytes {
     return new String(result);
   }
 
-  /**
-   * Encodes all UTF-16 code units into independent bytes, preserving embedded NULs.
-   * Latin-1 retains the low eight bits; malformed UTF-16 produces empty UTF-8 output.
-   */
+  /// Encodes all UTF-16 code units into independent bytes, preserving embedded NULs.
+  /// Latin-1 retains the low eight bits; malformed UTF-16 produces empty UTF-8 output.
   public static byte[] encode(String value, Charset charset) {
     Objects.requireNonNull(value);
     if (UTF_8.equals(charset)) {

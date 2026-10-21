@@ -12,17 +12,13 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A mutable FLAC picture value with copied image inputs and detached binary exports.
- */
+/// A mutable FLAC picture value with copied image inputs and detached binary exports.
 public class Picture extends MetadataBlock {
   private static final System.Logger LOG = System.getLogger(Picture.class.getName());
 
   private static final Type[] TYPE_VALUES = Type.values();
 
-  /**
-   * The role of an embedded FLAC picture.
-   */
+  /// The role of an embedded FLAC picture.
   public enum Type {
     Other, FileIcon, OtherFileIcon, FrontCover, BackCover, LeafletPage,
     Media, LeadArtist, Artist, Conductor, Band, Composer, Lyricist, RecordingLocation,
@@ -39,58 +35,29 @@ public class Picture extends MetadataBlock {
   private int width, height, colorDepth, numColors;
   private byte[] data = new byte[0];
 
-  /**
-   * Creates an empty picture value.
-   */
   public Picture() {
   }
 
-  /**
-   * Decodes a serialized picture value.
-   *
-   * @param payload the encoded FLAC picture payload without its block header
-   */
+  /// Decodes a serialized picture value.
+  ///
+  /// @param payload the encoded FLAC picture payload without its block header
   public Picture(byte[] payload) {
     parse(payload);
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param type the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static String typeToString(Type type) {
     return PictureTypes.nameForCode(Objects.requireNonNull(type).code());
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromString(String value) {
     return TYPE_VALUES[PictureTypes.codeForName(value)];
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromUInt(long value) {
     long narrowed = value & 0xffff_ffffL;
     return narrowed < TYPE_VALUES.length ? TYPE_VALUES[(int) narrowed] : Type.Other;
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromByte(byte value) {
     return typeFromUInt(value & 255);
   }
@@ -156,30 +123,24 @@ public class Picture extends MetadataBlock {
     numColors = value;
   }
 
-  /**
-   * Returns an independent copy of the image bytes.
-   *
-   * @return picture bytes
-   */
+  /// Returns an independent copy of the image bytes.
+  ///
+  /// @return picture bytes
   public final byte[] data() {
     return data.clone();
   }
 
-  /**
-   * Replaces the stored binary payload with an independent copy.
-   *
-   * @param value the bytes to copy
-   */
+  /// Replaces the stored binary payload with an independent copy.
+  ///
+  /// @param value the bytes to copy
   public final void setData(byte[] value) {
     data = Objects.requireNonNull(value).clone();
   }
 
-  /**
-   * Decodes serialized picture fields into this object.
-   *
-   * @param payload encoded picture payload bytes
-   * @return whether the picture payload was readable
-   */
+  /// Decodes serialized picture fields into this object.
+  ///
+  /// @param payload encoded picture payload bytes
+  /// @return whether the picture payload was readable
   public final boolean parse(byte[] payload) {
     Objects.requireNonNull(payload);
     if (payload.length < 32) {
@@ -218,20 +179,16 @@ public class Picture extends MetadataBlock {
     return true;
   }
 
-  /**
-   * Creates an immutable format-independent picture snapshot with copied image bytes.
-   *
-   * @return the picture snapshot
-   */
+  /// Creates an immutable format-independent picture snapshot with copied image bytes.
+  ///
+  /// @return the picture snapshot
   public final cz.skyba.taglib.Picture snapshot() {
     return new cz.skyba.taglib.Picture(type.code(), mimeType, description, data, width, height, colorDepth, numColors);
   }
 
-  /**
-   * Serializes the picture fields and image data without writing a file.
-   *
-   * @return picture bytes
-   */
+  /// Serializes the picture fields and image data without writing a file.
+  ///
+  /// @return picture bytes
   @Override
   public byte[] render() {
     return XiphComment.renderPicture(type.code(), mimeType, description, data, width, height, colorDepth, numColors);

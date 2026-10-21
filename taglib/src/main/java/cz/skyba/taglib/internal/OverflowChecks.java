@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.internal;
 
-/**
- * Arithmetic overflow preflight checks that do not retain the computed result.
- */
+/// Arithmetic overflow preflight checks that do not retain the computed result.
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public final class OverflowChecks {
   private OverflowChecks() {

@@ -14,9 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * DSF and DSDIFF/DST audio properties and embedded ID3v2 metadata.
- */
+/// DSF and DSDIFF/DST audio properties and embedded ID3v2 metadata.
 public final class DsdCodec implements Codec {
   private final Format selectedFormat;
 
@@ -31,9 +29,7 @@ public final class DsdCodec implements Codec {
     selectedFormat = format;
   }
 
-  /**
-   * The constructor selected by AudioFile without another probe or payload read.
-   */
+  /// The constructor selected by AudioFile without another probe or payload read.
   public Format format() {
     return selectedFormat;
   }
@@ -53,9 +49,7 @@ public final class DsdCodec implements Codec {
   private record ReadResult(AudioMetadata snapshot, DsfDetails dsfDetails, DffDetails dffDetails) {
   }
 
-  /**
-   * Native DSF Properties' available-byte conversions, shared with the file decoder.
-   */
+  /// Native DSF Properties' available-byte conversions, shared with the file decoder.
   public static DsfDetails dsfProperties(byte[] data) {
     var numeric = new ByteVector(data);
     int channels = (int) numeric.toUnsignedInt(12, false), rate = (int) numeric.toUnsignedInt(16, false),
@@ -71,9 +65,7 @@ public final class DsdCodec implements Codec {
       (int) numeric.toUnsignedInt(8, false), samples, (int) numeric.toUnsignedInt(32, false));
   }
 
-  /**
-   * Unsigned sample count is supplied as raw 64-bit bits, matching the native constructor.
-   */
+  /// Unsigned sample count is supplied as raw 64-bit bits, matching the native constructor.
   public static DffDetails dffProperties(long sampleRate, int channels, long samples, int bitrate) {
     if (sampleRate < 0 || sampleRate > 0xffff_ffffL || channels < 0 || channels > 0xffff) {
       throw new IllegalArgumentException("DSDIFF unsigned sample rate/channel range");

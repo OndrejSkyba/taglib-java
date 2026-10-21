@@ -14,28 +14,22 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A mutable Nero chapter list with explicit storage read, write and removal operations.
- */
+/// A mutable Nero chapter list with explicit storage read, write and removal operations.
 public class NeroChapterList extends ChapterHolder {
-  /**
-   * Reads and replaces this list from Nero chapter metadata. The source remains open.
-   *
-   * @param file the source or storage target
-   * @return whether chapter metadata was found and readable
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads and replaces this list from Nero chapter metadata. The source remains open.
+  ///
+  /// @param file the source or storage target
+  /// @return whether chapter metadata was found and readable
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final boolean read(FileBase file) {
     return read(FileOwnerStream.properties(file));
   }
 
-  /**
-   * Reads and replaces this list from Nero chapter metadata. The source remains open.
-   *
-   * @param file the source or storage target
-   * @return whether chapter metadata was found and readable
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads and replaces this list from Nero chapter metadata. The source remains open.
+  ///
+  /// @param file the source or storage target
+  /// @return whether chapter metadata was found and readable
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final boolean read(IOStream file) {
     Atoms atoms = new Atoms(file);
     Atom atom = atoms.find("moov", "udta", "chpl");
@@ -68,30 +62,26 @@ public class NeroChapterList extends ChapterHolder {
     return true;
   }
 
-  /**
-   * Writes this list to storage immediately, updating atom sizes and offsets. An empty list
-   * removes chapter metadata. The source remains open; failures can leave partial changes.
-   * The chapter count and each UTF-8 title are limited to 255; excess entries or title bytes are omitted.
-   *
-   * @param file the source or storage target
-   * @throws IllegalStateException        if storage is closed
-   * @throws TagLibException              if storage is read-only or chapter data cannot be represented
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes this list to storage immediately, updating atom sizes and offsets. An empty list
+  /// removes chapter metadata. The source remains open; failures can leave partial changes.
+  /// The chapter count and each UTF-8 title are limited to 255; excess entries or title bytes are omitted.
+  ///
+  /// @param file the source or storage target
+  /// @throws IllegalStateException        if storage is closed
+  /// @throws TagLibException              if storage is read-only or chapter data cannot be represented
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final void write(Mp4File file) {
     write(file.metadataStream());
   }
 
-  /**
-   * Writes this list to storage immediately, updating atom sizes and offsets. An empty list
-   * removes chapter metadata. The source remains open; failures can leave partial changes.
-   * The chapter count and each UTF-8 title are limited to 255; excess entries or title bytes are omitted.
-   *
-   * @param file the source or storage target
-   * @throws IllegalStateException        if storage is closed
-   * @throws TagLibException              if storage is read-only or chapter data cannot be represented
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes this list to storage immediately, updating atom sizes and offsets. An empty list
+  /// removes chapter metadata. The source remains open; failures can leave partial changes.
+  /// The chapter count and each UTF-8 title are limited to 255; excess entries or title bytes are omitted.
+  ///
+  /// @param file the source or storage target
+  /// @throws IllegalStateException        if storage is closed
+  /// @throws TagLibException              if storage is read-only or chapter data cannot be represented
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final void write(IOStream file) {
     if (chapterList.isEmpty()) {
       remove(file);
@@ -133,28 +123,24 @@ public class NeroChapterList extends ChapterHolder {
     modified = false;
   }
 
-  /**
-   * Removes Nero chapter metadata from storage immediately and clears this list.
-   * The source remains open; failures can leave partial changes.
-   *
-   * @param file the source or storage target
-   * @throws IllegalStateException        if storage is closed
-   * @throws TagLibException              if storage is read-only or chapter data cannot be represented
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Removes Nero chapter metadata from storage immediately and clears this list.
+  /// The source remains open; failures can leave partial changes.
+  ///
+  /// @param file the source or storage target
+  /// @throws IllegalStateException        if storage is closed
+  /// @throws TagLibException              if storage is read-only or chapter data cannot be represented
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final void remove(Mp4File file) {
     remove(file.metadataStream());
   }
 
-  /**
-   * Removes Nero chapter metadata from storage immediately and clears this list.
-   * The source remains open; failures can leave partial changes.
-   *
-   * @param file the source or storage target
-   * @throws IllegalStateException        if storage is closed
-   * @throws TagLibException              if storage is read-only or chapter data cannot be represented
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Removes Nero chapter metadata from storage immediately and clears this list.
+  /// The source remains open; failures can leave partial changes.
+  ///
+  /// @param file the source or storage target
+  /// @throws IllegalStateException        if storage is closed
+  /// @throws TagLibException              if storage is read-only or chapter data cannot be represented
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final void remove(IOStream file) {
     requireWritable(file);
     Atoms atoms = new Atoms(file);

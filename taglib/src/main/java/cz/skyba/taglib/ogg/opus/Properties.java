@@ -13,34 +13,27 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
-/**
- * Parsed Ogg Opus audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- * The read-style hint does not change the calculation for this format.
- */
+/// Parsed Ogg Opus audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
+/// The read-style hint does not change the calculation for this format.
 public final class Properties {
   private final OggCodec.Details details;
 
-  /**
-   * Reads Ogg Opus audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Ogg Opus audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     try (var file = new BinaryFile(path)) {
       details = OggCodec.readProperties(file, Format.OGG_OPUS, style);
@@ -49,25 +42,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads Ogg Opus audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Ogg Opus audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     try (var file = new BinaryFile(stream)) {
       details = OggCodec.readProperties(file, Format.OGG_OPUS, style);
@@ -76,25 +65,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param file the live file to inspect without taking ownership
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param file the live file to inspect without taking ownership
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(OggFile file) {
     this(file, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param file  the live file to inspect without taking ownership
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param file  the live file to inspect without taking ownership
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(OggFile file, ReadStyle style) {
     try {
       details = OggCodec.readProperties(file, Format.OGG_OPUS, style);
@@ -135,12 +120,6 @@ public final class Properties {
     return details.outputGain();
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return details.common();
   }

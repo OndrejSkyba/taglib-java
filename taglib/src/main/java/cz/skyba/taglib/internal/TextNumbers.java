@@ -3,12 +3,10 @@ package cz.skyba.taglib.internal;
 
 import java.util.Objects;
 
-/**
- * Metadata number parsing with partial values and explicit success status.
- * Parsing stops at NUL, accepts leading ASCII whitespace and radix prefixes, and
- * saturates on 64-bit overflow. Integer results keep the low 32 bits; their success
- * flag excludes both signed 32-bit endpoints.
- */
+/// Metadata number parsing with partial values and explicit success status.
+/// Parsing stops at NUL, accepts leading ASCII whitespace and radix prefixes, and
+/// saturates on 64-bit overflow. Integer results keep the low 32 bits; their success
+/// flag excludes both signed 32-bit endpoints.
 public final class TextNumbers {
   private TextNumbers() {
   }
@@ -19,17 +17,17 @@ public final class TextNumbers {
   public record LongResult(long value, boolean ok) {
   }
 
-  /** Returns the parsed value even when input is partial or out of range. */
+  /// Returns the parsed value even when input is partial or out of range.
   public static int parseInt(String value) {
     return (int) integer(value, 10, false).value();
   }
 
-  /** Returns the parsed value even when input is partial or out of range. */
+  /// Returns the parsed value even when input is partial or out of range.
   public static long parseLong(String value, int base) {
     return extractLong(value, base).value();
   }
 
-  /** Returns the unsigned value as long bits, even when input is partial or out of range. */
+  /// Returns the unsigned value as long bits, even when input is partial or out of range.
   public static long parseUnsignedLong(String value, int base) {
     return extractUnsignedLong(value, base).value();
   }

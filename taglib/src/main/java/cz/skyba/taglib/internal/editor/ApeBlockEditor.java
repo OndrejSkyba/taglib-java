@@ -13,9 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/**
- * Physical APE entries and their original-byte retention policy.
- */
+/// Physical APE entries and their original-byte retention policy.
 final class ApeBlockEditor {
   private static final Set<String> COVER_ART_KEYS = Set.of("COVER ART (FRONT)", "COVER ART (BACK)");
   private static final Set<String> RESERVED_KEYS = Set.of("ID3", "TAG", "OGGS", "MP+");

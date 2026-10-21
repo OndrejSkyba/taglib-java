@@ -15,15 +15,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * An editable MP4 file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable MP4 file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class Mp4File extends FileBase {
-  /**
-   * Tag families supported by this format's removal operations.
-   */
+  /// Tag families supported by this format's removal operations.
   public enum TagType {MP4}
 
   private final IOStream source;
@@ -35,79 +31,67 @@ public class Mp4File extends FileBase {
   private NeroChapterList nero;
   private QtChapterList qt;
 
-  /**
-   * Opens a MP4 file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a MP4 file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public Mp4File(Path path) {
     this(path, ReadOptions.DEFAULT, null);
   }
 
-  /**
-   * Opens a MP4 file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a MP4 file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public Mp4File(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a MP4 file and owns the file handle.
-   * The item factory controls MP4 item parsing; null selects the shared default factory.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the item decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a MP4 file and owns the file handle.
+  /// The item factory controls MP4 item parsing; null selects the shared default factory.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the item decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public Mp4File(Path path, ReadOptions options, ItemFactory factory) {
     this(open(path, options), true, options, factory);
   }
 
-  /**
-   * Opens a MP4 file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a MP4 file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public Mp4File(IOStream stream) {
     this(stream, ReadOptions.DEFAULT, null);
   }
 
-  /**
-   * Opens a MP4 file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a MP4 file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public Mp4File(IOStream stream, ReadOptions options) {
     this(stream, options, null);
   }
 
-  /**
-   * Opens a MP4 file over a borrowed stream that remains open when this file closes.
-   * The item factory controls MP4 item parsing; null selects the shared default factory.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the item decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a MP4 file over a borrowed stream that remains open when this file closes.
+  /// The item factory controls MP4 item parsing; null selects the shared default factory.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the item decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public Mp4File(IOStream stream, ReadOptions options, ItemFactory factory) {
     this(stream, false, options, factory);
   }
@@ -149,11 +133,7 @@ public class Mp4File extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -177,13 +157,11 @@ public class Mp4File extends FileBase {
     return atoms != null && atoms.find("moov", "udta", "meta", "ilst") != null;
   }
 
-  /**
-   * Returns Nero chapter snapshots, loading them on first access.
-   * Pending replacements are returned without re-reading storage.
-   *
-   * @return the chapter list
-   * @throws java.io.UncheckedIOException if loading storage fails
-   */
+  /// Returns Nero chapter snapshots, loading them on first access.
+  /// Pending replacements are returned without re-reading storage.
+  ///
+  /// @return the chapter list
+  /// @throws java.io.UncheckedIOException if loading storage fails
   public final List<Chapter> neroChapters() {
     if (nero == null) {
       nero = new NeroChapterList();
@@ -192,12 +170,10 @@ public class Mp4File extends FileBase {
     return nero.chapters();
   }
 
-  /**
-   * Stages complete Nero chapter replacement.
-   * An empty list requests removal. Call {@link #save()} to write the chapter metadata.
-   *
-   * @param values the replacement chapter list
-   */
+  /// Stages complete Nero chapter replacement.
+  /// An empty list requests removal. Call [#save()] to write the chapter metadata.
+  ///
+  /// @param values the replacement chapter list
   public final void setNeroChapters(List<Chapter> values) {
     if (nero == null) {
       nero = new NeroChapterList();
@@ -209,13 +185,11 @@ public class Mp4File extends FileBase {
     }
   }
 
-  /**
-   * Returns QuickTime chapter snapshots, loading them on first access.
-   * Pending replacements are returned without re-reading storage.
-   *
-   * @return the chapter list
-   * @throws java.io.UncheckedIOException if loading storage fails
-   */
+  /// Returns QuickTime chapter snapshots, loading them on first access.
+  /// Pending replacements are returned without re-reading storage.
+  ///
+  /// @return the chapter list
+  /// @throws java.io.UncheckedIOException if loading storage fails
   public final List<Chapter> qtChapters() {
     if (qt == null) {
       qt = new QtChapterList();
@@ -224,12 +198,10 @@ public class Mp4File extends FileBase {
     return qt.chapters();
   }
 
-  /**
-   * Stages complete QuickTime chapter replacement.
-   * An empty list requests removal. Call {@link #save()} to write the chapter metadata.
-   *
-   * @param values the replacement chapter list
-   */
+  /// Stages complete QuickTime chapter replacement.
+  /// An empty list requests removal. Call [#save()] to write the chapter metadata.
+  ///
+  /// @param values the replacement chapter list
   public final void setQtChapters(List<Chapter> values) {
     if (qt == null) {
       qt = new QtChapterList();
@@ -265,16 +237,12 @@ public class Mp4File extends FileBase {
     }
   }
 
-  /**
-   * Removes all supported tag types from storage immediately, without calling save().
-   */
+  /// Removes all supported tag types from storage immediately, without calling save().
   public final void strip() {
     strip(Set.of(TagType.values()));
   }
 
-  /**
-   * Removes selected MP4 metadata from storage immediately, without calling save().
-   */
+  /// Removes selected MP4 metadata from storage immediately, without calling save().
   public final void strip(Set<TagType> types) {
     types = Set.copyOf(types);
     requireWritable();
@@ -297,10 +265,8 @@ public class Mp4File extends FileBase {
     return super.readBlock(count);
   }
 
-  /**
-   * Replaces a byte span, rejecting growth across an externally shortened cached memory span before
-   * writing.
-   */
+  /// Replaces a byte span, rejecting growth across an externally shortened cached memory span before
+  /// writing.
   @Override
   protected void insert(ByteVector data, long start, long replace) {
     // Native ByteVectorStream growth with an externally shortened cached span is undefined.
@@ -317,14 +283,12 @@ public class Mp4File extends FileBase {
     }
   }
 
-  /**
-   * Checks for a recognizable MP4 header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param stream the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable MP4 header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param stream the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream stream) {
     long pos = stream.tell();
     try {

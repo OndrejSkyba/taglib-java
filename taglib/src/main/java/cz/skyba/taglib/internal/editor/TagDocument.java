@@ -21,9 +21,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
-/**
- * Physical tag editor. Each callback changes one original frame, field, or metadata block.
- */
+/// Physical tag editor. Each callback changes one original frame, field, or metadata block.
 public final class TagDocument extends AbstractDocument {
   private static final int LIMIT = ReadOptions.DEFAULT.maxMetadataBytes();
   private static final Pattern LEGACY_INTEGER = Pattern.compile("[+-]?[0-9]+");

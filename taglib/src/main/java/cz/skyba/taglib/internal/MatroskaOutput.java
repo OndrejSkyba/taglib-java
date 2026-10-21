@@ -4,9 +4,7 @@ package cz.skyba.taglib.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Local EBML render plan; payload arrays are borrowed until the final output is copied.
- */
+/// Local EBML render plan; payload arrays are borrowed until the final output is copied.
 public final class MatroskaOutput {
   private sealed interface Part {
     int write(byte[] destination, int offset);

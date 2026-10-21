@@ -23,9 +23,7 @@ import java.util.function.Consumer;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * EBML metadata parsing and native default Compact updates.
- */
+/// EBML metadata parsing and native default Compact updates.
 public final class MatroskaCodec implements Codec {
   private Segment nativeSegment;
   private ReadOptions nativeOptions;
@@ -100,9 +98,7 @@ public final class MatroskaCodec implements Codec {
     new Mapping("MUSICBRAINZ_ALBUMID", "MUSICBRAINZ_ALBUMID", 50, false),
     new Mapping("MUSICBRAINZ_RELEASEGROUPID", "MUSICBRAINZ_RELEASEGROUPID", 50, false));
 
-  /**
-   * All generic keys backed by a native SimpleTag name, irrespective of its target.
-   */
+  /// All generic keys backed by a native SimpleTag name, irrespective of its target.
   public static List<String> propertyKeysForName(String name) {
     var keys = new ArrayList<String>();
     keys.add(name);
@@ -114,9 +110,7 @@ public final class MatroskaCodec implements Codec {
     return List.copyOf(keys);
   }
 
-  /**
-   * An admitted element retains its successfully parsed children for an ordinary file read.
-   */
+  /// An admitted element retains its successfully parsed children for an ordinary file read.
   private static final class Element {
     final long id, offset, length;
     final int header, sizeWidth;
@@ -569,16 +563,12 @@ public final class MatroskaCodec implements Codec {
     }
   }
 
-  /**
-   * Native-dispatched Tags presence, used by a live AudioFile's retained empty-Tag state.
-   */
+  /// Native-dispatched Tags presence, used by a live AudioFile's retained empty-Tag state.
   public static boolean hasTags(BinaryFile file) throws IOException {
     return last(segment(file), TAGS) != null;
   }
 
-  /**
-   * The Info title remains the fallback after generic TITLE is cleared on a live file.
-   */
+  /// The Info title remains the fallback after generic TITLE is cleared on a live file.
   public static String segmentTitle(BinaryFile file) throws IOException {
     Element info = last(segment(file), INFO);
     if (info != null) {
@@ -1080,9 +1070,7 @@ public final class MatroskaCodec implements Codec {
   }
 
 
-  /**
-   * Internal deferred attachment index; no payload bytes are read while constructing it.
-   */
+  /// Internal deferred attachment index; no payload bytes are read while constructing it.
   public record AttachmentData(String fileName, String mediaType, String description, long uid,
                                DeferredBinaryElement data) {
   }
@@ -1102,9 +1090,7 @@ public final class MatroskaCodec implements Codec {
     }
   }
 
-  /**
-   * Constructor-selected metadata, including Fast scan limits and a borrowed stream origin.
-   */
+  /// Constructor-selected metadata, including Fast scan limits and a borrowed stream origin.
   public NativeMetadata nativeMetadata(BinaryFile file) throws IOException {
     Segment selected = nativeSegment != null ? nativeSegment : segment(file);
     ReadOptions options = nativeOptions != null ? nativeOptions : ReadOptions.DEFAULT;
@@ -1232,9 +1218,7 @@ public final class MatroskaCodec implements Codec {
     return new MatroskaOutput().element(ATTACHMENTS, output).toByteArray();
   }
 
-  /**
-   * Retained native element graph used by the actual Matroska MatroskaFile owner.
-   */
+  /// Retained native element graph used by the actual Matroska MatroskaFile owner.
   public static final class LiveState {
     private final NativeMetadata metadata;
     private final Details details;
@@ -1774,9 +1758,7 @@ public final class MatroskaCodec implements Codec {
     }
   }
 
-  /**
-   * Read native selected state without materializing any attachment payload, including images.
-   */
+  /// Read native selected state without materializing any attachment payload, including images.
   public LiveState readLive(BinaryFile source, ReadOptions options) throws IOException {
     nativeOptions = options;
     nativeSegment = segment(source, options, source.initialPosition(), false);

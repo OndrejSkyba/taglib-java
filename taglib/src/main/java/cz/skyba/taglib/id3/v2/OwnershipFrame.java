@@ -10,36 +10,25 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing OWNE price, purchase date and seller.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for ownership information (OWNE).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class OwnershipFrame extends Frame {
   private Charset encoding = ISO_8859_1;
   private String pricePaid = "", datePurchased = "", seller = "";
 
-  /**
-   * Creates a frame containing OWNE price, purchase date and seller. The initial text encoding is ISO-8859-1.
-   */
+  /// Creates a frame containing OWNE price, purchase date and seller. The initial text encoding is ISO-8859-1.
   public OwnershipFrame() {
     this(ISO_8859_1);
   }
 
-  /**
-   * Creates a frame containing OWNE price, purchase date and seller.
-   *
-   * @param encoding the requested text encoding
-   */
   public OwnershipFrame(Charset encoding) {
     super(new ByteVector("OWNE"));
     this.encoding = Id3Text.requireEncoding(encoding);
   }
 
-  /**
-   * Decodes OWNE price, purchase date and seller from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes OWNE price, purchase date and seller from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public OwnershipFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -94,9 +83,6 @@ public class OwnershipFrame extends Frame {
     return new ArrayList<>(List.of(pricePaid, datePurchased, seller));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseOwnership(data);
@@ -117,9 +103,6 @@ public class OwnershipFrame extends Frame {
     seller = Id3Text.decode(data.mid(position + 8), encoding);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset rendered = checkTextEncoding(List.of(seller), encoding);

@@ -10,9 +10,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.Objects;
 
-/**
- * Internal implementation shared only where the pinned codec sources agree.
- */
+/// Internal implementation shared only where the pinned codec sources agree.
 public abstract class ApeTaggedFile extends FileBase {
   private final IOStream source;
   private final boolean owned;
@@ -28,9 +26,7 @@ public abstract class ApeTaggedFile extends FileBase {
     metadataLimit = Objects.requireNonNull(options).maxMetadataBytes();
   }
 
-  /**
-   * Called by the codec after its own prefix processing, never from this constructor.
-   */
+  /// Called by the codec after its own prefix processing, never from this constructor.
   protected final long readApeTags() {
     id3v1Location = TagUtils.findID3v1(this);
     if (id3v1Location >= 0) {
@@ -62,20 +58,16 @@ public abstract class ApeTaggedFile extends FileBase {
     return super.readBlock(length);
   }
 
-  /**
-   * Returns the live APE tag object without creating a new object.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live APE tag object without creating a new object.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public Tag apeTag() {
     return (Tag) tag.tag(0);
   }
 
-  /**
-   * Returns the live APE tag object, creating an empty object in memory if absent.
-   *
-   * @return the live tag
-   */
+  /// Returns the live APE tag object, creating an empty object in memory if absent.
+  ///
+  /// @return the live tag
   public Tag getOrCreateApeTag() {
     if (tag.tag(0) == null) {
       tag.set(0, new Tag());
@@ -83,20 +75,16 @@ public abstract class ApeTaggedFile extends FileBase {
     return (Tag) tag.tag(0);
   }
 
-  /**
-   * Returns the live ID3v1 tag object without creating a new object.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v1 tag object without creating a new object.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public cz.skyba.taglib.id3.v1.Tag id3v1Tag() {
     return (cz.skyba.taglib.id3.v1.Tag) tag.tag(1);
   }
 
-  /**
-   * Returns the live ID3v1 tag object, creating an empty object in memory if absent.
-   *
-   * @return the live tag
-   */
+  /// Returns the live ID3v1 tag object, creating an empty object in memory if absent.
+  ///
+  /// @return the live tag
   public cz.skyba.taglib.id3.v1.Tag getOrCreateId3v1Tag() {
     if (tag.tag(1) == null) {
       tag.set(1, new cz.skyba.taglib.id3.v1.Tag());
@@ -124,9 +112,7 @@ public abstract class ApeTaggedFile extends FileBase {
     }
   }
 
-  /**
-   * MPC alone removes its retained leading ID3 header span before updating tail tags.
-   */
+  /// MPC alone removes its retained leading ID3 header span before updating tail tags.
   protected final void removePrefixOnSave(long location, long size) {
     prefixLocation = location;
     prefixSize = size;

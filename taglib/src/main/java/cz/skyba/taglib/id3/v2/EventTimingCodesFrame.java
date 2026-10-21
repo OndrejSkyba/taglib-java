@@ -8,16 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * A mutable ID3v2 frame containing ETCO timestamps and event codes.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for timed events (ETCO).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class EventTimingCodesFrame extends Frame {
   private static final TimestampFormat[] TIMESTAMP_FORMATS = TimestampFormat.values();
 
-  /**
-   * The unit used by frame timestamps.
-   */
+  /// The unit used by frame timestamps.
   public enum TimestampFormat {
     Unknown, AbsoluteMpegFrames, AbsoluteMilliseconds;
 
@@ -26,9 +22,7 @@ public class EventTimingCodesFrame extends Frame {
     }
   }
 
-  /**
-   * An event code with a named value when recognized. Every unsigned byte value can be represented.
-   */
+  /// An event code with a named value when recognized. Every unsigned byte value can be represented.
   public static final class EventType {
     private final int code;
 
@@ -92,12 +86,10 @@ public class EventTimingCodesFrame extends Frame {
       return code;
     }
 
-    /**
-     * Maps an unsigned byte to an event type without discarding unnamed codes.
-     *
-     * @param value the encoded event byte
-     * @return the corresponding event code
-     */
+    /// Maps an unsigned byte to an event type without discarding unnamed codes.
+    ///
+    /// @param value the encoded event byte
+    /// @return the corresponding event code
     public static EventType fromByte(byte value) {
       return VALUES[value & 255];
     }
@@ -113,18 +105,14 @@ public class EventTimingCodesFrame extends Frame {
     }
   }
 
-  /**
-   * An immutable timed entry. Timestamps retain their low 32 bits and use the containing frame's units.
-   *
-   * @param time the timestamp in the containing frame's selected units
-   * @param type the event type
-   */
+  /// An immutable timed entry. Timestamps retain their low 32 bits and use the containing frame's units.
+  ///
+  /// @param time the timestamp in the containing frame's selected units
+  /// @param type the event type
   public record SynchedEvent(long time, EventType type) {
-    /**
-     * Creates a timed entry, retaining the timestamp's low 32 bits.
-     *
-     * @throws NullPointerException if the event type is null
-     */
+    /// Creates a timed entry, retaining the timestamp's low 32 bits.
+    ///
+    /// @throws NullPointerException if the event type is null
     public SynchedEvent {
       time &= 0xffff_ffffL;
       Objects.requireNonNull(type);
@@ -134,18 +122,13 @@ public class EventTimingCodesFrame extends Frame {
   private TimestampFormat format = TimestampFormat.AbsoluteMilliseconds;
   private final List<SynchedEvent> events = new ArrayList<>();
 
-  /**
-   * Creates a frame containing ETCO timestamps and event codes.
-   */
   public EventTimingCodesFrame() {
     super(new ByteVector("ETCO"));
   }
 
-  /**
-   * Decodes ETCO timestamps and event codes from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes ETCO timestamps and event codes from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public EventTimingCodesFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -165,20 +148,16 @@ public class EventTimingCodesFrame extends Frame {
     format = Objects.requireNonNull(value);
   }
 
-  /**
-   * Returns an independent mutable list of immutable timed event entries.
-   *
-   * @return an independent list of entries
-   */
+  /// Returns an independent mutable list of immutable timed event entries.
+  ///
+  /// @return an independent list of entries
   public final List<SynchedEvent> synchedEvents() {
     return new ArrayList<>(events);
   }
 
-  /**
-   * Replaces the timed event entries, copying the list and rejecting null entries.
-   *
-   * @param value replacement entries
-   */
+  /// Replaces the timed event entries, copying the list and rejecting null entries.
+  ///
+  /// @param value replacement entries
   public final void setSynchedEvents(List<SynchedEvent> value) {
     var copy = List.copyOf(value);
     events.clear();
@@ -190,9 +169,6 @@ public class EventTimingCodesFrame extends Frame {
     return "";
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseEvents(data);
@@ -210,9 +186,6 @@ public class EventTimingCodesFrame extends Frame {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     var data = new ByteVectorOutput().append((byte) format.code());

@@ -7,9 +7,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Chapter values and modification tracking shared by Nero and QuickTime chapter lists.
- */
+/// Chapter values and modification tracking shared by Nero and QuickTime chapter lists.
 public class ChapterHolder {
   protected List<Chapter> chapterList = new ArrayList<>();
   protected boolean modified;
@@ -23,21 +21,17 @@ public class ChapterHolder {
     }
   }
 
-  /**
-   * Returns an immutable snapshot of this list's chapter values.
-   *
-   * @return chapter values
-   */
+  /// Returns an immutable snapshot of this list's chapter values.
+  ///
+  /// @return chapter values
   public final List<Chapter> chapters() {
     return List.copyOf(chapterList);
   }
 
-  /**
-   * Replaces chapter values in memory, copying the list. The modification flag is unchanged.
-   *
-   * @param chapters the replacement values
-   * @see #setModified(boolean)
-   */
+  /// Replaces chapter values in memory, copying the list. The modification flag is unchanged.
+  ///
+  /// @param chapters the replacement values
+  /// @see #setModified(boolean)
   public final void setChapters(List<Chapter> chapters) {
     chapterList = new ArrayList<>(List.copyOf(chapters));
   }

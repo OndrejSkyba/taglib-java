@@ -18,17 +18,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * An editable MPEG audio file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable MPEG audio file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class MpegFile extends FileBase {
   private static final int ID3v1 = 1, ID3v2 = 2, APE = 4;
 
-  /**
-   * Tag families supported by this format's save and removal operations.
-   */
+  /// Tag families supported by this format's save and removal operations.
   public enum TagType {
     ID3V1(ID3v1), ID3V2(ID3v2), APE(MpegFile.APE);
 
@@ -55,80 +51,68 @@ public class MpegFile extends FileBase {
   private long modernLocation = -1, modernSize, legacyLocation = -1, apeLocation = -1, apeSize;
   private Properties details;
 
-  /**
-   * Opens a MPEG audio file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a MPEG audio file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public MpegFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a MPEG audio file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a MPEG audio file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public MpegFile(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a MPEG audio file and owns the file handle.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a MPEG audio file and owns the file handle.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public MpegFile(Path path, ReadOptions options, FrameFactory factory) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options, factory);
   }
 
-  /**
-   * Opens a MPEG audio file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a MPEG audio file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public MpegFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a MPEG audio file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a MPEG audio file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public MpegFile(IOStream stream, ReadOptions options) {
     this(stream, false, options, null);
   }
 
-  /**
-   * Opens a MPEG audio file over a borrowed stream that remains open when this file closes.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a MPEG audio file over a borrowed stream that remains open when this file closes.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public MpegFile(IOStream stream, ReadOptions options, FrameFactory factory) {
     this(stream, false, options, factory);
   }
@@ -164,10 +148,8 @@ public class MpegFile extends FileBase {
     tags.removeUnsupportedProperties(values);
   }
 
-  /**
-   * Replaces properties on an existing ID3v1 tag and creates or updates ID3v2 in memory.
-   * Reports acceptance and rejection from the ID3v2 mapping; this does not save.
-   */
+  /// Replaces properties on an existing ID3v1 tag and creates or updates ID3v2 in memory.
+  /// Reports acceptance and rejection from the ID3v2 mapping; this does not save.
   @Override
   public PropertyUpdateResult replaceProperties(PropertyMap values) {
     var legacy = id3v1Tag();
@@ -182,11 +164,7 @@ public class MpegFile extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public final Properties detailedProperties() {
     return details;
   }
@@ -199,20 +177,16 @@ public class MpegFile extends FileBase {
     return super.readBlock(length);
   }
 
-  /**
-   * Returns the live ID3v2 tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v2 tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final Tag id3v2Tag() {
     return (Tag) tags.tag(0);
   }
 
-  /**
-   * Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final Tag getOrCreateId3v2Tag() {
     if (tags.tag(0) == null) {
       tags.set(0, new Tag(null, 0, factory));
@@ -220,20 +194,16 @@ public class MpegFile extends FileBase {
     return (Tag) tags.tag(0);
   }
 
-  /**
-   * Returns the live APE tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live APE tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.ape.Tag apeTag() {
     return (cz.skyba.taglib.ape.Tag) tags.tag(1);
   }
 
-  /**
-   * Returns the live APE tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live APE tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.ape.Tag getOrCreateApeTag() {
     if (tags.tag(1) == null) {
       tags.set(1, new cz.skyba.taglib.ape.Tag());
@@ -241,20 +211,16 @@ public class MpegFile extends FileBase {
     return (cz.skyba.taglib.ape.Tag) tags.tag(1);
   }
 
-  /**
-   * Returns the live ID3v1 tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v1 tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.id3.v1.Tag id3v1Tag() {
     return (cz.skyba.taglib.id3.v1.Tag) tags.tag(2);
   }
 
-  /**
-   * Returns the live ID3v1 tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live ID3v1 tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.id3.v1.Tag getOrCreateId3v1Tag() {
     if (tags.tag(2) == null) {
       tags.set(2, new cz.skyba.taglib.id3.v1.Tag());
@@ -332,14 +298,12 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /**
-   * Searches for a valid MPEG frame header at or after a byte offset. The shared cursor moves
-   * as the search and header validation read storage.
-   *
-   * @param position the absolute byte offset to start from
-   * @return the frame header's starting byte offset, or {@code -1} if none is found
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Searches for a valid MPEG frame header at or after a byte offset. The shared cursor moves
+  /// as the search and header validation read storage.
+  ///
+  /// @param position the absolute byte offset to start from
+  /// @return the frame header's starting byte offset, or `-1` if none is found
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final long nextFrameOffset(long position) {
     int previous = 0;
     while (true) {
@@ -360,14 +324,12 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /**
-   * Searches backward for a valid MPEG frame and returns its end offset. The shared cursor
-   * moves as the search and header validation read storage.
-   *
-   * @param position the byte boundary before which to search
-   * @return the byte offset immediately after the frame, or {@code -1} if none is found
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Searches backward for a valid MPEG frame and returns its end offset. The shared cursor
+  /// moves as the search and header validation read storage.
+  ///
+  /// @param position the byte boundary before which to search
+  /// @return the byte offset immediately after the frame, or `-1` if none is found
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final long previousFrameOffset(long position) {
     int next = 0;
     while (position > 0) {
@@ -390,33 +352,27 @@ public class MpegFile extends FileBase {
     return -1;
   }
 
-  /**
-   * Finds the first valid MPEG frame after any leading ID3v2 tag. The shared cursor moves.
-   *
-   * @return the frame header's starting byte offset, or {@code -1} if none is found
-   */
+  /// Finds the first valid MPEG frame after any leading ID3v2 tag. The shared cursor moves.
+  ///
+  /// @return the frame header's starting byte offset, or `-1` if none is found
   public final long firstFrameOffset() {
     return nextFrameOffset(hasId3v2Tag() ? Math.addExact(modernLocation, id3v2Tag().header().completeTagSize()) : 0);
   }
 
-  /**
-   * Finds the end offset of the last valid MPEG frame before trailing APE or ID3v1 tags.
-   * The shared cursor moves.
-   *
-   * @return the byte offset immediately after the frame, or {@code -1} if none is found
-   */
+  /// Finds the end offset of the last valid MPEG frame before trailing APE or ID3v1 tags.
+  /// The shared cursor moves.
+  ///
+  /// @return the byte offset immediately after the frame, or `-1` if none is found
   public final long lastFrameOffset() {
     return previousFrameOffset(hasApeTag() ? apeLocation - 1 : hasId3v1Tag() ? legacyLocation - 1 : length());
   }
 
-  /**
-   * Checks for a recognizable MPEG audio header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param stream the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable MPEG audio header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param stream the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream stream) {
     var read = TagUtils.readHeaderWithOffset(stream, bufferSize(), true);
     var bytes = read.data();
@@ -450,44 +406,38 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /**
-   * Removes selected metadata from storage immediately; no save call is required.
-   * A storage failure can leave partial changes. All supported tag families are selected.
-   *
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or cached extents cannot be removed
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Removes selected metadata from storage immediately; no save call is required.
+  /// A storage failure can leave partial changes. All supported tag families are selected.
+  ///
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws IllegalStateException        if the file is closed
   public final void strip() {
     strip(Set.of(TagType.values()), true);
   }
 
-  /**
-   * Removes selected metadata from storage immediately; no save call is required.
-   * A storage failure can leave partial changes. This file discards its references to physically removed tag objects.
-   *
-   * @param types tag families to remove; an empty set selects none
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or cached extents cannot be removed
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Removes selected metadata from storage immediately; no save call is required.
+  /// A storage failure can leave partial changes. This file discards its references to physically removed tag objects.
+  ///
+  /// @param types tag families to remove; an empty set selects none
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws IllegalStateException        if the file is closed
   public final void strip(Set<TagType> types) {
     strip(types, true);
   }
 
-  /**
-   * Removes selected metadata from storage immediately; no save call is required.
-   * A storage failure can leave partial changes.
-   * When discarding is disabled, live tag objects remain and a later save can write them back.
-   * When enabled, this file drops its references to physically removed tags; references held
-   * by the caller remain valid. Tags without an on-disk representation are unaffected.
-   *
-   * @param types       tag families to remove; an empty set selects none
-   * @param discardTags whether this file discards its live objects for physically removed tags
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or cached extents cannot be removed
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Removes selected metadata from storage immediately; no save call is required.
+  /// A storage failure can leave partial changes.
+  /// When discarding is disabled, live tag objects remain and a later save can write them back.
+  /// When enabled, this file drops its references to physically removed tags; references held
+  /// by the caller remain valid. Tags without an on-disk representation are unaffected.
+  ///
+  /// @param types       tag families to remove; an empty set selects none
+  /// @param discardTags whether this file discards its live objects for physically removed tags
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws IllegalStateException        if the file is closed
   public final void strip(Set<TagType> types, boolean discardTags) {
     stripMask(tagMask(types), discardTags);
   }
@@ -531,32 +481,28 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /**
-   * Writes staged metadata to storage in place. An I/O failure can leave partial changes.
-   * Saves all tag families, removes unselected tags, uses ID3v2.4 and copies missing common
-   * fields between selected ID3 tags.
-   *
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or the cached layout cannot be saved
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Writes staged metadata to storage in place. An I/O failure can leave partial changes.
+  /// Saves all tag families, removes unselected tags, uses ID3v2.4 and copies missing common
+  /// fields between selected ID3 tags.
+  ///
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws IllegalStateException        if the file is closed
   @Override
   public void save() {
     save(MpegSaveOptions.DEFAULT);
   }
 
-  /**
-   * Writes staged metadata to storage in place using the supplied options.
-   * Selected empty tags are removed from storage.
-   * Unselected tag families are preserved with {@link StripTags#STRIP_NONE} and removed
-   * with {@link StripTags#STRIP_OTHERS}. An I/O failure can leave partial changes.
-   *
-   * @param options tag selection, preservation policy and ID3v2 output settings
-   * @throws NullPointerException         if {@code options} is null
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or the cached layout cannot be saved
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Writes staged metadata to storage in place using the supplied options.
+  /// Selected empty tags are removed from storage.
+  /// Unselected tag families are preserved with [StripTags#STRIP_NONE] and removed
+  /// with [StripTags#STRIP_OTHERS]. An I/O failure can leave partial changes.
+  ///
+  /// @param options tag selection, preservation policy and ID3v2 output settings
+  /// @throws NullPointerException         if `options` is null
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws IllegalStateException        if the file is closed
   public final void save(MpegSaveOptions options) {
     requireWritable();
     int mask = tagMask(options.tags());
@@ -634,9 +580,7 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /**
-   * Layout-only simulations keep payload rendering and user I/O hooks in native phase order.
-   */
+  /// Layout-only simulations keep payload rendering and user I/O hooks in native phase order.
   private final class Extents {
     long size = length(), modern = modernLocation, modernLength = modernSize, legacy = legacyLocation, ape = apeLocation, apeLength =
       apeSize;

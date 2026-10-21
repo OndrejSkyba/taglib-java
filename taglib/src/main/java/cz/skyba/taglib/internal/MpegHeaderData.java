@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.internal;
 
-/**
- * Shared native header decoding; an invalid result retains fields parsed before the failure.
- */
+/// Shared native header decoding; an invalid result retains fields parsed before the failure.
 public record MpegHeaderData(
   boolean valid, int version, int layer, boolean protectionEnabled, int bitrate,
   int sampleRate, boolean padded, int channelMode, int channelConfiguration,
@@ -43,9 +41,7 @@ public record MpegHeaderData(
       && (data[at + 1] & 255) != 255 && (data[at + 1] & 224) == 224;
   }
 
-  /**
-   * Native Header reads two more bytes only after recognizing the ADTS version/layer bits.
-   */
+  /// Native Header reads two more bytes only after recognizing the ADTS version/layer bits.
   public static boolean needsADTSLength(byte[] data) {
     if (data.length < 4 || !isFrameSync(data, 0)) {
       return false;

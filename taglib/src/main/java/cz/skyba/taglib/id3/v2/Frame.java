@@ -14,16 +14,14 @@ import java.util.*;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * A mutable ID3v2 frame with a live header and extensible field parsing and rendering.
- * Payload size and frame identifier come from the header. Rendering updates that header's
- * payload size and emits serialized bytes without writing storage. Subclasses define their
- * field layout and common-property mapping.
- * Text-encoding parameters accept {@link StandardCharsets#ISO_8859_1},
- * {@link StandardCharsets#UTF_8}, {@link StandardCharsets#UTF_16},
- * {@link StandardCharsets#UTF_16BE} and {@link StandardCharsets#UTF_16LE}.
- * Unsupported charsets are rejected with {@link IllegalArgumentException}.
- */
+/// A mutable ID3v2 frame with a live header and extensible field parsing and rendering.
+/// Payload size and frame identifier come from the header. Rendering updates that header's
+/// payload size and emits serialized bytes without writing storage. Subclasses define their
+/// field layout and common-property mapping.
+/// Text-encoding parameters accept [StandardCharsets#ISO_8859_1],
+/// [StandardCharsets#UTF_8], [StandardCharsets#UTF_16],
+/// [StandardCharsets#UTF_16BE] and [StandardCharsets#UTF_16LE].
+/// Unsupported charsets are rejected with [IllegalArgumentException].
 public abstract class Frame {
   private static final System.Logger LOG = System.getLogger(Frame.class.getName());
 
@@ -45,20 +43,16 @@ public abstract class Frame {
 
   private Header header;
 
-  /**
-   * Initializes a frame by reading a version-4 header from serialized bytes. The subclass parses its fields.
-   *
-   * @param data serialized frame bytes
-   */
+  /// Initializes a frame by reading a version-4 header from serialized bytes. The subclass parses its fields.
+  ///
+  /// @param data serialized frame bytes
   protected Frame(ByteVector data) {
     header = new Header(data);
   }
 
-  /**
-   * Initializes a frame with a live header reference, without copying it.
-   *
-   * @param header the live frame header
-   */
+  /// Initializes a frame with a live header reference, without copying it.
+  ///
+  /// @param header the live frame header
   protected Frame(Header header) {
     this.header = header;
   }
@@ -67,11 +61,9 @@ public abstract class Frame {
     return header.size();
   }
 
-  /**
-   * Returns independent frame-identifier bytes.
-   *
-   * @return copied identifier bytes
-   */
+  /// Returns independent frame-identifier bytes.
+  ///
+  /// @return copied identifier bytes
   public final ByteVector frameID() {
     return header == null ? new ByteVector() : header.frameID();
   }
@@ -84,12 +76,10 @@ public abstract class Frame {
     return header;
   }
 
-  /**
-   * Reparses serialized frame bytes using an ID3v2.4 header and the concrete field decoder.
-   * The existing header object is updated rather than replaced when available.
-   *
-   * @param data bytes including the frame header
-   */
+  /// Reparses serialized frame bytes using an ID3v2.4 header and the concrete field decoder.
+  /// The existing header object is updated rather than replaced when available.
+  ///
+  /// @param data bytes including the frame header
   public final void setData(ByteVector data) {
     parse(data);
   }
@@ -100,46 +90,38 @@ public abstract class Frame {
   @Override
   public abstract String toString();
 
-  /**
-   * Returns a text representation as a detached list. The base implementation wraps
-   * {@link #toString()} as one value; text frames can expose multiple values.
-   *
-   * @return displayed text values
-   */
+  /// Returns a text representation as a detached list. The base implementation wraps
+  /// [#toString()] as one value; text frames can expose multiple values.
+  ///
+  /// @return displayed text values
   public List<String> toStringList() {
     return new ArrayList<>(List.of(toString()));
   }
 
-  /**
-   * Serializes fields and updates the live header's payload size. Serialized frame flags are zero.
-   * This does not write a file.
-   *
-   * @return the header and encoded payload
-   */
+  /// Serializes fields and updates the live header's payload size. Serialized frame flags are zero.
+  /// This does not write a file.
+  ///
+  /// @return the header and encoded payload
   public final ByteVector render() {
     ByteVector fields = Objects.requireNonNull(renderFields());
     header.setFrameSize(fields.size());
     return header.render().append(fields);
   }
 
-  /**
-   * Creates the NUL delimiter for an encoding: two zero bytes for UTF-16 forms, one otherwise.
-   *
-   * @param encoding the text encoding
-   * @return delimiter bytes
-   */
+  /// Creates the NUL delimiter for an encoding: two zero bytes for UTF-16 forms, one otherwise.
+  ///
+  /// @param encoding the text encoding
+  /// @return delimiter bytes
   public static ByteVector textDelimiter(Charset encoding) {
     Id3Text.requireEncoding(encoding);
     return new ByteVector(UTF_16.equals(encoding) || UTF_16BE.equals(encoding)
       || UTF_16LE.equals(encoding) ? 2 : 1);
   }
 
-  /**
-   * Maps a frame identifier to a common property key. Recognized date-frame identifiers map to DATE.
-   *
-   * @param id the frame identifier
-   * @return the property key, or an empty string if unmapped
-   */
+  /// Maps a frame identifier to a common property key. Recognized date-frame identifiers map to DATE.
+  ///
+  /// @param id the frame identifier
+  /// @return the property key, or an empty string if unmapped
   public static String frameIDToKey(ByteVector id) {
     String value = new String(id.data(), StandardCharsets.ISO_8859_1);
     if (LEGACY_DATE_IDS.contains(value)) {
@@ -148,9 +130,7 @@ public abstract class Frame {
     return TRANSLATION.getOrDefault(value, "");
   }
 
-  /**
-   * Maps a standard property key to a frame identifier, or an empty vector when unmapped.
-   */
+  /// Maps a standard property key to a frame identifier, or an empty vector when unmapped.
   public static ByteVector keyToFrameID(String key) {
     String upper = Ascii.upper(key);
     return new ByteVector(FRAME_IDS.getOrDefault(upper, ""));
@@ -160,11 +140,9 @@ public abstract class Frame {
     header = value;
   }
 
-  /**
-   * Reparses a version-4 frame header and delegates the payload to {@link #parseFields(ByteVector)}.
-   *
-   * @param data serialized frame bytes
-   */
+  /// Reparses a version-4 frame header and delegates the payload to [#parseFields(ByteVector)].
+  ///
+  /// @param data serialized frame bytes
   protected final void parse(ByteVector data) {
     Objects.requireNonNull(data);
     if (header == null) {
@@ -175,28 +153,22 @@ public abstract class Frame {
     parseFields(fieldData(data));
   }
 
-  /**
-   * Decodes a frame payload into the concrete frame's fields. The supplied bytes exclude
-   * the frame header and have passed through frame-level decoding.
-   *
-   * @param data decoded payload bytes
-   */
+  /// Decodes a frame payload into the concrete frame's fields. The supplied bytes exclude
+  /// the frame header and have passed through frame-level decoding.
+  ///
+  /// @param data decoded payload bytes
   protected abstract void parseFields(ByteVector data);
 
-  /**
-   * Serializes the concrete frame fields without a frame header.
-   *
-   * @return encoded payload bytes
-   */
+  /// Serializes the concrete frame fields without a frame header.
+  ///
+  /// @return encoded payload bytes
   protected abstract ByteVector renderFields();
 
-  /**
-   * Extracts and decodes payload bytes according to the live header, including eligible compressed data.
-   * A missing or rejected compressed payload returns empty data.
-   *
-   * @param data serialized bytes including the frame header
-   * @return decoded payload bytes
-   */
+  /// Extracts and decodes payload bytes according to the live header, including eligible compressed data.
+  /// A missing or rejected compressed payload returns empty data.
+  ///
+  /// @param data serialized bytes including the frame header
+  /// @return decoded payload bytes
   protected final ByteVector fieldData(ByteVector data) {
     Objects.requireNonNull(data);
     long headerSize = header.size(), offset = headerSize, length = size();
@@ -231,14 +203,12 @@ public abstract class Frame {
     return mid(data, offset, length);
   }
 
-  /**
-   * Reads one NUL-terminated string field using the selected encoding.
-   * A missing delimiter returns empty text without advancing the position.
-   *
-   * @param data     the payload bytes
-   * @param encoding the text encoding
-   * @return decoded field text
-   */
+  /// Reads one NUL-terminated string field using the selected encoding.
+  /// A missing delimiter returns empty text without advancing the position.
+  ///
+  /// @param data     the payload bytes
+  /// @param encoding the text encoding
+  /// @return decoded field text
   protected final String readStringField(ByteVector data, Charset encoding) {
     return readStringField(data, encoding, null);
   }
@@ -256,16 +226,14 @@ public abstract class Frame {
       Id3Text.decode(data.mid(start, end - start), encoding), end + delimiter.size());
   }
 
-  /**
-   * Reads one NUL-terminated string field using the selected encoding.
-   * A missing delimiter returns empty text without advancing the position.
-   *
-   * @param data     the payload bytes
-   * @param encoding the text encoding
-   * @param position a one-element cursor array updated past the delimiter, or null to start at zero
-   * @return decoded field text
-   * @throws IllegalArgumentException if the cursor array does not have one element
-   */
+  /// Reads one NUL-terminated string field using the selected encoding.
+  /// A missing delimiter returns empty text without advancing the position.
+  ///
+  /// @param data     the payload bytes
+  /// @param encoding the text encoding
+  /// @param position a one-element cursor array updated past the delimiter, or null to start at zero
+  /// @return decoded field text
+  /// @throws IllegalArgumentException if the cursor array does not have one element
   protected final String readStringField(ByteVector data, Charset encoding, int[] position) {
     Objects.requireNonNull(data);
     if (position != null && position.length != 1) {
@@ -279,14 +247,12 @@ public abstract class Frame {
     return field.value();
   }
 
-  /**
-   * Selects an encoding that can represent all fields in the header's target version.
-   * Non-Latin-1 text promotes Latin-1 to UTF-8 for version 4 or UTF-16 for earlier versions.
-   *
-   * @param fields   text fields to represent
-   * @param encoding the requested encoding
-   * @return an encoding suitable for the fields and version
-   */
+  /// Selects an encoding that can represent all fields in the header's target version.
+  /// Non-Latin-1 text promotes Latin-1 to UTF-8 for version 4 or UTF-16 for earlier versions.
+  ///
+  /// @param fields   text fields to represent
+  /// @param encoding the requested encoding
+  /// @return an encoding suitable for the fields and version
   protected final Charset checkTextEncoding(List<String> fields, Charset encoding) {
     Objects.requireNonNull(fields);
     Id3Text.requireEncoding(encoding);
@@ -307,23 +273,19 @@ public abstract class Frame {
     return ISO_8859_1;
   }
 
-  /**
-   * Returns the standard properties represented by this frame.
-   */
+  /// Returns the standard properties represented by this frame.
   protected PropertyMap asProperties() {
     String id = Id3Text.fixedLatin1(frameID());
     return PropertyMap.builder().addUnsupportedData(this instanceof UnknownFrame ? "UNKNOWN/" + id : id).build();
   }
 
-  /**
-   * Partitions properties into ordinary fields, involved-people credits and musician credits.
-   * The destination maps are cleared before values are copied; the source is unchanged.
-   *
-   * @param original the source properties
-   * @param single   ordinary text properties
-   * @param tipl     involved-people properties
-   * @param tmcl     musician-credit properties
-   */
+  /// Partitions properties into ordinary fields, involved-people credits and musician credits.
+  /// The destination maps are cleared before values are copied; the source is unchanged.
+  ///
+  /// @param original the source properties
+  /// @param single   ordinary text properties
+  /// @param tipl     involved-people properties
+  /// @param tmcl     musician-credit properties
   protected static void splitProperties(
     MutablePropertyMap original,
     MutablePropertyMap single, MutablePropertyMap tipl,
@@ -419,29 +381,23 @@ public abstract class Frame {
     return Map.copyOf(result);
   }
 
-  /**
-   * A live mutable frame header. Rendering emits a four-byte size field and two zero flag bytes.
-   */
+  /// A live mutable frame header. Rendering emits a four-byte size field and two zero flag bytes.
   public static class Header {
     private ByteVector frameID = new ByteVector();
     private long frameSize, version = 4;
     private boolean tagAlter, fileAlter, readOnly, grouping, compression, encryption, unsync, dli;
 
-    /**
-     * Decodes the frame header from serialized bytes. The version is ID3v2.4.
-     *
-     * @param data bytes starting at the frame header
-     */
+    /// Decodes the frame header from serialized bytes. The version is ID3v2.4.
+    ///
+    /// @param data bytes starting at the frame header
     public Header(ByteVector data) {
       this(data, 4);
     }
 
-    /**
-     * Decodes the frame header from serialized bytes.
-     *
-     * @param data    bytes starting at the frame header
-     * @param version the tag major version
-     */
+    /// Decodes the frame header from serialized bytes.
+    ///
+    /// @param data    bytes starting at the frame header
+    /// @param version the tag major version
     public Header(ByteVector data, long version) {
       parseData(data, version);
     }
@@ -450,30 +406,24 @@ public abstract class Frame {
       parseData(data, offset, version);
     }
 
-    /**
-     * Updates header fields from serialized frame bytes. The version is ID3v2.4.
-     *
-     * @param data bytes starting at the frame header
-     */
+    /// Updates header fields from serialized frame bytes. The version is ID3v2.4.
+    ///
+    /// @param data bytes starting at the frame header
     public final void setData(ByteVector data) {
       parseData(data, 4);
     }
 
-    /**
-     * Updates header fields from serialized frame bytes.
-     *
-     * @param data    bytes starting at the frame header
-     * @param version the tag major version
-     */
+    /// Updates header fields from serialized frame bytes.
+    ///
+    /// @param data    bytes starting at the frame header
+    /// @param version the tag major version
     public final void setData(ByteVector data, long version) {
       parseData(data, version);
     }
 
-    /**
-     * Returns independent frame-identifier bytes.
-     *
-     * @return copied identifier bytes
-     */
+    /// Returns independent frame-identifier bytes.
+    ///
+    /// @return copied identifier bytes
     public final ByteVector frameID() {
       return new ByteVector(frameID);
     }
@@ -538,11 +488,9 @@ public abstract class Frame {
       return dli;
     }
 
-    /**
-     * Serializes the identifier, four-byte size and two zero flag bytes.
-     *
-     * @return frame-header bytes
-     */
+    /// Serializes the identifier, four-byte size and two zero flag bytes.
+    ///
+    /// @return frame-header bytes
     public final ByteVector render() {
       return new ByteVector(frameID).append(version == 3 ? ByteVector.fromUnsignedInt(frameSize)
         : SynchData.fromUnsignedInt(frameSize)).append(new ByteVector(2));

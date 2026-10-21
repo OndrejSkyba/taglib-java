@@ -25,9 +25,7 @@ import java.util.zip.Inflater;
 
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * Bounded ID3v2 parser. Writes preserve the source version and unedited opaque frames.
- */
+/// Bounded ID3v2 parser. Writes preserve the source version and unedited opaque frames.
 public final class Id3v2 {
   private Id3v2() {
   }
@@ -231,9 +229,7 @@ public final class Id3v2 {
         GP1 GRP1
         """);
 
-  /**
-   * Native Frame::frameIDToKey, also used by explicitly constructed URL frames.
-   */
+  /// Native Frame::frameIDToKey, also used by explicitly constructed URL frames.
   public static String frameIdToKey(String id) {
     return switch (id) {
       case "TRDA", "TDAT", "TYER", "TIME" -> "DATE";
@@ -270,9 +266,7 @@ public final class Id3v2 {
         """);
   private static final List<String> ROLE_PROPERTY_KEYS = List.copyOf(ROLES.values());
 
-  /**
-   * Native Header::parse admits non-FF versions and defaults invalid/short headers to ten bytes.
-   */
+  /// Native Header::parse admits non-FF versions and defaults invalid/short headers to ten bytes.
   public static int tagSize(byte[] header) throws IOException {
     if (header.length < 3 || header[0] != 'I' || header[1] != 'D' || header[2] != '3') {
       return 0;
@@ -280,9 +274,7 @@ public final class Id3v2 {
     return nativeTagSize(header);
   }
 
-  /**
-   * A codec-selected ID3 tag parses Header bytes without checking the file identifier.
-   */
+  /// A codec-selected ID3 tag parses Header bytes without checking the file identifier.
   public static int nativeTagSize(byte[] header) throws IOException {
     if (!validNativeHeader(header)) {
       return 10;
@@ -306,9 +298,7 @@ public final class Id3v2 {
     return read(parseNative(tag, options));
   }
 
-  /**
-   * Projects the live native frame list without flattening physical duplicates.
-   */
+  /// Projects the live native frame list without flattening physical duplicates.
   public static TagData read(Parsed parsed) {
     var properties = new LinkedHashMap<String, List<String>>();
     var pictures = new ArrayList<Picture>();
@@ -361,9 +351,7 @@ public final class Id3v2 {
     return new TagData(projected.build(), pictures, basic.tag(), parsed.frames().isEmpty(), parsed);
   }
 
-  /**
-   * Mirrors native FrameFactory class selection and each class's asProperties identifier.
-   */
+  /// Mirrors native FrameFactory class selection and each class's asProperties identifier.
   private static String unsupported(Frame frame, int version) {
     String id = frame.id();
     if (version == 2 && V2_UNKNOWN_IDS.contains(id)) {
@@ -400,9 +388,7 @@ public final class Id3v2 {
     return "UNKNOWN/" + id;
   }
 
-  /**
-   * Native exact-ID removal and first described-frame removal, independent of property export.
-   */
+  /// Native exact-ID removal and first described-frame removal, independent of property export.
   public static Parsed removeUnsupported(Parsed parsed, List<String> specifications) {
     var frames = new ArrayList<>(parsed.frames());
     for (String specification : specifications) {
@@ -445,9 +431,7 @@ public final class Id3v2 {
     return new Parsed(parsed.version(), List.copyOf(frames), parsed.headerFlags());
   }
 
-  /**
-   * Property keys affected by removing a physical frame ID from a staged generic tag.
-   */
+  /// Property keys affected by removing a physical frame ID from a staged generic tag.
   public static List<String> propertyKeysForFrame(String id, PropertyMap values) {
     if (KEYS.containsKey(id)) {
       return List.of(KEYS.get(id));
@@ -465,9 +449,7 @@ public final class Id3v2 {
     };
   }
 
-  /**
-   * Native text-frame factory preserves an explicitly empty field list.
-   */
+  /// Native text-frame factory preserves an explicitly empty field list.
   public static boolean isTextProperty(String key) {
     return KEYS.entrySet().stream().anyMatch(entry -> entry.getKey().startsWith("T") && entry.getValue().equals(key));
   }
@@ -530,16 +512,12 @@ public final class Id3v2 {
     }
   }
 
-  /**
-   * Replaces properties, retaining artwork and opaque frames permitted to survive tag edits.
-   */
+  /// Replaces properties, retaining artwork and opaque frames permitted to survive tag edits.
   public static byte[] render(PropertyMap properties, byte[] originalTag) throws IOException {
     return render(properties, originalTag, null);
   }
 
-  /**
-   * A null artwork list preserves existing pictures; a nonnull list replaces them all.
-   */
+  /// A null artwork list preserves existing pictures; a nonnull list replaces them all.
   public static byte[] render(PropertyMap properties, byte[] originalTag, List<Picture> pictures)
     throws IOException {
     return render(properties, originalTag, pictures, 0);
@@ -551,9 +529,7 @@ public final class Id3v2 {
     return render(properties, originalTag, pictures, fileSize, false);
   }
 
-  /**
-   * Native generic saves convert the tag and its typed frame payloads to ID3v2.4.
-   */
+  /// Native generic saves convert the tag and its typed frame payloads to ID3v2.4.
   public static byte[] renderNative(PropertyMap properties, byte[] originalTag, List<Picture> pictures)
     throws IOException {
     return render(properties, originalTag, pictures, 0, true);
@@ -566,9 +542,7 @@ public final class Id3v2 {
     return render(properties, originalTag, pictures, fileSize, true);
   }
 
-  /**
-   * Native Tag::read folds consecutive ID3 headers into the original padding capacity.
-   */
+  /// Native Tag::read folds consecutive ID3 headers into the original padding capacity.
   public static byte[] renderNative(
     PropertyMap properties, byte[] originalTag,
     List<Picture> pictures, long fileSize, long nativeOriginalSpan
@@ -799,9 +773,7 @@ public final class Id3v2 {
     return renderTag(version, frames, originalCapacity, fileSize, original.headerFlags());
   }
 
-  /**
-   * Render parsed field data rather than copying old compression/encoding/version headers.
-   */
+  /// Render parsed field data rather than copying old compression/encoding/version headers.
   private static byte[] nativeFrameFields(Frame frame, int sourceVersion) {
     String id = frame.id();
     byte[] data = frame.data();
@@ -900,9 +872,7 @@ public final class Id3v2 {
   public record RenderedTag(byte[] bytes, Tag basic) {
   }
 
-  /**
-   * MPEG's common-field duplication shares the parsed frames and renders only when needed.
-   */
+  /// MPEG's common-field duplication shares the parsed frames and renders only when needed.
   public static RenderedTag renderMpeg(
     PropertyMap properties, byte[] originalTag, List<Picture> pictures, Tag source, long fileSize)
     throws IOException {
@@ -910,9 +880,7 @@ public final class Id3v2 {
       originalBodySize(originalTag));
   }
 
-  /**
-   * Native consecutive ID3 headers enlarge the first tag's capacity and replacement span.
-   */
+  /// Native consecutive ID3 headers enlarge the first tag's capacity and replacement span.
   public static RenderedTag renderMpeg(
     PropertyMap properties, byte[] originalTag, List<Picture> pictures, Tag source, long fileSize,
     long nativeOriginalSpan
@@ -965,9 +933,7 @@ public final class Id3v2 {
     return new RenderedTag(rendered, basic(physical));
   }
 
-  /**
-   * Applies MPEG's default ID3v1-to-ID3v2 common-field duplication after setProperties.
-   */
+  /// Applies MPEG's default ID3v1-to-ID3v2 common-field duplication after setProperties.
   public static byte[] duplicateMissingBasic(byte[] renderedTag, Tag source) throws IOException {
     return duplicateMissingBasic(renderedTag, source, originalBodySize(renderedTag)).bytes();
   }
@@ -1074,9 +1040,7 @@ public final class Id3v2 {
     return renderTag(version, frames, 0, 0);
   }
 
-  /**
-   * Native padding uses header-declared capacity even when the physical source is shorter.
-   */
+  /// Native padding uses header-declared capacity even when the physical source is shorter.
   public static int originalBodySize(byte[] original) throws IOException {
     if (original == null
       || !validNativeHeader(original)) {
@@ -1110,9 +1074,7 @@ public final class Id3v2 {
     return out;
   }
 
-  /**
-   * Mirrors FrameFactory's obsolete-frame handling and ID3 tag-alter-preservation flags.
-   */
+  /// Mirrors FrameFactory's obsolete-frame handling and ID3 tag-alter-preservation flags.
   private static boolean discardOnTagAlteration(Frame frame, int version) {
     if (version == 2) {
       return List.of("CRM", "EQUA", "LINK", "RVAD", "TIME", "TSIZ", "TDAT").contains(frame.id());
@@ -1132,9 +1094,7 @@ public final class Id3v2 {
     return parse(tag, options.maxMetadataBytes());
   }
 
-  /**
-   * Native setProperties preserves exactly matching frames and then appends new UTF-8 frames.
-   */
+  /// Native setProperties preserves exactly matching frames and then appends new UTF-8 frames.
   public static Parsed updateProperties(Parsed original, PropertyMap requested) throws IOException {
     var remaining = new LinkedHashMap<>(requested.asMap());
     var retained = new HashSet<Frame>();
@@ -1198,9 +1158,7 @@ public final class Id3v2 {
     return new Parsed(original.version(), List.copyOf(result), original.headerFlags());
   }
 
-  /**
-   * Native GENERALOBJECT dictionaries for typed, including default-empty malformed, GEOB frames.
-   */
+  /// Native GENERALOBJECT dictionaries for typed, including default-empty malformed, GEOB frames.
   public static List<Map<String, Variant>> generalObjects(Parsed parsed) {
     var result = new ArrayList<Map<String, Variant>>();
     for (Frame frame : parsed.frames()) {
@@ -1259,9 +1217,7 @@ public final class Id3v2 {
     return payload.toByteArray();
   }
 
-  /**
-   * Native common setters update one typed physical frame, preserving other duplicates.
-   */
+  /// Native common setters update one typed physical frame, preserving other duplicates.
   public static Parsed updateCommon(Parsed original, String key, String value) {
     String id = switch (key) {
       case "TITLE" -> "TIT2";
@@ -1667,9 +1623,7 @@ public final class Id3v2 {
     return textFields(data, false);
   }
 
-  /**
-   * Native text-frame splitting, with TXXX's distinguished empty description.
-   */
+  /// Native text-frame splitting, with TXXX's distinguished empty description.
   public static List<String> textFields(byte[] data, boolean userText) {
     if (data.length < 2) {
       return List.of();
@@ -1814,9 +1768,7 @@ public final class Id3v2 {
     return output;
   }
 
-  /**
-   * Retained native frames keep their declared encoding; newly created frames use UTF-8.
-   */
+  /// Retained native frames keep their declared encoding; newly created frames use UTF-8.
   private static byte[] nativeTextData(List<String> fields, int requestedEncoding) {
     int encoding = requestedEncoding >= 0 && requestedEncoding <= 3 ? requestedEncoding : 0;
     if (encoding == 0 && fields.stream().flatMapToInt(String::chars).anyMatch(c -> c > 255)) {

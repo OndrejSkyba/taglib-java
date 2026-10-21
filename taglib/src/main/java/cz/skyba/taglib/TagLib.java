@@ -23,46 +23,40 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/**
- * High-level API for reading and editing audio metadata.
- *
- * <p>Path operations open and close their own file handles. Stream operations borrow the
- * supplied stream and leave it open. Writes update storage in place and can leave partial
- * changes if an operation fails.
- */
+/// High-level API for reading and editing audio metadata.
+///
+/// Path operations open and close their own file handles. Stream operations borrow the
+/// supplied stream and leave it open. Writes update storage in place and can leave partial
+/// changes if an operation fails.
 public final class TagLib {
   public static final String UPSTREAM_VERSION = "2.3.2";
 
   private TagLib() {
   }
 
-  /**
-   * Reads an immutable metadata snapshot from a file.
-   * Opens and closes its own file handle. Uses {@link ReadOptions#DEFAULT}.
-   * Audio properties that were not read are represented by {@link AudioProperties#EMPTY}.
-   *
-   * @param path the audio file to read
-   * @return a snapshot independent of the file handle
-   * @throws UncheckedIOException          if storage access fails
-   * @throws InvalidAudioFileException     if the input is not a readable supported format
-   * @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
-   */
+  /// Reads an immutable metadata snapshot from a file.
+  /// Opens and closes its own file handle. Uses [ReadOptions#DEFAULT].
+  /// Audio properties that were not read are represented by [AudioProperties#EMPTY].
+  ///
+  /// @param path the audio file to read
+  /// @return a snapshot independent of the file handle
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws InvalidAudioFileException     if the input is not a readable supported format
+  /// @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
   public static AudioMetadata read(Path path) {
     return read(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Reads an immutable metadata snapshot from a file.
-   * Opens and closes its own file handle.
-   * Audio properties that were not read are represented by {@link AudioProperties#EMPTY}.
-   *
-   * @param path    the audio file to read
-   * @param options audio property selection and metadata allocation limit
-   * @return a snapshot independent of the file handle
-   * @throws UncheckedIOException          if storage access fails
-   * @throws InvalidAudioFileException     if the input is not a readable supported format
-   * @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
-   */
+  /// Reads an immutable metadata snapshot from a file.
+  /// Opens and closes its own file handle.
+  /// Audio properties that were not read are represented by [AudioProperties#EMPTY].
+  ///
+  /// @param path    the audio file to read
+  /// @param options audio property selection and metadata allocation limit
+  /// @return a snapshot independent of the file handle
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws InvalidAudioFileException     if the input is not a readable supported format
+  /// @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
   public static AudioMetadata read(Path path, ReadOptions options) {
     Objects.requireNonNull(path);
     Objects.requireNonNull(options);
@@ -71,35 +65,31 @@ public final class TagLib {
     }
   }
 
-  /**
-   * Reads an immutable metadata snapshot from the beginning of a borrowed stream.
-   * Leaves the stream open; its cursor is not restored. Uses {@link ReadOptions#DEFAULT}.
-   * Audio properties that were not read are represented by {@link AudioProperties#EMPTY}.
-   *
-   * @param stream the open, seekable input stream
-   * @return a snapshot independent of the file handle
-   * @throws UncheckedIOException          if storage access fails
-   * @throws InvalidAudioFileException     if the input is not a readable supported format
-   * @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
-   * @throws IllegalStateException         if the supplied stream is closed
-   */
+  /// Reads an immutable metadata snapshot from the beginning of a borrowed stream.
+  /// Leaves the stream open; its cursor is not restored. Uses [ReadOptions#DEFAULT].
+  /// Audio properties that were not read are represented by [AudioProperties#EMPTY].
+  ///
+  /// @param stream the open, seekable input stream
+  /// @return a snapshot independent of the file handle
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws InvalidAudioFileException     if the input is not a readable supported format
+  /// @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
+  /// @throws IllegalStateException         if the supplied stream is closed
   public static AudioMetadata read(IOStream stream) {
     return read(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Reads an immutable metadata snapshot from the beginning of a borrowed stream.
-   * Leaves the stream open; its cursor is not restored.
-   * Audio properties that were not read are represented by {@link AudioProperties#EMPTY}.
-   *
-   * @param stream  the open, seekable input stream
-   * @param options audio property selection and metadata allocation limit
-   * @return a snapshot independent of the file handle
-   * @throws UncheckedIOException          if storage access fails
-   * @throws InvalidAudioFileException     if the input is not a readable supported format
-   * @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
-   * @throws IllegalStateException         if the supplied stream is closed
-   */
+  /// Reads an immutable metadata snapshot from the beginning of a borrowed stream.
+  /// Leaves the stream open; its cursor is not restored.
+  /// Audio properties that were not read are represented by [AudioProperties#EMPTY].
+  ///
+  /// @param stream  the open, seekable input stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @return a snapshot independent of the file handle
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws InvalidAudioFileException     if the input is not a readable supported format
+  /// @throws UnsupportedOperationException if a custom resolver supplies a format without snapshot support
+  /// @throws IllegalStateException         if the supplied stream is closed
   public static AudioMetadata read(IOStream stream, ReadOptions options) {
     Objects.requireNonNull(stream);
     Objects.requireNonNull(options);
@@ -233,26 +223,24 @@ public final class TagLib {
     return selected;
   }
 
-  /**
-   * Builds common text edits without opening the file. Use {@code set} to replace values
-   * and {@code clear} to remove a property. Saving merges the edits into the file's current
-   * properties and uses the replacement and default save behavior of {@link #write(Path, PropertyMap)}.
-   * Changes are applied only by {@code save()}; {@code build()} creates an immutable request
-   * for later saving.
-   *
-   * <pre>{@code
-   * TagLib.edit(path)
-   *   .set("TITLE", "New title")
-   *   .set("ARTIST", "Artist A", "Artist B")
-   *   .clear("COMMENT")
-   *   .save();
-   * }</pre>
-   *
-   * @param path the audio file to edit when saving
-   * @return a mutable builder for text edits
-   * @throws NullPointerException if the path is null
-   * @see MetadataEdit
-   */
+  /// Builds common text edits without opening the file. Use `set` to replace values
+  /// and `clear` to remove a property. Saving merges the edits into the file's current
+  /// properties and uses the replacement and default save behavior of [#write(Path, PropertyMap)].
+  /// Changes are applied only by `save()`; `build()` creates an immutable request
+  /// for later saving.
+  ///
+  /// ```java
+  /// TagLib.edit(path)
+  ///   .set("TITLE", "New title")
+  ///   .set("ARTIST", "Artist A", "Artist B")
+  ///   .clear("COMMENT")
+  ///   .save();
+  /// ```
+  ///
+  /// @param path the audio file to edit when saving
+  /// @return a mutable builder for text edits
+  /// @throws NullPointerException if the path is null
+  /// @see MetadataEdit
   public static MetadataEdit.Builder edit(Path path) {
     return new MetadataEdit.Builder(path);
   }
@@ -285,42 +273,38 @@ public final class TagLib {
     }
   }
 
-  /**
-   * Writes the complete text property map in place, preserving existing pictures,
-   * format-specific opaque metadata and audio. Omitted text keys are removed;
-   * supported values are saved even when other values are rejected.
-   * A failed write can leave partial changes.
-   *
-   * @param path       the audio file to update
-   * @param properties the complete replacement text property map
-   * @return values accepted for saving and rejected as unrepresentable;
-   * accepted values are not a read-back snapshot
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if opening or saving is rejected
-   */
+  /// Writes the complete text property map in place, preserving existing pictures,
+  /// format-specific opaque metadata and audio. Omitted text keys are removed;
+  /// supported values are saved even when other values are rejected.
+  /// A failed write can leave partial changes.
+  ///
+  /// @param path       the audio file to update
+  /// @param properties the complete replacement text property map
+  /// @return values accepted for saving and rejected as unrepresentable;
+  /// accepted values are not a read-back snapshot
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if opening or saving is rejected
   public static WriteResult write(Path path, PropertyMap properties) {
     Objects.requireNonNull(path);
     Objects.requireNonNull(properties);
     return writePath(path, properties, null);
   }
 
-  /**
-   * Writes the complete text property map and embedded pictures in place, preserving
-   * format-specific opaque metadata and audio. Omitted text keys are removed;
-   * supported values are saved even when other values are rejected.
-   * Use {@link #write(Path, PropertyMap)} to preserve existing pictures.
-   * A failed write can leave partial changes.
-   *
-   * @param path       the audio file to update
-   * @param properties the complete replacement text property map
-   * @param pictures   the non-null replacement pictures; an empty list removes artwork
-   * @return text values accepted for saving and rejected as unrepresentable;
-   * accepted values are not a read-back snapshot
-   * @throws UncheckedIOException          if storage access fails
-   * @throws TagLibException               if opening or saving is rejected
-   * @throws UnsupportedOperationException if the format does not support writing pictures
-   * @throws NullPointerException          if an argument or a picture list element is null
-   */
+  /// Writes the complete text property map and embedded pictures in place, preserving
+  /// format-specific opaque metadata and audio. Omitted text keys are removed;
+  /// supported values are saved even when other values are rejected.
+  /// Use [#write(Path, PropertyMap)] to preserve existing pictures.
+  /// A failed write can leave partial changes.
+  ///
+  /// @param path       the audio file to update
+  /// @param properties the complete replacement text property map
+  /// @param pictures   the non-null replacement pictures; an empty list removes artwork
+  /// @return text values accepted for saving and rejected as unrepresentable;
+  /// accepted values are not a read-back snapshot
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws TagLibException               if opening or saving is rejected
+  /// @throws UnsupportedOperationException if the format does not support writing pictures
+  /// @throws NullPointerException          if an argument or a picture list element is null
   public static WriteResult write(Path path, PropertyMap properties, List<Picture> pictures) {
     Objects.requireNonNull(path);
     Objects.requireNonNull(properties);
@@ -328,42 +312,38 @@ public final class TagLib {
     return writePath(path, properties, copy);
   }
 
-  /**
-   * Writes the complete text property map through a borrowed stream, preserving
-   * existing pictures, format-specific opaque metadata and audio. Omitted text keys
-   * are removed; supported values are saved even when other values are rejected.
-   * The stream remains open. A failed write can leave partial changes.
-   *
-   * @param stream     the caller-owned audio stream to update in place
-   * @param properties the complete replacement text property map
-   * @return values accepted for saving and rejected as unrepresentable;
-   * accepted values are not a read-back snapshot
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if opening or saving is rejected
-   */
+  /// Writes the complete text property map through a borrowed stream, preserving
+  /// existing pictures, format-specific opaque metadata and audio. Omitted text keys
+  /// are removed; supported values are saved even when other values are rejected.
+  /// The stream remains open. A failed write can leave partial changes.
+  ///
+  /// @param stream     the caller-owned audio stream to update in place
+  /// @param properties the complete replacement text property map
+  /// @return values accepted for saving and rejected as unrepresentable;
+  /// accepted values are not a read-back snapshot
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if opening or saving is rejected
   public static WriteResult write(IOStream stream, PropertyMap properties) {
     Objects.requireNonNull(stream);
     Objects.requireNonNull(properties);
     return writeStream(stream, properties, null);
   }
 
-  /**
-   * Writes the complete text property map and embedded pictures through a borrowed
-   * stream, preserving format-specific opaque metadata and audio. Omitted text keys
-   * are removed; supported values are saved even when other values are rejected.
-   * Use {@link #write(IOStream, PropertyMap)} to preserve existing pictures.
-   * The stream remains open. A failed write can leave partial changes.
-   *
-   * @param stream     the caller-owned audio stream to update in place
-   * @param properties the complete replacement text property map
-   * @param pictures   the non-null replacement pictures; an empty list removes artwork
-   * @return text values accepted for saving and rejected as unrepresentable;
-   * accepted values are not a read-back snapshot
-   * @throws UncheckedIOException          if storage access fails
-   * @throws TagLibException               if opening or saving is rejected
-   * @throws UnsupportedOperationException if the format does not support writing pictures
-   * @throws NullPointerException          if an argument or a picture list element is null
-   */
+  /// Writes the complete text property map and embedded pictures through a borrowed
+  /// stream, preserving format-specific opaque metadata and audio. Omitted text keys
+  /// are removed; supported values are saved even when other values are rejected.
+  /// Use [#write(IOStream, PropertyMap)] to preserve existing pictures.
+  /// The stream remains open. A failed write can leave partial changes.
+  ///
+  /// @param stream     the caller-owned audio stream to update in place
+  /// @param properties the complete replacement text property map
+  /// @param pictures   the non-null replacement pictures; an empty list removes artwork
+  /// @return text values accepted for saving and rejected as unrepresentable;
+  /// accepted values are not a read-back snapshot
+  /// @throws UncheckedIOException          if storage access fails
+  /// @throws TagLibException               if opening or saving is rejected
+  /// @throws UnsupportedOperationException if the format does not support writing pictures
+  /// @throws NullPointerException          if an argument or a picture list element is null
   public static WriteResult write(
     IOStream stream, PropertyMap properties, List<Picture> pictures) {
     Objects.requireNonNull(stream);

@@ -5,9 +5,7 @@ import cz.skyba.taglib.toolkit.ByteVector;
 
 import java.util.*;
 
-/**
- * Native stable pointer-list/map storage with read-only live container views.
- */
+/// Native stable pointer-list/map storage with read-only live container views.
 final class FrameCollection {
   private final NativeFrames frames = new NativeFrames();
   private final List<Frame> view = Collections.unmodifiableList(frames);
@@ -44,9 +42,7 @@ final class FrameCollection {
     }
   }
 
-  /**
-   * A native map iterator remains valid when a frame hook inserts another bucket.
-   */
+  /// A native map iterator remains valid when a frame hook inserts another bucket.
   private final class BucketIterator implements Iterator<Map.Entry<ByteVector, List<Frame>>> {
     private final ByteVector first = buckets.isEmpty() ? null : buckets.firstKey();
     private ByteVector previous;
@@ -132,9 +128,7 @@ final class FrameCollection {
     }
   }
 
-  /**
-   * Linked nodes preserve native iterators on append and removal of other entries.
-   */
+  /// Linked nodes preserve native iterators on append and removal of other entries.
   private static final class NativeFrames extends AbstractList<Frame> {
     private static final class Node {
       final Frame frame;

@@ -9,9 +9,7 @@ import java.util.zip.Inflater;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * Bounded native-compatible zlib frame decoding.
- */
+/// Bounded native-compatible zlib frame decoding.
 final class FrameCompression {
   private static final System.Logger LOG = System.getLogger(FrameCompression.class.getName());
 

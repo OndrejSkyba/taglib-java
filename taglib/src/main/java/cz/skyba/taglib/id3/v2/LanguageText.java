@@ -9,9 +9,7 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Shared COMM/USLT wire fields; parsing retains each completed field before later failures.
- */
+/// Shared COMM/USLT wire fields; parsing retains each completed field before later failures.
 final class LanguageText {
   private static final System.Logger LOG = System.getLogger(LanguageText.class.getName());
 

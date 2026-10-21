@@ -14,11 +14,9 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A mutable ID3v2 frame containing TXXX description and text values.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- * The description is the first logical text field; {@code setValues} preserves it.
- */
+/// A mutable ID3v2 frame for user-defined text information (TXXX).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
+/// The description remains the first logical text field when text values are replaced.
 public class UserTextIdentificationFrame extends TextIdentificationFrame {
   private static final Map<String, String> KEYS = Map.ofEntries(
     Map.entry("MUSICBRAINZ ALBUM ID", "MUSICBRAINZ_ALBUMID"),
@@ -37,50 +35,36 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
     KEYS.entrySet().stream()
       .collect(Collectors.toUnmodifiableMap(Map.Entry::getValue, Map.Entry::getKey));
 
-  /**
-   * Creates a frame containing TXXX description and text values.
-   */
   public UserTextIdentificationFrame() {
     this(ISO_8859_1);
   }
 
-  /**
-   * Creates a frame containing TXXX description and text values.
-   *
-   * @param encoding the requested text encoding
-   */
   public UserTextIdentificationFrame(Charset encoding) {
     super(new ByteVector("TXXX"), encoding);
     setValues(List.of("", ""));
   }
 
-  /**
-   * Decodes TXXX description and text values from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes TXXX description and text values from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public UserTextIdentificationFrame(ByteVector data) {
     super(data);
     checkFields();
   }
 
-  /**
-   * Creates a frame containing TXXX description and text values.
-   *
-   * @param description the descriptive text
-   * @param values      text values to copy
-   */
+  /// Creates a frame containing TXXX description and text values.
+  ///
+  /// @param description the descriptive text
+  /// @param values      text values to copy
   public UserTextIdentificationFrame(String description, List<String> values) {
     this(description, values, UTF_8);
   }
 
-  /**
-   * Creates a frame containing TXXX description and text values.
-   *
-   * @param encoding    the requested text encoding
-   * @param description the descriptive text
-   * @param values      text values to copy
-   */
+  /// Creates a frame containing TXXX description and text values.
+  ///
+  /// @param encoding    the requested text encoding
+  /// @param description the descriptive text
+  /// @param values      text values to copy
   public UserTextIdentificationFrame(String description, List<String> values, Charset encoding) {
     super(new ByteVector("TXXX"), encoding);
     setDescription(description);
@@ -112,9 +96,7 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
     setValues(List.of(Objects.requireNonNull(value)));
   }
 
-  /**
-   * Replaces the text values while preserving the description as the first logical field.
-   */
+  /// Replaces the text values while preserving the description as the first logical field.
   public final void setValues(List<String> values) {
     var copy = List.copyOf(values);
     if (description().isEmpty()) {
@@ -153,46 +135,38 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
     return result.build();
   }
 
-  /**
-   * Maps a TXXX description to its standard property key, using ASCII uppercase and recognized aliases.
-   *
-   * @param description the field description
-   * @return the mapped property key
-   */
+  /// Maps a TXXX description to its standard property key, using ASCII uppercase and recognized aliases.
+  ///
+  /// @param description the field description
+  /// @return the mapped property key
   public static String txxxToKey(String description) {
     String key = Id3Text.upper(description);
     return KEYS.getOrDefault(key, key);
   }
 
-  /**
-   * Maps a recognized property key to its conventional TXXX description; otherwise retains the supplied key.
-   *
-   * @param key the property key
-   * @return the TXXX description
-   */
+  /// Maps a recognized property key to its conventional TXXX description; otherwise retains the supplied key.
+  ///
+  /// @param key the property key
+  /// @return the TXXX description
   public static String keyToTXXX(String key) {
     String upper = Id3Text.upper(key);
     return DESCRIPTIONS.getOrDefault(upper, key);
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag   the tag to search
-   * @param value the owner or description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag   the tag to search
+  /// @param value the owner or description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UserTextIdentificationFrame find(Tag tag, String value) {
     return find(tag.frameList(new ByteVector("TXXX")), value);
   }
 
-  /**
-   * Returns the first live matching frame from the supplied frame sequence.
-   *
-   * @param frames      the frames to search in iteration order
-   * @param description the description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from the supplied frame sequence.
+  ///
+  /// @param frames      the frames to search in iteration order
+  /// @param description the description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UserTextIdentificationFrame find(Iterable<? extends Frame> frames, String description) {
     for (Frame frame : frames) {
       if (frame instanceof UserTextIdentificationFrame user && user.description().equals(description)) {

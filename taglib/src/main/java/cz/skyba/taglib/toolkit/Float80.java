@@ -6,11 +6,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
 
-/**
- * An exact finite extended-precision value represented by a nonnegative significand,
- * a power of two and a separate sign. Signed zero is preserved. Conversion to Java floating
- * point can round or overflow. Byte decoding maps infinity and NaN encodings to positive zero.
- */
+/// An exact finite extended-precision value represented by a nonnegative significand,
+/// a power of two and a separate sign. Signed zero is preserved. Conversion to Java floating
+/// point can round or overflow. Byte decoding maps infinity and NaN encodings to positive zero.
 public final class Float80 extends Number {
   @Serial
   private static final long serialVersionUID = 1L;
@@ -60,9 +58,7 @@ public final class Float80 extends Number {
     return significand.signum() == 0;
   }
 
-  /**
-   * Nonnegative, odd for nonzero values; the sign is supplied by isNegative().
-   */
+  /// Nonnegative, odd for nonzero values; the sign is supplied by isNegative().
   public BigInteger significand() {
     return significand;
   }
@@ -71,12 +67,10 @@ public final class Float80 extends Number {
     return binaryExponent;
   }
 
-  /**
-   * Returns the exact decimal value. {@link BigDecimal} does not preserve a zero
-   * sign; consult {@link #isNegative()} when that distinction matters.
-   *
-   * @return the exact decimal value
-   */
+  /// Returns the exact decimal value. [BigDecimal] does not preserve a zero
+  /// sign; consult [#isNegative()] when that distinction matters.
+  ///
+  /// @return the exact decimal value
   public BigDecimal toBigDecimal() {
     BigInteger n = negative ? significand.negate() : significand;
     if (binaryExponent >= 0) {
@@ -86,45 +80,37 @@ public final class Float80 extends Number {
     return new BigDecimal(n.multiply(BigInteger.valueOf(5).pow(scale)), scale);
   }
 
-  /**
-   * Converts to a signed 32-bit integer by truncating fractional digits and retaining low bits
-   * when the result exceeds the integer range.
-   *
-   * @return the narrowed integer
-   */
+  /// Converts to a signed 32-bit integer by truncating fractional digits and retaining low bits
+  /// when the result exceeds the integer range.
+  ///
+  /// @return the narrowed integer
   @Override
   public int intValue() {
     return toBigDecimal().intValue();
   }
 
-  /**
-   * Converts to a signed 64-bit integer by truncating fractional digits and retaining low bits
-   * when the result exceeds the integer range.
-   *
-   * @return the narrowed integer
-   */
+  /// Converts to a signed 64-bit integer by truncating fractional digits and retaining low bits
+  /// when the result exceeds the integer range.
+  ///
+  /// @return the narrowed integer
   @Override
   public long longValue() {
     return toBigDecimal().longValue();
   }
 
-  /**
-   * Converts to a Java float, preserving signed zero. Precision can be rounded and a value
-   * outside the finite float range can become infinity.
-   *
-   * @return the floating-point approximation
-   */
+  /// Converts to a Java float, preserving signed zero. Precision can be rounded and a value
+  /// outside the finite float range can become infinity.
+  ///
+  /// @return the floating-point approximation
   @Override
   public float floatValue() {
     return isZero() && negative ? -0.0f : toBigDecimal().floatValue();
   }
 
-  /**
-   * Converts to a Java double, preserving signed zero. Precision can be rounded and a value
-   * outside the finite double range can become infinity.
-   *
-   * @return the floating-point approximation
-   */
+  /// Converts to a Java double, preserving signed zero. Precision can be rounded and a value
+  /// outside the finite double range can become infinity.
+  ///
+  /// @return the floating-point approximation
   @Override
   public double doubleValue() {
     return isZero() && negative ? -0.0 : toBigDecimal().doubleValue();

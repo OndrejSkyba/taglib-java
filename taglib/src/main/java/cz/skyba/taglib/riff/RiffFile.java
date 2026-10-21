@@ -15,17 +15,13 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A RIFF-family file base with cached chunk descriptors and configurable byte order.
- * Protected chunk edits write storage immediately and update cached offsets and sizes.
- * Format subclasses supply metadata and audio-property parsing.
- */
+/// A RIFF-family file base with cached chunk descriptors and configurable byte order.
+/// Protected chunk edits write storage immediately and update cached offsets and sizes.
+/// Format subclasses supply metadata and audio-property parsing.
 public abstract class RiffFile extends FileBase {
   private static final System.Logger LOG = System.getLogger(RiffFile.class.getName());
 
-  /**
-   * The byte order used by RIFF-family integer fields.
-   */
+  /// The byte order used by RIFF-family integer fields.
   protected enum Endianness {BigEndian, LittleEndian}
 
   private static final int MAX_CHUNKS = 50_000;
@@ -50,41 +46,35 @@ public abstract class RiffFile extends FileBase {
   private long size, sizeOffset, ds64Offset, dataSize64;
   private boolean longForm;
 
-  /**
-   * Initializes a RIFF-family implementation and reads its chunk layout.
-   * Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
-   *
-   * @param path       the input file
-   * @param endianness the container byte order
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Initializes a RIFF-family implementation and reads its chunk layout.
+  /// Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
+  ///
+  /// @param path       the input file
+  /// @param endianness the container byte order
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected RiffFile(Path path, Endianness endianness) {
     Objects.requireNonNull(endianness);
     this(new FileStream(path), true, endianness, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Initializes a RIFF-family implementation and reads its chunk layout.
-   * Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
-   *
-   * @param source     the open stream
-   * @param endianness the container byte order
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Initializes a RIFF-family implementation and reads its chunk layout.
+  /// Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
+  ///
+  /// @param source     the open stream
+  /// @param endianness the container byte order
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected RiffFile(IOStream source, Endianness endianness) {
     this(source, false, endianness, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Initializes a RIFF-family implementation and reads its chunk layout.
-   * Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
-   *
-   * @param source     the open stream
-   * @param owned      whether ownership of the supplied stream transfers
-   * @param endianness the container byte order
-   * @param options    read options and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Initializes a RIFF-family implementation and reads its chunk layout.
+  /// Path storage is owned; supplied streams are borrowed unless ownership is explicitly requested.
+  ///
+  /// @param source     the open stream
+  /// @param owned      whether ownership of the supplied stream transfers
+  /// @param endianness the container byte order
+  /// @param options    read options and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected RiffFile(IOStream source, boolean owned, Endianness endianness, ReadOptions options) {
     super(source);
     this.source = source;
@@ -125,67 +115,55 @@ public abstract class RiffFile extends FileBase {
     return chunks.get(index);
   }
 
-  /**
-   * Returns a cached chunk payload byte offset.
-   *
-   * @param index the cached chunk index
-   * @return the cached chunk field
-   */
+  /// Returns a cached chunk payload byte offset.
+  ///
+  /// @param index the cached chunk index
+  /// @return the cached chunk field
   protected final long chunkOffset(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.offset;
   }
 
-  /**
-   * Returns a cached 32-bit payload size.
-   *
-   * @param index the cached chunk index
-   * @return the cached chunk field
-   */
+  /// Returns a cached 32-bit payload size.
+  ///
+  /// @param index the cached chunk index
+  /// @return the cached chunk field
   protected final long chunkDataSize(int index) {
     return Math.min(chunkDataSize64(index), 0xffff_ffffL);
   }
 
-  /**
-   * Returns the cached full payload byte length.
-   *
-   * @param index the cached chunk index
-   * @return the cached chunk field
-   */
+  /// Returns the cached full payload byte length.
+  ///
+  /// @param index the cached chunk index
+  /// @return the cached chunk field
   protected final long chunkDataSize64(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.size;
   }
 
-  /**
-   * Returns the cached chunk padding byte count.
-   *
-   * @param index the cached chunk index
-   * @return the cached chunk field
-   */
+  /// Returns the cached chunk padding byte count.
+  ///
+  /// @param index the cached chunk index
+  /// @return the cached chunk field
   protected final int chunkPadding(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.padding;
   }
 
-  /**
-   * Returns copied chunk-identifier bytes.
-   *
-   * @param index the cached chunk index
-   * @return the cached chunk field
-   */
+  /// Returns copied chunk-identifier bytes.
+  ///
+  /// @param index the cached chunk index
+  /// @return the cached chunk field
   protected final ByteVector chunkName(int index) {
     var c = chunk(index);
     return c == null ? new ByteVector() : new ByteVector(c.name);
   }
 
-  /**
-   * Reads chunk payload bytes through the shared cursor.
-   *
-   * @param index the cached chunk index
-   * @return payload bytes
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads chunk payload bytes through the shared cursor.
+  ///
+  /// @param index the cached chunk index
+  /// @return payload bytes
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final ByteVector chunkData(int index) {
     var c = chunk(index);
     if (c == null) {
@@ -200,13 +178,11 @@ public abstract class RiffFile extends FileBase {
     return readBlock(count);
   }
 
-  /**
-   * Writes a replacement chunk payload immediately, updating cached layout and container size.
-   *
-   * @param index the cached chunk index
-   * @param data  replacement payload bytes
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  ///
+  /// @param index the cached chunk index
+  /// @param data  replacement payload bytes
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void setChunkData(int index, ByteVector data) {
     Objects.requireNonNull(data);
     var c = chunk(index);
@@ -225,25 +201,21 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /**
-   * Writes a replacement chunk payload immediately, updating cached layout and container size.
-   *
-   * @param name the four-byte chunk identifier
-   * @param data replacement payload bytes
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  ///
+  /// @param name the four-byte chunk identifier
+  /// @param data replacement payload bytes
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void setChunkData(ByteVector name, ByteVector data) {
     setChunkData(name, data, false);
   }
 
-  /**
-   * Writes a replacement chunk payload immediately, updating cached layout and container size.
-   *
-   * @param name         the four-byte chunk identifier
-   * @param data         replacement payload bytes
-   * @param alwaysCreate whether to append a new chunk even if a matching name exists
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  ///
+  /// @param name         the four-byte chunk identifier
+  /// @param data         replacement payload bytes
+  /// @param alwaysCreate whether to append a new chunk even if a matching name exists
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void setChunkData(ByteVector name, ByteVector data, boolean alwaysCreate) {
     Objects.requireNonNull(name);
     Objects.requireNonNull(data);
@@ -285,12 +257,10 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /**
-   * Removes a chunk from storage immediately and updates the cached layout.
-   *
-   * @param index the cached chunk index
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Removes a chunk from storage immediately and updates the cached layout.
+  ///
+  /// @param index the cached chunk index
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void removeChunk(int index) {
     var c = chunk(index);
     if (c == null) {
@@ -305,12 +275,10 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /**
-   * Removes a chunk from storage immediately and updates the cached layout.
-   *
-   * @param name the four-byte chunk identifier
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Removes a chunk from storage immediately and updates the cached layout.
+  ///
+  /// @param name the four-byte chunk identifier
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void removeChunk(ByteVector name) {
     Objects.requireNonNull(name);
     for (int i = chunks.size() - 1; i >= 0; i--) {
@@ -320,11 +288,9 @@ public abstract class RiffFile extends FileBase {
     }
   }
 
-  /**
-   * Checks whether the cached chunk descriptors still fit the available storage.
-   *
-   * @return whether the cached layout is writable
-   */
+  /// Checks whether the cached chunk descriptors still fit the available storage.
+  ///
+  /// @return whether the cached layout is writable
   protected final boolean cachedLayoutWritable() {
     if (chunks.isEmpty() || !(source instanceof ByteVectorStream)) {
       return true;

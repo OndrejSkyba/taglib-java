@@ -18,11 +18,9 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * An editable AIFF/AIFC file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable AIFF/AIFC file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class AiffFile extends RiffFile {
   private static final System.Logger LOG = System.getLogger(AiffFile.class.getName());
 
@@ -31,80 +29,68 @@ public class AiffFile extends RiffFile {
   private Properties details;
   private boolean hasID3;
 
-  /**
-   * Opens a AIFF/AIFC file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a AIFF/AIFC file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public AiffFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a AIFF/AIFC file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a AIFF/AIFC file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public AiffFile(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a AIFF/AIFC file and owns the file handle.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a AIFF/AIFC file and owns the file handle.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public AiffFile(Path path, ReadOptions options, FrameFactory factory) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options, factory);
   }
 
-  /**
-   * Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public AiffFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public AiffFile(IOStream stream, ReadOptions options) {
     this(stream, false, options, null);
   }
 
-  /**
-   * Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a AIFF/AIFC file over a borrowed stream that remains open when this file closes.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public AiffFile(IOStream stream, ReadOptions options, FrameFactory factory) {
     this(stream, false, options, factory);
   }
@@ -167,11 +153,7 @@ public class AiffFile extends RiffFile {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -180,14 +162,12 @@ public class AiffFile extends RiffFile {
     return hasID3;
   }
 
-  /**
-   * Checks for a recognizable AIFF/AIFC header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param stream the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable AIFF/AIFC header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param stream the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream stream) {
     var id = TagUtils.readHeader(stream, 12, false);
     return id.startsWith(new ByteVector("FORM")) && (id.containsAt(new ByteVector("AIFF"), 8) || id.containsAt(new ByteVector("AIFC"),
@@ -226,14 +206,12 @@ public class AiffFile extends RiffFile {
     save(Tag.Version.V4);
   }
 
-  /**
-   * Writes staged metadata to storage in place. An I/O failure can leave partial changes.
-   *
-   * @param version the ID3v2 output version
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or the cached layout cannot be saved
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Writes staged metadata to storage in place. An I/O failure can leave partial changes.
+  ///
+  /// @param version the ID3v2 output version
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws IllegalStateException        if the file is closed
   public final void save(Tag.Version version) {
     requireWritable();
     Objects.requireNonNull(version);

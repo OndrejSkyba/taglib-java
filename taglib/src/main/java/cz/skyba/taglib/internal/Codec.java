@@ -19,9 +19,7 @@ public interface Codec {
 
   AudioMetadata read(BinaryFile file, ReadOptions options) throws IOException;
 
-  /**
-   * Native constructor entry point, including effects of a borrowed stream's current cursor.
-   */
+  /// Native constructor entry point, including effects of a borrowed stream's current cursor.
   default AudioMetadata readNative(BinaryFile file, ReadOptions options) throws IOException {
     return read(file, options);
   }

@@ -13,9 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-/**
- * Validates a complete edit plan before upstream-style in-place I/O.
- */
+/// Validates a complete edit plan before upstream-style in-place I/O.
 public final class Rewrite {
   private Rewrite() {
   }
@@ -37,9 +35,7 @@ public final class Rewrite {
     replace(file, List.of(new Edit(offset, removeLength, insertion)));
   }
 
-  /**
-   * Runs the same edit plan against a borrowed native IOStream without copying its audio.
-   */
+  /// Runs the same edit plan against a borrowed native IOStream without copying its audio.
   public static void replace(BinaryFile file, List<Edit> edits)
     throws IOException {
     if (file.path() != null) {
@@ -65,9 +61,7 @@ public final class Rewrite {
     }
   }
 
-  /**
-   * Executes native save order, translating each original offset after earlier edits.
-   */
+  /// Executes native save order, translating each original offset after earlier edits.
   public static void replaceNative(BinaryFile file, List<Edit> edits)
     throws IOException {
     if (file.path() != null) {
@@ -93,9 +87,7 @@ public final class Rewrite {
     }
   }
 
-  /**
-   * Prefix sums over original offsets, updated in the native physical save order.
-   */
+  /// Prefix sums over original offsets, updated in the native physical save order.
   private static final class OffsetDeltas {
     private final long[] offsets, sums;
 
@@ -153,9 +145,7 @@ public final class Rewrite {
     inPlace(real, sorted, before);
   }
 
-  /**
-   * Remove identical prefixes/suffixes, making no-op saves and padded updates metadata-only I/O.
-   */
+  /// Remove identical prefixes/suffixes, making no-op saves and padded updates metadata-only I/O.
   private static Edit trim(FileChannel in, Edit edit) throws IOException {
     byte[] bytes = edit.insertion();
     int shared = (int) Math.min(edit.removeLength(), bytes.length);

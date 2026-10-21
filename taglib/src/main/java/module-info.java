@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
-/**
- * Pure Java audio metadata API.
- */
+/// Pure Java audio metadata API.
 module cz.skyba.taglib {
   exports cz.skyba.taglib;
   exports cz.skyba.taglib.toolkit;

@@ -3,20 +3,16 @@ package cz.skyba.taglib.flac;
 
 import java.util.Objects;
 
-/**
- * A mutable FLAC metadata payload retained by numeric block code.
- * Payload inputs and exports are copied, so edits through returned arrays do not change the block.
- */
+/// A mutable FLAC metadata payload retained by numeric block code.
+/// Payload inputs and exports are copied, so edits through returned arrays do not change the block.
 public final class UnknownMetadataBlock extends MetadataBlock {
   private int code;
   private byte[] data;
 
-  /**
-   * Creates a metadata block with copied payload bytes.
-   *
-   * @param code the FLAC block code
-   * @param data the payload bytes
-   */
+  /// Creates a metadata block with copied payload bytes.
+  ///
+  /// @param code the FLAC block code
+  /// @param data the payload bytes
   public UnknownMetadataBlock(int code, byte[] data) {
     this.code = code;
     setData(data);
@@ -35,11 +31,9 @@ public final class UnknownMetadataBlock extends MetadataBlock {
     return data.clone();
   }
 
-  /**
-   * Replaces the stored binary payload with an independent copy.
-   *
-   * @param value the bytes to copy
-   */
+  /// Replaces the stored binary payload with an independent copy.
+  ///
+  /// @param value the bytes to copy
   public void setData(byte[] value) {
     data = Objects.requireNonNull(value).clone();
   }

@@ -12,47 +12,38 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * Parsed DSDIFF audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Parsed DSDIFF audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   private final DsdCodec.DffDetails details;
 
-  /**
-   * Reads DSDIFF audio properties from supplied property values.
-   *
-   * @param style       the audio property read hint
-   * @param sampleRate  samples per second
-   * @param channels    audio channel count
-   * @param sampleCount decoded sample count
-   * @param bitrate     bitrate in kilobits per second
-   */
+  /// Reads DSDIFF audio properties from supplied property values.
+  ///
+  /// @param style       the audio property read hint
+  /// @param sampleRate  samples per second
+  /// @param channels    audio channel count
+  /// @param sampleCount decoded sample count
+  /// @param bitrate     bitrate in kilobits per second
   public Properties(long sampleRate, int channels, long sampleCount, int bitrate, ReadStyle style) {
     Objects.requireNonNull(style);
     details = DsdCodec.dffProperties(sampleRate, channels, sampleCount, bitrate);
   }
 
-  /**
-   * Reads DSDIFF audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads DSDIFF audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads DSDIFF audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads DSDIFF audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(path)) {
@@ -62,25 +53,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads DSDIFF audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads DSDIFF audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads DSDIFF audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads DSDIFF audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(stream)) {
@@ -118,12 +105,6 @@ public final class Properties {
     return details.sampleCount();
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return details.common();
   }

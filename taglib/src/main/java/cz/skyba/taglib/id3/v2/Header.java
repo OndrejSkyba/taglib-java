@@ -7,9 +7,7 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * Mutable ID3v2 tag header fields for parsing and serialization.
- */
+/// Mutable ID3v2 tag header fields for parsing and serialization.
 public class Header {
   private static final System.Logger LOG = System.getLogger(Header.class.getName());
 
@@ -19,11 +17,9 @@ public class Header {
   public Header() {
   }
 
-  /**
-   * Decodes ID3v2 tag header fields from the supplied bytes.
-   *
-   * @param data encoded ID3v2 tag header bytes
-   */
+  /// Decodes ID3v2 tag header fields from the supplied bytes.
+  ///
+  /// @param data encoded ID3v2 tag header bytes
   public Header(ByteVector data) {
     parseData(data);
   }
@@ -60,11 +56,9 @@ public class Header {
     return tagSize;
   }
 
-  /**
-   * Returns the payload size plus header and, when flagged, footer length.
-   *
-   * @return the complete byte length of the tag
-   */
+  /// Returns the payload size plus header and, when flagged, footer length.
+  ///
+  /// @return the complete byte length of the tag
   public long completeTagSize() {
     return (tagSize + size() + (footerPresent ? Footer.size() : 0)) & 0xffff_ffffL;
   }
@@ -81,21 +75,17 @@ public class Header {
     return new ByteVector("ID3");
   }
 
-  /**
-   * Decodes ID3v2 tag header fields from the supplied bytes.
-   *
-   * @param data encoded ID3v2 tag header bytes
-   */
+  /// Decodes ID3v2 tag header fields from the supplied bytes.
+  ///
+  /// @param data encoded ID3v2 tag header bytes
   public void setData(ByteVector data) {
     parseData(data);
   }
 
-  /**
-   * Serializes a ten-byte header with revision zero. Clears the live extended-header, footer
-   * and unsynchronization flags; the experimental flag is retained.
-   *
-   * @return serialized tag-header bytes
-   */
+  /// Serializes a ten-byte header with revision zero. Clears the live extended-header, footer
+  /// and unsynchronization flags; the experimental flag is retained.
+  ///
+  /// @return serialized tag-header bytes
   public ByteVector render() {
     extendedHeader = false;
     footerPresent = false;
@@ -105,11 +95,9 @@ public class Header {
     })).append(SynchData.fromUnsignedInt(tagSize));
   }
 
-  /**
-   * Decodes available header fields into this object.
-   *
-   * @param data encoded header bytes
-   */
+  /// Decodes available header fields into this object.
+  ///
+  /// @param data encoded header bytes
   protected void parse(ByteVector data) {
     parseData(data);
   }

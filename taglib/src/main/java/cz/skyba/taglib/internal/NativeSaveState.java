@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Constructor-owned state that cannot be reconstructed by rereading the rewritten bytes.
- */
+/// Constructor-owned state that cannot be reconstructed by rereading the rewritten bytes.
 public final class NativeSaveState {
   private static final ScopedValue<Boolean> EMPTY_MATROSKA_TAG = ScopedValue.newInstance();
   private static final ScopedValue<PropertyMap> MPEG_APE_PROPERTIES = ScopedValue.newInstance();
@@ -225,10 +223,8 @@ public final class NativeSaveState {
     return values == null ? null : List.copyOf(values);
   }
 
-  /**
-   * A missing override inherits the enclosing scope; it must not bind a null or empty value.
-   * Composite operations nest these calls so collection snapshots retain their evaluation order.
-   */
+  /// A missing override inherits the enclosing scope; it must not bind a null or empty value.
+  /// Composite operations nest these calls so collection snapshots retain their evaluation order.
   private static <T> void withOptionalState(
     ScopedValue<T> key, T value, WriteGuard.Operation action
   ) throws IOException {

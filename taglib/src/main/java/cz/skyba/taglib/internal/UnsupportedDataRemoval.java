@@ -4,9 +4,7 @@ package cz.skyba.taglib.internal;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Explicit AudioFile save request, scoped to one render; ordinary readers never hide source data.
- */
+/// Explicit AudioFile save request, scoped to one render; ordinary readers never hide source data.
 public final class UnsupportedDataRemoval {
   private static final ScopedValue<List<String>> REQUEST = ScopedValue.newInstance();
 

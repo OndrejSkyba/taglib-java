@@ -3,9 +3,7 @@ package cz.skyba.taglib;
 
 import java.io.Serial;
 
-/**
- * An edit cannot be represented safely; no source file has been changed.
- */
+/// An edit cannot be represented safely; no source file has been changed.
 public class MetadataEditException extends TagLibException {
   @Serial
   private static final long serialVersionUID = 1L;

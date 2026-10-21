@@ -9,31 +9,24 @@ import cz.skyba.taglib.internal.codec.FlacCodec;
 import java.util.Arrays;
 import java.util.Objects;
 
-/**
- * Parsed FLAC audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Parsed FLAC audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   private final AudioProperties common;
   private final long sampleFrames;
   private final byte[] signature;
 
-  /**
-   * Reads FLAC audio properties from supplied property values.
-   *
-   * @param streamLength the byte length used to calculate bitrate
-   */
+  /// Reads FLAC audio properties from supplied property values.
+  ///
+  /// @param streamLength the byte length used to calculate bitrate
   public Properties(byte[] data, long streamLength) {
     this(data, streamLength, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads FLAC audio properties from supplied property values.
-   *
-   * @param streamLength the byte length used to calculate bitrate
-   * @param style        the audio property read hint
-   */
+  /// Reads FLAC audio properties from supplied property values.
+  ///
+  /// @param streamLength the byte length used to calculate bitrate
+  /// @param style        the audio property read hint
   public Properties(byte[] data, long streamLength, ReadStyle style) {
     Objects.requireNonNull(data);
     Objects.requireNonNull(style);
@@ -74,12 +67,6 @@ public final class Properties {
     return signature.clone();
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return common;
   }

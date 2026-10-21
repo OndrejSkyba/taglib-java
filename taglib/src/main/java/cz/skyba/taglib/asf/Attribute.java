@@ -11,11 +11,9 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 
-/**
- * A mutable typed ASF attribute with stream and language scope.
- * Explicit copies have independent scope and picture state. Binary storage is copied on input
- * and exported as detached bytes. Named views can share the stored value state.
- */
+/// A mutable typed ASF attribute with stream and language scope.
+/// Explicit copies have independent scope and picture state. Binary storage is copied on input
+/// and exported as detached bytes. Named views can share the stored value state.
 public final class Attribute {
   private static final System.Logger LOG = System.getLogger(Attribute.class.getName());
 
@@ -48,18 +46,14 @@ public final class Attribute {
   private final State state;
   private String name = "";
 
-  /**
-   * Creates an empty Unicode-text attribute.
-   */
+  /// Creates an empty Unicode-text attribute.
   public Attribute() {
     state = new State();
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param other the attribute to copy
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param other the attribute to copy
   public Attribute(Attribute other) {
     state = new State(Objects.requireNonNull(other).state);
     name = other.name;
@@ -75,92 +69,76 @@ public final class Attribute {
     return new Attribute(state, name);
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(String value) {
     this();
     state.text = Objects.requireNonNull(value);
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(ByteVector value) {
     this();
     state.type = BytesType;
     state.bytes = new ByteVector(value);
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(Picture value) {
     this();
     state.type = BytesType;
     state.picture = new Picture(value);
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(boolean value) {
     this();
     state.type = BoolType;
     state.number = value ? 1 : 0;
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(int value) {
     this();
     state.type = DWordType;
     state.number = Integer.toUnsignedLong(value);
   }
 
-  /**
-   * Creates an unsigned 64-bit numeric attribute using all bits of a Java long.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an unsigned 64-bit numeric attribute using all bits of a Java long.
+  ///
+  /// @param value the value to copy or store
   public Attribute(long value) {
     this();
     state.type = QWordType;
     state.number = value;
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields.
-   *
-   * @param value the value to copy or store
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields.
+  ///
+  /// @param value the value to copy or store
   public Attribute(short value) {
     this();
     state.type = WordType;
     state.number = Short.toUnsignedLong(value);
   }
 
-  /**
-   * Creates an ASF attribute from the supplied value or encoded descriptor fields. Encoded fields use ASF byte order.
-   *
-   * @param name     the attribute name without NUL
-   * @param type     the descriptor data-type code from 0 to 65535
-   * @param stream   the stream index from 0 to 65535
-   * @param language the language index from 0 to 65535
-   * @param data     the encoded descriptor value bytes
-   * @throws IllegalArgumentException if descriptor identity or scope is outside its range
-   */
+  /// Creates an ASF attribute from the supplied value or encoded descriptor fields. Encoded fields use ASF byte order.
+  ///
+  /// @param name     the attribute name without NUL
+  /// @param type     the descriptor data-type code from 0 to 65535
+  /// @param stream   the stream index from 0 to 65535
+  /// @param language the language index from 0 to 65535
+  /// @param data     the encoded descriptor value bytes
+  /// @throws IllegalArgumentException if descriptor identity or scope is outside its range
   public Attribute(String name, int type, int stream, int language, byte[] data) {
     this();
     this.name = Objects.requireNonNull(name);
@@ -192,16 +170,14 @@ public final class Attribute {
     }
   }
 
-  /**
-   * Decodes a named descriptor, interpreting WM/Picture binary content as picture data.
-   *
-   * @param name     the attribute name
-   * @param type     the descriptor data-type code
-   * @param stream   the stream index
-   * @param language the language index
-   * @param data     the encoded value bytes
-   * @return the new attribute
-   */
+  /// Decodes a named descriptor, interpreting WM/Picture binary content as picture data.
+  ///
+  /// @param name     the attribute name
+  /// @param type     the descriptor data-type code
+  /// @param stream   the stream index
+  /// @param language the language index
+  /// @param data     the encoded value bytes
+  /// @return the new attribute
   public static Attribute parsed(String name, int type, int stream, int language, byte[] data) {
     var value = new Attribute(name, type, stream, language, data);
     if (type == BytesType && name.equals("WM/Picture")) {
@@ -215,9 +191,7 @@ public final class Attribute {
     return name;
   }
 
-  /**
-   * Returns an independent attribute copy with the supplied name.
-   */
+  /// Returns an independent attribute copy with the supplied name.
   public Attribute named(String value) {
     var copy = new Attribute(this);
     copy.name = Objects.requireNonNull(value);
@@ -244,27 +218,23 @@ public final class Attribute {
     state.language = value;
   }
 
-  /**
-   * Reads one ASF attribute descriptor at the file's current cursor into this value.
-   * The borrowed file remains open and its cursor advances.
-   *
-   * @param file the ASF source
-   * @return the decoded attribute name
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads one ASF attribute descriptor at the file's current cursor into this value.
+  /// The borrowed file remains open and its cursor advances.
+  ///
+  /// @param file the ASF source
+  /// @return the decoded attribute name
+  /// @throws java.io.UncheckedIOException if storage access fails
   public String parse(AsfFile file) {
     return parse(file, 0);
   }
 
-  /**
-   * Reads one ASF attribute descriptor at the file's current cursor into this value.
-   * The borrowed file remains open and its cursor advances.
-   *
-   * @param file the ASF source
-   * @param kind zero for Extended Content Description, one for Metadata, or two for Metadata Library
-   * @return the decoded attribute name
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads one ASF attribute descriptor at the file's current cursor into this value.
+  /// The borrowed file remains open and its cursor advances.
+  ///
+  /// @param file the ASF source
+  /// @param kind zero for Extended Content Description, one for Metadata, or two for Metadata Library
+  /// @return the decoded attribute name
+  /// @throws java.io.UncheckedIOException if storage access fails
   public String parse(AsfFile file, int kind) {
     Objects.requireNonNull(file);
     state.picture = Picture.fromInvalid();
@@ -344,35 +314,27 @@ public final class Attribute {
     return TextBytes.decodeTerminated(data.data(), 0, size, UTF_16LE);
   }
 
-  /**
-   * Returns whether the stored numeric value is nonzero, without checking the active attribute type.
-   */
+  /// Returns whether the stored numeric value is nonzero, without checking the active attribute type.
   public boolean toBoolean() {
     return state.number != 0;
   }
 
-  /**
-   * Returns the low 16 bits of the stored numeric value as an unsigned Java value.
-   *
-   * @return the numeric bits
-   */
+  /// Returns the low 16 bits of the stored numeric value as an unsigned Java value.
+  ///
+  /// @return the numeric bits
   public int toUnsignedShort() {
     return (int) (state.number & 65535);
   }
 
-  /**
-   * Returns the low 32 bits of the stored numeric value as an unsigned Java value.
-   *
-   * @return the numeric bits
-   */
+  /// Returns the low 32 bits of the stored numeric value as an unsigned Java value.
+  ///
+  /// @return the numeric bits
   public long toUnsignedInt() {
     return state.number & 0xffff_ffffL;
   }
 
-  /**
-   * Returns the numeric value as an unsigned 64-bit bit pattern.
-   * Use {@link Long#toUnsignedString(long)} to display it.
-   */
+  /// Returns the numeric value as an unsigned 64-bit bit pattern.
+  /// Use [Long#toUnsignedString(long)] to display it.
   public long toUnsignedLong() {
     return state.number;
   }
@@ -382,42 +344,34 @@ public final class Attribute {
     return state.text;
   }
 
-  /**
-   * Returns independent bytes for the active binary or picture payload.
-   *
-   * @return copied or serialized value bytes
-   */
+  /// Returns independent bytes for the active binary or picture payload.
+  ///
+  /// @return copied or serialized value bytes
   public ByteVector toByteVector() {
     return state.picture.isValid() ? state.picture.render() : new ByteVector(state.bytes);
   }
 
-  /**
-   * Returns the live picture object stored in this attribute.
-   *
-   * @return the picture value, which can be invalid for a non-picture attribute
-   */
+  /// Returns the live picture object stored in this attribute.
+  ///
+  /// @return the picture value, which can be invalid for a non-picture attribute
   public Picture toPicture() {
     return state.picture;
   }
 
-  /**
-   * Creates a GUID-typed attribute with copied identifier bytes.
-   *
-   * @param value the value to store
-   * @return the new attribute
-   */
+  /// Creates a GUID-typed attribute with copied identifier bytes.
+  ///
+  /// @param value the value to store
+  /// @return the new attribute
   public static Attribute fromGuid(ByteVector value) {
     var a = new Attribute(value);
     a.state.type = GuidType;
     return a;
   }
 
-  /**
-   * Returns the descriptor payload byte size. The size reported for a QWORD value is five
-   * bytes even though its serialized numeric payload is eight bytes.
-   *
-   * @return the reported descriptor size
-   */
+  /// Returns the descriptor payload byte size. The size reported for a QWORD value is five
+  /// bytes even though its serialized numeric payload is eight bytes.
+  ///
+  /// @return the reported descriptor size
   public int dataSize() {
     return switch (type()) {
       case WordType -> 2;
@@ -430,11 +384,9 @@ public final class Attribute {
     };
   }
 
-  /**
-   * Serializes the active value using its ASF type and width. Pictures use the WM/Picture encoding.
-   *
-   * @return serialized value bytes
-   */
+  /// Serializes the active value using its ASF type and width. Pictures use the WM/Picture encoding.
+  ///
+  /// @return serialized value bytes
   public byte[] data() {
     return switch (type()) {
       case UnicodeType -> Picture.stringBytes(state.text).data();
@@ -446,20 +398,16 @@ public final class Attribute {
     };
   }
 
-  /**
-   * Returns Unicode text, rejecting attributes whose active type is not Unicode.
-   */
+  /// Creates a named Unicode text attribute.
   public static Attribute text(String name, String value) {
     return new Attribute(value).named(name);
   }
 
-  /**
-   * Creates a named binary attribute with copied bytes.
-   *
-   * @param name  the attribute name
-   * @param value the value to store
-   * @return the new attribute
-   */
+  /// Creates a named binary attribute with copied bytes.
+  ///
+  /// @param name  the attribute name
+  /// @param value the value to store
+  /// @return the new attribute
   public static Attribute binary(String name, byte[] value) {
     var attribute = new Attribute();
     attribute.state.type = BytesType;
@@ -467,21 +415,17 @@ public final class Attribute {
     return attribute.named(name);
   }
 
-  /**
-   * Creates a named boolean attribute.
-   *
-   * @param name  the attribute name
-   * @param value the value to store
-   * @return the new attribute
-   */
+  /// Creates a named boolean attribute.
+  ///
+  /// @param name  the attribute name
+  /// @param value the value to store
+  /// @return the new attribute
   public static Attribute bool(String name, boolean value) {
     return new Attribute(value).named(name);
   }
 
-  /**
-   * Creates a named unsigned numeric attribute of the selected width, rejecting values outside that
-   * width.
-   */
+  /// Creates a named unsigned numeric attribute of the selected width, rejecting values outside that
+  /// width.
   public static Attribute unsigned(String name, int type, BigInteger value) {
     int width = switch (type) {
       case WordType -> 2;
@@ -497,14 +441,12 @@ public final class Attribute {
       : width == 4 ? new Attribute(value.intValue()) : new Attribute(value.longValue())).named(name);
   }
 
-  /**
-   * Creates a named GUID attribute requiring exactly 16 identifier bytes.
-   *
-   * @param name  the attribute name
-   * @param value the GUID bytes
-   * @return the GUID attribute
-   * @throws IllegalArgumentException if the byte count is not 16
-   */
+  /// Creates a named GUID attribute requiring exactly 16 identifier bytes.
+  ///
+  /// @param name  the attribute name
+  /// @param value the GUID bytes
+  /// @return the GUID attribute
+  /// @throws IllegalArgumentException if the byte count is not 16
   public static Attribute guid(String name, byte[] value) {
     if (value.length != 16) {
       throw new IllegalArgumentException("ASF GUID requires 16 bytes");
@@ -512,20 +454,16 @@ public final class Attribute {
     return fromGuid(new ByteVector(value)).named(name);
   }
 
-  /**
-   * Creates an independent attribute copy with replacement stream and language scope.
-   *
-   * @param stream   the stream index
-   * @param language the language index
-   * @return the new attribute
-   */
+  /// Creates an independent attribute copy with replacement stream and language scope.
+  ///
+  /// @param stream   the stream index
+  /// @param language the language index
+  /// @return the new attribute
   public Attribute withScope(int stream, int language) {
     return new Attribute(name, type(), stream, language, data());
   }
 
-  /**
-   * Returns Unicode text, rejecting attributes whose active type is not Unicode.
-   */
+  /// Returns Unicode text, rejecting attributes whose active type is not Unicode.
   public String text() {
     if (type() != UnicodeType) {
       throw new IllegalStateException("Not a Unicode ASF attribute");
@@ -540,9 +478,7 @@ public final class Attribute {
     };
   }
 
-  /**
-   * Returns the numeric bit pattern as a nonnegative integer, rejecting nonnumeric attribute types.
-   */
+  /// Returns the numeric bit pattern as a nonnegative integer, rejecting nonnumeric attribute types.
   public BigInteger unsigned() {
     if (!isNumeric(type())) {
       throw new IllegalStateException("Not a numeric ASF attribute");

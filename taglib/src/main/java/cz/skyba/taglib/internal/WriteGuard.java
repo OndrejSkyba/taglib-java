@@ -10,10 +10,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Java 25 scoped state binds a source snapshot to nested codec rewrites, without thread-local
- * leaks.
- */
+/// Java 25 scoped state binds a source snapshot to nested codec rewrites, without thread-local
+/// leaks.
 public final class WriteGuard {
   private WriteGuard() {
   }

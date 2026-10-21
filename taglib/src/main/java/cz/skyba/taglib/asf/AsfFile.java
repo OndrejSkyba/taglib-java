@@ -18,11 +18,9 @@ import java.nio.file.Path;
 import java.util.HexFormat;
 import java.util.Objects;
 
-/**
- * An editable ASF file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable ASF file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class AsfFile extends FileBase {
   private static final ByteVector FILE_IDENTIFIER =
     new ByteVector(HexFormat.of().parseHex("3026b2758e66cf11a6d900aa0062ce6c"));
@@ -33,51 +31,43 @@ public class AsfFile extends FileBase {
   private Tag tag;
   private Properties properties;
 
-  /**
-   * Opens a ASF file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws UncheckedIOException            if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a ASF file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws UncheckedIOException            if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public AsfFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a ASF file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException            if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a ASF file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException            if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public AsfFile(Path path, ReadOptions options) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options);
   }
 
-  /**
-   * Opens a ASF file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws UncheckedIOException            if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a ASF file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws UncheckedIOException            if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public AsfFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a ASF file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException            if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a ASF file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException            if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public AsfFile(IOStream stream, ReadOptions options) {
     this(stream, false, options);
   }
@@ -122,11 +112,7 @@ public class AsfFile extends FileBase {
     return properties == null ? null : properties.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return properties;
   }
@@ -141,14 +127,12 @@ public class AsfFile extends FileBase {
     }
   }
 
-  /**
-   * Checks for a recognizable ASF header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param stream the stream to inspect
-   * @return whether a format header is recognized
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable ASF header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param stream the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream stream) {
     return TagUtils.readHeader(stream, 16, false).equals(FILE_IDENTIFIER);
   }

@@ -16,10 +16,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 
-/**
- * A mutable SimpleTag collection. Incoming values and exported collection values are copied.
- * MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
- */
+/// A mutable SimpleTag collection. Incoming values and exported collection values are copied.
+/// MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
 public class Tag extends TagBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 
@@ -34,11 +32,9 @@ public class Tag extends TagBase {
     snapshotValue = false;
   }
 
-  /**
-   * Creates a collection with copied input values.
-   *
-   * @param values the values to copy
-   */
+  /// Creates a collection with copied input values.
+  ///
+  /// @param values the values to copy
   public Tag(List<SimpleTag> values) {
     snapshotValue = true;
     this.values.addAll(values);
@@ -54,13 +50,11 @@ public class Tag extends TagBase {
     segmentTitle = title;
   }
 
-  /**
-   * Reads SimpleTag values from a file and closes temporary handles.
-   *
-   * @param path the Matroska file to inspect
-   * @return the decoded collection
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Reads SimpleTag values from a file and closes temporary handles.
+  ///
+  /// @param path the Matroska file to inspect
+  /// @return the decoded collection
+  /// @throws UncheckedIOException if storage access fails
   public static Tag read(Path path) {
     try {
       return new Tag(MatroskaCodec.readSimpleTags(path));
@@ -69,13 +63,11 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Writes this SimpleTag collection to the supplied path in place.
-   * An empty collection requests removal. A failure can leave partial changes.
-   *
-   * @param path the Matroska file to update
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Writes this SimpleTag collection to the supplied path in place.
+  /// An empty collection requests removal. A failure can leave partial changes.
+  ///
+  /// @param path the Matroska file to update
+  /// @throws UncheckedIOException if storage access fails
   public final void save(Path path) {
     try {
       WriteGuard.run(path, () -> MatroskaCodec.writeSimpleTags(path, simpleTagsList()));
@@ -84,62 +76,50 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Returns an immutable snapshot of copied SimpleTag values.
-   *
-   * @return detached tags
-   */
+  /// Returns an immutable snapshot of copied SimpleTag values.
+  ///
+  /// @return detached tags
   public final List<SimpleTag> simpleTags() {
     return simpleTagsList();
   }
 
-  /**
-   * Returns an immutable list snapshot with copied values.
-   *
-   * @return detached collection values
-   */
+  /// Returns an immutable list snapshot with copied values.
+  ///
+  /// @return detached collection values
   public final List<SimpleTag> simpleTagsList() {
     return values.snapshot();
   }
 
-  /**
-   * Appends a copy of the supplied value in memory and marks a bound container changed.
-   *
-   * @param tag the value to copy
-   */
+  /// Appends a copy of the supplied value in memory and marks a bound container changed.
+  ///
+  /// @param tag the value to copy
   public final void addSimpleTag(SimpleTag tag) {
     values.add(tag);
     changed.run();
   }
 
-  /**
-   * Appends copied tags in source order and marks a bound container changed.
-   *
-   * @param values the tags to copy
-   */
+  /// Appends copied tags in source order and marks a bound container changed.
+  ///
+  /// @param values the tags to copy
   public final void addSimpleTags(List<SimpleTag> values) {
     this.values.addAll(values);
     changed.run();
   }
 
-  /**
-   * Inserts a copied tag at an unsigned 32-bit position, or appends when the position is beyond
-   * the list. The change remains in memory.
-   *
-   * @param index the insertion position using its low 32 bits
-   * @param tag   the value to copy
-   */
+  /// Inserts a copied tag at an unsigned 32-bit position, or appends when the position is beyond
+  /// the list. The change remains in memory.
+  ///
+  /// @param index the insertion position using its low 32 bits
+  /// @param tag   the value to copy
   public final void insertSimpleTag(long index, SimpleTag tag) {
     long n = unsignedIndex(index);
     values.insert(n < tags.size() ? (int) n : tags.size(), tag);
     changed.run();
   }
 
-  /**
-   * Removes the tag at the unsigned 32-bit index, ignoring an out-of-range index. The edit remains in memory.
-   *
-   * @param index the position using its low 32 bits
-   */
+  /// Removes the tag at the unsigned 32-bit index, ignoring an out-of-range index. The edit remains in memory.
+  ///
+  /// @param index the position using its low 32 bits
   public final void removeSimpleTag(long index) {
     long n = unsignedIndex(index);
     if (n < tags.size()) {
@@ -148,62 +128,52 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
-   *
-   * @param name   the exact tag name
-   * @param target the exact target level
-   */
+  /// Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
+  ///
+  /// @param name   the exact tag name
+  /// @param target the exact target level
   public final void removeSimpleTag(String name, SimpleTag.TargetTypeValue target) {
     removeSimpleTag(name, target, 0);
   }
 
-  /**
-   * Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
-   *
-   * @param name   the exact tag name
-   * @param target the exact target level
-   * @param track  the exact track UID; omitted scope parameters default to zero
-   */
+  /// Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
+  ///
+  /// @param name   the exact tag name
+  /// @param target the exact target level
+  /// @param track  the exact track UID; omitted scope parameters default to zero
   public final void removeSimpleTag(String name, SimpleTag.TargetTypeValue target, long track) {
     removeSimpleTag(name, target, track, 0, 0, 0);
   }
 
-  /**
-   * Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
-   *
-   * @param name    the exact tag name
-   * @param target  the exact target level
-   * @param track   the exact track UID; omitted scope parameters default to zero
-   * @param edition the exact edition UID
-   */
+  /// Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
+  ///
+  /// @param name    the exact tag name
+  /// @param target  the exact target level
+  /// @param track   the exact track UID; omitted scope parameters default to zero
+  /// @param edition the exact edition UID
   public final void removeSimpleTag(String name, SimpleTag.TargetTypeValue target, long track, long edition) {
     removeSimpleTag(name, target, track, edition, 0, 0);
   }
 
-  /**
-   * Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
-   *
-   * @param name    the exact tag name
-   * @param target  the exact target level
-   * @param track   the exact track UID; omitted scope parameters default to zero
-   * @param edition the exact edition UID
-   * @param chapter the exact chapter UID
-   */
+  /// Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
+  ///
+  /// @param name    the exact tag name
+  /// @param target  the exact target level
+  /// @param track   the exact track UID; omitted scope parameters default to zero
+  /// @param edition the exact edition UID
+  /// @param chapter the exact chapter UID
   public final void removeSimpleTag(String name, SimpleTag.TargetTypeValue target, long track, long edition, long chapter) {
     removeSimpleTag(name, target, track, edition, chapter, 0);
   }
 
-  /**
-   * Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
-   *
-   * @param name       the exact tag name
-   * @param target     the exact target level
-   * @param track      the exact track UID; omitted scope parameters default to zero
-   * @param edition    the exact edition UID
-   * @param chapter    the exact chapter UID
-   * @param attachment the exact attachment UID
-   */
+  /// Removes the first tag matching the name, target level and all supplied scope UIDs exactly. The edit remains in memory.
+  ///
+  /// @param name       the exact tag name
+  /// @param target     the exact target level
+  /// @param track      the exact track UID; omitted scope parameters default to zero
+  /// @param edition    the exact edition UID
+  /// @param chapter    the exact chapter UID
+  /// @param attachment the exact attachment UID
   public final void removeSimpleTag(
     String name,
     SimpleTag.TargetTypeValue target,
@@ -234,9 +204,7 @@ public class Tag extends TagBase {
       && tag.editionUid() == edition && tag.chapterUid() == chapter && tag.attachmentUid() == attachment;
   }
 
-  /**
-   * Removes all SimpleTag values in memory and marks a bound container changed.
-   */
+  /// Removes all SimpleTag values in memory and marks a bound container changed.
   public final void clearSimpleTags() {
     this.values.clear();
     changed.run();
@@ -274,9 +242,7 @@ public class Tag extends TagBase {
     changed.run();
   }
 
-  /**
-   * Returns the mapped TITLE value, falling back to the segment title when the tag value is empty.
-   */
+  /// Returns the mapped TITLE value, falling back to the segment title when the tag value is empty.
   @Override
   public String title() {
     String value = common("TITLE");
@@ -363,10 +329,8 @@ public class Tag extends TagBase {
     return tags.isEmpty();
   }
 
-  /**
-   * Exports unscoped text tags using their names and target levels; unmapped text names are
-   * reported as unsupported.
-   */
+  /// Exports unscoped text tags using their names and target levels; unmapped text names are
+  /// reported as unsupported.
   @Override
   public PropertyMap properties() {
     var result = PropertyMap.builder();

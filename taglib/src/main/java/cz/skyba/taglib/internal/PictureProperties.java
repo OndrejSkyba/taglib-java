@@ -8,9 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * Shared exact Variant dictionaries used by native FLAC File and XiphComment.
- */
+/// Shared exact Variant dictionaries used by native FLAC File and XiphComment.
 public final class PictureProperties {
   private static final Variant EMPTY_VARIANT = new Variant();
 

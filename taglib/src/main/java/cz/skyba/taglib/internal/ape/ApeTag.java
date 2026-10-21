@@ -18,9 +18,7 @@ import static cz.skyba.taglib.internal.Binary.ascii;
 import static cz.skyba.taglib.internal.Binary.u32le;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * APEv2 text, binary, locator, and artwork items.
- */
+/// APEv2 text, binary, locator, and artwork items.
 public final class ApeTag {
   private static final ItemType[] ITEMTYPE_VALUES = ItemType.values();
 
@@ -37,9 +35,7 @@ public final class ApeTag {
 
   public record Data(
     long offset, long length, PropertyMap properties, List<Picture> pictures, List<Item> items) {
-    /**
-     * Native common accessors use YEAR/TRACK rather than arbitrary DATE/TRACKNUMBER items.
-     */
+    /// Native common accessors use YEAR/TRACK rather than arbitrary DATE/TRACKNUMBER items.
     public Tag basic() {
       var tag =
         typed(

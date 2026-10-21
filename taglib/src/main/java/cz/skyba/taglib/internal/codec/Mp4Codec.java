@@ -19,9 +19,7 @@ import static cz.skyba.taglib.internal.Binary.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * ISO BMFF/iTunes metadata. Media payloads are streamed, never loaded into the metadata tree.
- */
+/// ISO BMFF/iTunes metadata. Media payloads are streamed, never loaded into the metadata tree.
 public final class Mp4Codec implements Codec {
   private NativeLayout nativeLayout;
 
@@ -35,9 +33,7 @@ public final class Mp4Codec implements Codec {
     return properties(file, codec.nativeLayout.movie.atom, codec.nativeLayout.tops);
   }
 
-  /**
-   * Direct properties from the live public atom tree, without reconstructing tag state.
-   */
+  /// Direct properties from the live public atom tree, without reconstructing tag state.
   public static Details readProperties(FileBase owner, Atoms atoms) throws IOException {
     var roots = new ArrayList<Top>();
     var encrypted = new HashSet<Long>();
@@ -780,25 +776,19 @@ public final class Mp4Codec implements Codec {
         : null);
   }
 
-  /**
-   * Native item-factory projection, also used by the mutable AudioFile removal preview.
-   */
+  /// Native item-factory projection, also used by the mutable AudioFile removal preview.
   public static String propertyKeyForItem(String name) {
     return keyFor(name);
   }
 
-  /**
-   * Raw native Stem manifest, including an empty manifest; null denotes an absent atom.
-   */
+  /// Raw native Stem manifest, including an empty manifest; null denotes an absent atom.
   public static byte[] stemData(BinaryFile file) throws IOException {
     var moov = movie(file, tops(file), ReadOptions.DEFAULT, false);
     Atom stem = moov.path("udta", "stem");
     return stem == null ? null : stem.leafData().clone();
   }
 
-  /**
-   * Physical free-form items retained by the native factory's canonical-name erasure.
-   */
+  /// Physical free-form items retained by the native factory's canonical-name erasure.
   public static Map<String, PropertyMap> nonCanonicalPropertyItems(BinaryFile file)
     throws IOException {
     var moov = movie(file, tops(file), ReadOptions.DEFAULT, false);

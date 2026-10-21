@@ -14,17 +14,13 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A mutable APE item with a key, type, read-only flag and independent text and binary fields.
- * Changing only the type leaves both stored fields unchanged. Text and binary replacement
- * operations clear the other payload. Binary inputs and exports are copied.
- */
+/// A mutable typed APE metadata item with independent text and binary storage.
+/// Changing only the type leaves both stored fields unchanged. Text and binary replacement
+/// operations clear the other payload. Binary inputs and exports are copied.
 public final class Item {
   private static final System.Logger LOG = System.getLogger(Item.class.getName());
 
-  /**
-   * The encoded APE item kind.
-   */
+  /// The encoded APE item kind.
   public enum ItemType {
     Text,
     Binary,
@@ -40,30 +36,23 @@ public final class Item {
   private List<String> text = new ArrayList<>();
   private boolean readOnly;
 
-  /**
-   * Creates an empty text item.
-   */
   public Item() {
   }
 
-  /**
-   * Creates an independent APE item from the supplied values.
-   *
-   * @param key    the item key
-   * @param values text values to copy
-   */
+  /// Creates an independent APE item from the supplied values.
+  ///
+  /// @param key    the item key
+  /// @param values text values to copy
   public Item(String key, List<String> values) {
     this.key = Objects.requireNonNull(key);
     text.addAll(List.copyOf(values));
   }
 
-  /**
-   * Creates an independent APE item from the supplied values.
-   *
-   * @param key    the item key
-   * @param value  bytes to copy or decode
-   * @param binary whether the bytes form a binary payload; otherwise decode as ISO-8859-1 text
-   */
+  /// Creates an independent APE item from the supplied values.
+  ///
+  /// @param key    the item key
+  /// @param value  bytes to copy or decode
+  /// @param binary whether the bytes form a binary payload; otherwise decode as ISO-8859-1 text
   public Item(String key, ByteVector value, boolean binary) {
     this.key = Objects.requireNonNull(key);
     if (binary) {
@@ -74,11 +63,9 @@ public final class Item {
     }
   }
 
-  /**
-   * Creates an independent APE item from the supplied values.
-   *
-   * @param other the item to copy
-   */
+  /// Creates an independent APE item from the supplied values.
+  ///
+  /// @param other the item to copy
   public Item(Item other) {
     key = other.key;
     type = other.type;
@@ -111,27 +98,21 @@ public final class Item {
     this.readOnly = readOnly;
   }
 
-  /**
-   * Returns an independent copy of the stored binary field, regardless of the active item type.
-   *
-   * @return copied binary bytes
-   */
+  /// Returns an independent copy of the stored binary field, regardless of the active item type.
+  ///
+  /// @return copied binary bytes
   public ByteVector binaryData() {
     return new ByteVector(value);
   }
 
-  /**
-   * Returns an immutable snapshot of stored text values, regardless of the active item type.
-   *
-   * @return text values
-   */
+  /// Returns an immutable snapshot of stored text values, regardless of the active item type.
+  ///
+  /// @return text values
   public List<String> values() {
     return List.copyOf(text);
   }
 
-  /**
-   * Switches the item to binary, copies the bytes, and clears its text values.
-   */
+  /// Switches the item to binary, copies the bytes, and clears its text values.
   public void setBinaryData(ByteVector value) {
     type = ItemType.Binary;
     this.value = new ByteVector(value);
@@ -142,37 +123,29 @@ public final class Item {
     setValues(List.of(value));
   }
 
-  /**
-   * Switches the item to text, replaces its text values, and clears the binary payload.
-   */
+  /// Switches the item to text, replaces its text values, and clears the binary payload.
   public void setValues(List<String> values) {
     type = ItemType.Text;
     text = new ArrayList<>(List.copyOf(values));
     value.clear();
   }
 
-  /**
-   * Appends a text value, selects the text type and clears the binary payload.
-   *
-   * @param value the text to append
-   */
+  /// Appends a text value, selects the text type and clears the binary payload.
+  ///
+  /// @param value the text to append
   public void appendValue(String value) {
     appendValues(List.of(value));
   }
 
-  /**
-   * Switches the item to text, appends the supplied values, and clears the binary payload.
-   */
+  /// Switches the item to text, appends the supplied values, and clears the binary payload.
   public void appendValues(List<String> values) {
     type = ItemType.Text;
     text.addAll(List.copyOf(values));
     value.clear();
   }
 
-  /**
-   * Tests the active payload; one empty text value counts as empty, while a reserved item never
-   * does.
-   */
+  /// Tests the active payload; one empty text value counts as empty, while a reserved item never
+  /// does.
   public boolean isEmpty() {
     return switch (type) {
       case Text -> text.isEmpty() || text.size() == 1 && text.getFirst().isEmpty();
@@ -186,9 +159,7 @@ public final class Item {
     return type == ItemType.Text && !isEmpty() ? text.getFirst() : "";
   }
 
-  /**
-   * Calculates the serialized item size from its encoded key, value bytes, and fixed header.
-   */
+  /// Calculates the serialized item size from its encoded key, value bytes, and fixed header.
   public int size() {
     int result = 9 + key.length();
     switch (type) {
@@ -207,9 +178,7 @@ public final class Item {
     return result;
   }
 
-  /**
-   * Parses an item without clearing inactive storage, matching reuse semantics.
-   */
+  /// Parses an item without clearing inactive storage, matching reuse semantics.
   public void parse(ByteVector data) {
     parse(data, 0);
   }
@@ -236,9 +205,7 @@ public final class Item {
     }
   }
 
-  /**
-   * Rendering a text item also updates binaryData(), as in Item::render().
-   */
+  /// Rendering a text item also updates binaryData(), as in Item::render().
   public ByteVector render() {
     if (isEmpty()) {
       return new ByteVector();

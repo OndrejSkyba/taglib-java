@@ -15,9 +15,7 @@ import java.util.function.Consumer;
 import static cz.skyba.taglib.internal.Binary.*;
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 
-/**
- * ASF header objects and multi-valued typed attributes; unknown objects survive writes verbatim.
- */
+/// ASF header objects and multi-valued typed attributes; unknown objects survive writes verbatim.
 public final class AsfCodec implements Codec {
   private Header nativeHeader;
 
@@ -281,9 +279,7 @@ public final class AsfCodec implements Codec {
     return new Header(n, objects);
   }
 
-  /**
-   * The native reader follows object counts and actual reads, not the declared header extent.
-   */
+  /// The native reader follows object counts and actual reads, not the declared header extent.
   private static final class NativeReader {
     final BinaryFile file;
     final ReadOptions options;
@@ -502,9 +498,7 @@ public final class AsfCodec implements Codec {
     return read(nativeHeader);
   }
 
-  /**
-   * Captured during the single native constructor parse, including assigned partial state.
-   */
+  /// Captured during the single native constructor parse, including assigned partial state.
   public cz.skyba.taglib.asf.Tag liveTag() throws IOException {
     if (nativeHeader == null) {
       return null;
@@ -589,9 +583,7 @@ public final class AsfCodec implements Codec {
       common);
   }
 
-  /**
-   * Native codec-list parsing keeps the first audio entry of each top-level object.
-   */
+  /// Native codec-list parsing keeps the first audio entry of each top-level object.
   private static CodecDescription codecListFields(byte[] bytes) {
     if (bytes.length <= 20) {
       return null;
@@ -633,9 +625,7 @@ public final class AsfCodec implements Codec {
     return Ascii.stripWhiteSpace(bytes.decodeTerminatedText(UTF_16LE));
   }
 
-  /**
-   * Common getters use exact canonical names while PropertyMap translates case-insensitively.
-   */
+  /// Common getters use exact canonical names while PropertyMap translates case-insensitively.
   public static Tag canonicalCommon(
     PropertyMap properties, List<cz.skyba.taglib.asf.Attribute> attributes) {
     var album = new ArrayList<String>();
@@ -799,9 +789,7 @@ public final class AsfCodec implements Codec {
     return g.equals(EXTENDED) || g.equals(METADATA) || g.equals(LIBRARY);
   }
 
-  /**
-   * Typed ASF API; values keep stream/language identity that PropertyMap cannot express.
-   */
+  /// Typed ASF API; values keep stream/language identity that PropertyMap cannot express.
   public static List<cz.skyba.taglib.asf.Attribute> readAttributes(Path path) throws IOException {
     try (var file = new BinaryFile(path)) {
       var result = new ArrayList<cz.skyba.taglib.asf.Attribute>();
@@ -907,9 +895,7 @@ public final class AsfCodec implements Codec {
     Rewrite.replace(path, 0, header.size, replacement);
   }
 
-  /**
-   * Native save redistributes the complete AttributeListMap into its existing three carriers.
-   */
+  /// Native save redistributes the complete AttributeListMap into its existing three carriers.
   private static void placeAttributes(Header header, List<cz.skyba.taglib.asf.Attribute> values)
     throws IOException {
     var extended = new ArrayList<byte[]>();
@@ -1297,9 +1283,7 @@ public final class AsfCodec implements Codec {
     }
   }
 
-  /**
-   * Native attribute names accepted by removeUnsupportedProperties can include mapped entries.
-   */
+  /// Native attribute names accepted by removeUnsupportedProperties can include mapped entries.
   public static String propertyKeyForAttribute(String name) {
     var mapping = byName(name);
     return mapping == null ? null : mapping.key;
@@ -1310,9 +1294,7 @@ public final class AsfCodec implements Codec {
     return mapping == null ? null : mapping.name;
   }
 
-  /**
-   * Render the live tag from retained objects, with native absolute offsets and I/O order.
-   */
+  /// Render the live tag from retained objects, with native absolute offsets and I/O order.
   public void saveLive(BinaryFile file, cz.skyba.taglib.asf.Tag tag) throws IOException {
     if (nativeHeader == null) {
       throw new TagLibException("ASF has no parsed header to save");

@@ -12,11 +12,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * Mutable ASF audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Mutable ASF audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   public enum Codec {Unknown, WMA1, WMA2, WMA9Pro, WMA9Lossless}
 
@@ -25,38 +22,29 @@ public final class Properties {
   private String codecName = "", codecDescription = "";
   private boolean encrypted;
 
-  /**
-   * Creates zero-valued mutable audio property fields.
-   */
   public Properties() {
   }
 
-  /**
-   * Internal decoded-state adapter; avoids rereading the owning AsfFile's stream.
-   */
+  /// Internal decoded-state adapter; avoids rereading the owning AsfFile's stream.
   Properties(AsfCodec.Details value) {
     set(Objects.requireNonNull(value));
   }
 
-  /**
-   * Reads ASF audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads ASF audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads ASF audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads ASF audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(path)) {
@@ -66,25 +54,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads ASF audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads ASF audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads ASF audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads ASF audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(stream)) {
@@ -167,11 +151,9 @@ public final class Properties {
     bitsPerSample = value;
   }
 
-  /**
-   * Selects a codec using its WAVE format number, not the Codec enum ordinal.
-   *
-   * @param value the WAVE codec code
-   */
+  /// Selects a codec using its WAVE format number, not the Codec enum ordinal.
+  ///
+  /// @param value the WAVE codec code
   public void setCodec(int value) {
     codec = switch (value) {
       case 0x160 -> Codec.WMA1;
@@ -194,12 +176,6 @@ public final class Properties {
     encrypted = value;
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return new AudioProperties(length, bitrate, sampleRate, channels, bitsPerSample, codec == Codec.WMA9Lossless);
   }

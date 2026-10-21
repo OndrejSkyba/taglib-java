@@ -5,20 +5,16 @@ import cz.skyba.taglib.toolkit.ByteVector;
 
 import java.util.Objects;
 
-/**
- * A parsed Xing, Info or VBRI header with unsigned 32-bit totals represented as Java longs.
- */
+/// A parsed Xing, Info or VBRI header with unsigned 32-bit totals represented as Java longs.
 public final class XingHeader {
   public enum HeaderType {Invalid, Xing, VBRI}
 
   private final HeaderType type;
   private final long frames, size;
 
-  /**
-   * Decodes header fields from the supplied bytes.
-   *
-   * @param data encoded header bytes
-   */
+  /// Decodes header fields from the supplied bytes.
+  ///
+  /// @param data encoded header bytes
   public XingHeader(ByteVector data) {
     Objects.requireNonNull(data);
     int offset = data.find(new ByteVector("Xing"));

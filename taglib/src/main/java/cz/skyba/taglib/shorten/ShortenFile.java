@@ -12,66 +12,56 @@ import cz.skyba.taglib.toolkit.IOStream;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * A Shorten file reader with audio properties and an empty metadata view.
- * Path construction owns storage; stream construction borrows it. Metadata saving is unsupported.
- * Audio properties are parsed even when optional property reading is disabled.
- */
+/// A Shorten file reader with audio properties and an empty metadata view.
+/// Path construction owns storage; stream construction borrows it. Metadata saving is unsupported.
+/// Audio properties are parsed even when optional property reading is disabled.
 public class ShortenFile extends FileBase {
   private final IOStream source;
   private final boolean owned;
   private final Tag tag;
   private final Properties details;
 
-  /**
-   * Opens a Shorten file and owns the file handle. Uses default read options.
-   * Audio property parsing is required for this format.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a Shorten file and owns the file handle. Uses default read options.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public ShortenFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Shorten file and owns the file handle.
-   * Audio property parsing is required for this format.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a Shorten file and owns the file handle.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public ShortenFile(Path path, ReadOptions options) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options);
   }
 
-  /**
-   * Opens a Shorten file over a borrowed stream that remains open when this file closes. Uses default read options.
-   * Audio property parsing is required for this format.
-   *
-   * @param source the open, seekable audio stream
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a Shorten file over a borrowed stream that remains open when this file closes. Uses default read options.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param source the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public ShortenFile(IOStream source) {
     this(source, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Shorten file over a borrowed stream that remains open when this file closes.
-   * Audio property parsing is required for this format.
-   *
-   * @param source  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a Shorten file over a borrowed stream that remains open when this file closes.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param source  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public ShortenFile(IOStream source, ReadOptions options) {
     this(source, false, options);
   }
@@ -102,11 +92,7 @@ public class ShortenFile extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -126,14 +112,12 @@ public class ShortenFile extends FileBase {
     }
   }
 
-  /**
-   * Checks for a recognizable Shorten header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param source the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable Shorten header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param source the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream source) {
     if (source == null || !source.isOpen()) {
       return false;

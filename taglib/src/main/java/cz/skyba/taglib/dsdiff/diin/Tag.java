@@ -10,9 +10,7 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * Mutable DSDIFF Edited Master information. Only title and artist retain values.
- */
+/// Mutable DSDIFF Edited Master information. Only title and artist retain values.
 public class Tag extends TagBase {
   private static final System.Logger LOG = System.getLogger(Tag.class.getName());
 
@@ -92,23 +90,19 @@ public class Tag extends TagBase {
     LOG.log(DEBUG, () -> "Ignoring unsupported " + field + " field.");
   }
 
-  /**
-   * Exports title and artist, including fields whose single value is empty.
-   *
-   * @return the DIIN text fields
-   */
+  /// Exports title and artist, including fields whose single value is empty.
+  ///
+  /// @return the DIIN text fields
   @Override
   public PropertyMap properties() {
     return PropertyMap.builder().put("TITLE", title).put("ARTIST", artist).build();
   }
 
-  /**
-   * Replaces stored title and artist fields directly, without invoking common-field setter hooks.
-   * Changes are in memory and require saving the owner.
-   *
-   * @param original the complete replacement property map
-   * @return accepted and rejected text values
-   */
+  /// Replaces stored title and artist fields directly, without invoking common-field setter hooks.
+  /// Changes are in memory and require saving the owner.
+  ///
+  /// @param original the complete replacement property map
+  /// @return accepted and rejected text values
   @Override
   public PropertyUpdateResult replaceProperties(PropertyMap original) {
     var values = new MutablePropertyMap(original);

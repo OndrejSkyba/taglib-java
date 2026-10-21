@@ -2,9 +2,7 @@
 package cz.skyba.taglib.internal;
 
 
-/**
- * Shared bounded wire helpers for native elements and metadata transactions.
- */
+/// Shared bounded wire helpers for native elements and metadata transactions.
 public final class MatroskaWire {
   private MatroskaWire() {
   }

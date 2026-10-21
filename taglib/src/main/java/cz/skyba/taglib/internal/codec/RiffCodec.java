@@ -19,9 +19,7 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * RIFF WAVE/RF64/BW64 and IFF AIFF/AIFC, with bounded metadata reads.
- */
+/// RIFF WAVE/RF64/BW64 and IFF AIFF/AIFC, with bounded metadata reads.
 public final class RiffCodec implements Codec {
   private static final Set<String> LOSSLESS_AIFF_COMPRESSION =
     Set.of("NONE", "sowt", "twos", "fl32", "fl64", "FL32", "FL64", "in24", "in32");
@@ -101,9 +99,7 @@ public final class RiffCodec implements Codec {
     }
   }
 
-  /**
-   * Reuses native constructor layout/tag reads before retaining the AIFF properties.
-   */
+  /// Reuses native constructor layout/tag reads before retaining the AIFF properties.
   public static AiffDetails aiffDetails(BinaryFile file, ReadStyle style) throws IOException {
     var codec = new RiffCodec();
     var layout = layout(file, file.initialPosition(), true);
@@ -113,9 +109,7 @@ public final class RiffCodec implements Codec {
   private record ReadResult(AudioMetadata snapshot, AiffDetails aiffDetails) {
   }
 
-  /**
-   * Parsed WAV payloads; like upstream the last duplicate broadcast chunk wins.
-   */
+  /// Parsed WAV payloads; like upstream the last duplicate broadcast chunk wins.
   public static WavDetails wavDetails(Path path, ReadOptions options) throws IOException {
     try (var file = new BinaryFile(path)) {
       return wavDetails(file, options);
@@ -419,9 +413,7 @@ public final class RiffCodec implements Codec {
     return aiffFromChunks(format, streamSize);
   }
 
-  /**
-   * Shared native AIFF arithmetic for the live chunk owner and snapshot adapter.
-   */
+  /// Shared native AIFF arithmetic for the live chunk owner and snapshot adapter.
   public static AiffDetails aiffFromChunks(byte[] format, long streamSize) {
     if (format.length < 18 || streamSize == 0) {
       return new AiffDetails(AudioProperties.EMPTY, 0, new byte[0], "");
@@ -458,9 +450,7 @@ public final class RiffCodec implements Codec {
       samples, type, name);
   }
 
-  /**
-   * Round a bounded positive audio calculation to the pinned Linux long-double precision.
-   */
+  /// Round a bounded positive audio calculation to the pinned Linux long-double precision.
   private static BigDecimal extended(BigDecimal value) {
     if (value.signum() == 0) {
       return BigDecimal.ZERO;
@@ -508,9 +498,7 @@ public final class RiffCodec implements Codec {
     write(file, properties, pictures, null, null, true);
   }
 
-  /**
-   * Null payloads preserve their values; rewriteTags=false edits only WAV broadcast chunks.
-   */
+  /// Null payloads preserve their values; rewriteTags=false edits only WAV broadcast chunks.
   public void write(
     Path path,
     PropertyMap properties,
@@ -713,9 +701,7 @@ public final class RiffCodec implements Codec {
     }
   }
 
-  /**
-   * removeChunk(name) removes backwards, updating the size until the final anchor disappears.
-   */
+  /// removeChunk(name) removes backwards, updating the size until the final anchor disappears.
   private static void removeOnlyTagChunks(BinaryFile file, Layout layout) {
     var remaining = new ArrayList<>(layout.chunks);
     for (String id : List.of("ID3 ", "id3 ")) {

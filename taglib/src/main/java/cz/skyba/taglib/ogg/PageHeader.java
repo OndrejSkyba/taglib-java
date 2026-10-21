@@ -12,11 +12,9 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * Mutable Ogg page flags, serial number, granule position and packet lacing.
- * Parsed size and validity describe the last read header; setters do not recalculate them.
- * Rendering creates a header with a zero checksum for the page renderer to fill.
- */
+/// A mutable Ogg page header for parsing and serialization.
+/// Parsed size and validity describe the last read header; setters do not recalculate them.
+/// Rendering creates a header with a zero checksum for the page renderer to fill.
 public final class PageHeader {
   private static final System.Logger LOG = System.getLogger(PageHeader.class.getName());
 
@@ -25,52 +23,42 @@ public final class PageHeader {
   private int sequence = -1, size, dataSize;
   private List<Integer> packetSizes = List.of();
 
-  /**
-   * Creates an unparsed header with default fields. This overload does not read storage.
-   */
+  /// Creates an unparsed header with default fields. This overload does not read storage.
   public PageHeader() {
   }
 
-  /**
-   * Creates an unparsed header with default fields. This overload does not read storage.
-   *
-   * @param file the source file, unused without an offset
-   */
+  /// Creates an unparsed header with default fields. This overload does not read storage.
+  ///
+  /// @param file the source file, unused without an offset
   public PageHeader(OggFile file) {
     this(file, -1);
   }
 
-  /**
-   * Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The source is borrowed and its cursor can move.
-   *
-   * @param file   the source file, unused without an offset
-   * @param offset the page-header byte offset
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The source is borrowed and its cursor can move.
+  ///
+  /// @param file   the source file, unused without an offset
+  /// @param offset the page-header byte offset
+  /// @throws java.io.UncheckedIOException if storage access fails
   public PageHeader(OggFile file, long offset) {
     this(file == null ? null : file.pageStream(), offset);
   }
 
-  /**
-   * Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The source is borrowed and its cursor can move.
-   *
-   * @param stream the borrowed source, or null for an unparsed header
-   * @param offset the page-header byte offset
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The source is borrowed and its cursor can move.
+  ///
+  /// @param stream the borrowed source, or null for an unparsed header
+  /// @param offset the page-header byte offset
+  /// @throws java.io.UncheckedIOException if storage access fails
   public PageHeader(IOStream stream, long offset) {
     if (stream != null && offset >= 0) {
       read(stream, offset);
     }
   }
 
-  /**
-   * Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The temporary file handle is closed after reading.
-   *
-   * @param path   the input file
-   * @param offset the page-header byte offset
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an Ogg page header at the specified byte offset. Negative offsets leave an unparsed header. The temporary file handle is closed after reading.
+  ///
+  /// @param path   the input file
+  /// @param offset the page-header byte offset
+  /// @throws java.io.UncheckedIOException if storage access fails
   public PageHeader(Path path, long offset) {
     try (var stream = new FileStream(Objects.requireNonNull(path), true)) {
       if (offset >= 0) {
@@ -79,12 +67,10 @@ public final class PageHeader {
     }
   }
 
-  /**
-   * Parses an encoded header from byte offset zero of copied input data.
-   *
-   * @param data encoded page-header bytes
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an encoded header from byte offset zero of copied input data.
+  ///
+  /// @param data encoded page-header bytes
+  /// @throws java.io.UncheckedIOException if storage access fails
   public PageHeader(byte[] data) {
     this(new ByteVectorStream(data), 0);
   }
@@ -97,12 +83,10 @@ public final class PageHeader {
     return packetSizes;
   }
 
-  /**
-   * Copies packet fragment sizes used to render page lacing. Parsed size and validity are unchanged.
-   *
-   * @param sizes nonnegative fragment byte counts
-   * @throws IllegalArgumentException if a count is negative
-   */
+  /// Copies packet fragment sizes used to render page lacing. Parsed size and validity are unchanged.
+  ///
+  /// @param sizes nonnegative fragment byte counts
+  /// @throws IllegalArgumentException if a count is negative
   public void setPacketSizes(List<Integer> sizes) {
     var copy = List.copyOf(sizes);
     if (copy.stream().anyMatch(n -> n < 0)) {
@@ -175,10 +159,8 @@ public final class PageHeader {
     return dataSize;
   }
 
-  /**
-   * Encodes packet lacing and header flags; the returned header leaves the CRC field zero for the
-   * page renderer.
-   */
+  /// Encodes packet lacing and header flags; the returned header leaves the CRC field zero for the
+  /// page renderer.
   public ByteVector render() {
     var laces = new ByteArrayOutputStream();
     for (int i = 0; i < packetSizes.size(); i++) {

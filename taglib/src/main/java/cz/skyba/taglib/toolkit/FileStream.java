@@ -13,13 +13,11 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * A file-backed byte stream that owns its file channel.
- * Path opening attempts read/write access and falls back to read-only access unless read-only
- * access was requested explicitly. Storage failures preserve their {@link IOException}
- * cause in {@link UncheckedIOException}. The logical cursor is independent of the channel's
- * position. Closing never saves audio metadata.
- */
+/// A file-backed byte stream that owns its file channel.
+/// Path opening attempts read/write access and falls back to read-only access unless read-only
+/// access was requested explicitly. Storage failures preserve their [IOException]
+/// cause in [UncheckedIOException]. The logical cursor is independent of the channel's
+/// position. Closing never saves audio metadata.
 public class FileStream extends IOStream {
   private static final System.Logger LOG = System.getLogger(FileStream.class.getName());
 
@@ -31,35 +29,29 @@ public class FileStream extends IOStream {
   private long position;
   private boolean eof;
 
-  /**
-   * Returns the native-compatible block size. Internal file shifts may use larger batches.
-   *
-   * @return the buffer size in bytes
-   */
+  /// Returns the native-compatible block size. Internal file shifts may use larger batches.
+  ///
+  /// @return the buffer size in bytes
   protected static int bufferSize() {
     return BUFFER_SIZE;
   }
 
-  /**
-   * Opens a file channel for the supplied path.
-   * Writable opening falls back to read-only access if write access is unavailable.
-   *
-   * @param path the existing file to open
-   * @throws UncheckedIOException if opening or inspecting storage fails
-   * @see #FileStream(Path, boolean)
-   */
+  /// Opens a file channel for the supplied path.
+  /// Writable opening falls back to read-only access if write access is unavailable.
+  ///
+  /// @param path the existing file to open
+  /// @throws UncheckedIOException if opening or inspecting storage fails
+  /// @see #FileStream(Path, boolean)
   public FileStream(Path path) {
     this(path, false);
   }
 
-  /**
-   * Opens a file channel for the supplied path.
-   * Writable opening falls back to read-only access if write access is unavailable.
-   *
-   * @param path         the existing file to open
-   * @param openReadOnly whether to request read-only access
-   * @throws UncheckedIOException if opening or inspecting storage fails
-   */
+  /// Opens a file channel for the supplied path.
+  /// Writable opening falls back to read-only access if write access is unavailable.
+  ///
+  /// @param path         the existing file to open
+  /// @param openReadOnly whether to request read-only access
+  /// @throws UncheckedIOException if opening or inspecting storage fails
   public FileStream(Path path, boolean openReadOnly) {
     this.path = Objects.requireNonNull(path);
     if (!openReadOnly) {
@@ -79,30 +71,26 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Wraps a readable channel and takes ownership when initialization succeeds.
-   * The logical cursor starts at the channel's current position. The stream is unnamed.
-   * A rejected channel remains caller-owned; a non-writable channel is accepted as read-only.
-   *
-   * @param channel the readable channel to own
-   * @throws UncheckedIOException                          if opening or inspecting storage fails
-   * @throws java.nio.channels.NonReadableChannelException if the channel is not readable
-   * @see #FileStream(FileChannel, boolean)
-   */
+  /// Wraps a readable channel and takes ownership when initialization succeeds.
+  /// The logical cursor starts at the channel's current position. The stream is unnamed.
+  /// A rejected channel remains caller-owned; a non-writable channel is accepted as read-only.
+  ///
+  /// @param channel the readable channel to own
+  /// @throws UncheckedIOException                          if opening or inspecting storage fails
+  /// @throws java.nio.channels.NonReadableChannelException if the channel is not readable
+  /// @see #FileStream(FileChannel, boolean)
   public FileStream(FileChannel channel) {
     this(channel, false);
   }
 
-  /**
-   * Wraps a readable channel and takes ownership when initialization succeeds.
-   * The logical cursor starts at the channel's current position. The stream is unnamed.
-   * A rejected channel remains caller-owned; a non-writable channel is accepted as read-only.
-   *
-   * @param channel      the readable channel to own
-   * @param openReadOnly whether to request read-only access
-   * @throws UncheckedIOException                          if opening or inspecting storage fails
-   * @throws java.nio.channels.NonReadableChannelException if the channel is not readable
-   */
+  /// Wraps a readable channel and takes ownership when initialization succeeds.
+  /// The logical cursor starts at the channel's current position. The stream is unnamed.
+  /// A rejected channel remains caller-owned; a non-writable channel is accepted as read-only.
+  ///
+  /// @param channel      the readable channel to own
+  /// @param openReadOnly whether to request read-only access
+  /// @throws UncheckedIOException                          if opening or inspecting storage fails
+  /// @throws java.nio.channels.NonReadableChannelException if the channel is not readable
   @SuppressWarnings("ResultOfMethodCallIgnored")
   public FileStream(FileChannel channel, boolean openReadOnly) {
     path = null;
@@ -139,15 +127,13 @@ public class FileStream extends IOStream {
     return channel != null && channel.isOpen();
   }
 
-  /**
-   * Reads available bytes and advances the logical cursor. A closed stream returns empty data.
-   * Seeking or clearing stream status permits another read after end of input.
-   *
-   * @param count the maximum nonnegative byte count
-   * @return available bytes, or an empty vector at end of input or when closed
-   * @throws IllegalArgumentException if the byte count is negative
-   * @throws UncheckedIOException     if storage access fails
-   */
+  /// Reads available bytes and advances the logical cursor. A closed stream returns empty data.
+  /// Seeking or clearing stream status permits another read after end of input.
+  ///
+  /// @param count the maximum nonnegative byte count
+  /// @return available bytes, or an empty vector at end of input or when closed
+  /// @throws IllegalArgumentException if the byte count is negative
+  /// @throws UncheckedIOException     if storage access fails
   @Override
   public ByteVector readBlock(long count) {
     if (count < 0) {
@@ -193,13 +179,11 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Writes bytes at the logical cursor and advances it. The call has no effect when
-   * the stream is closed or read-only.
-   *
-   * @param data bytes to write
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Writes bytes at the logical cursor and advances it. The call has no effect when
+  /// the stream is closed or read-only.
+  ///
+  /// @param data bytes to write
+  /// @throws UncheckedIOException if storage access fails
   @Override
   public void writeBlock(ByteVector data) {
     if (!isOpen()) {
@@ -232,17 +216,15 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Inserts bytes or replaces a span immediately, shifting the file tail as needed.
-   * The call has no effect when the stream is closed or read-only. The cursor is not restored.
-   *
-   * @param data    bytes to insert
-   * @param start   the nonnegative byte offset
-   * @param replace the nonnegative byte count to replace
-   * @throws IllegalArgumentException if the span is negative
-   * @throws ArithmeticException      if span arithmetic overflows
-   * @throws UncheckedIOException     if storage access fails
-   */
+  /// Inserts bytes or replaces a span immediately, shifting the file tail as needed.
+  /// The call has no effect when the stream is closed or read-only. The cursor is not restored.
+  ///
+  /// @param data    bytes to insert
+  /// @param start   the nonnegative byte offset
+  /// @param replace the nonnegative byte count to replace
+  /// @throws IllegalArgumentException if the span is negative
+  /// @throws ArithmeticException      if span arithmetic overflows
+  /// @throws UncheckedIOException     if storage access fails
   @Override
   public void insert(ByteVector data, long start, long replace) {
     if (!isOpen()) {
@@ -290,16 +272,14 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Removes a span immediately, shifts remaining bytes and resizes the file.
-   * The resulting cursor is at the new end of the shifted tail. A closed stream is unchanged.
-   *
-   * @param start the nonnegative starting byte offset
-   * @param count the nonnegative byte count to remove
-   * @throws IllegalArgumentException    if the span is negative
-   * @throws UncheckedIOException        if storage access fails
-   * @throws NonWritableChannelException if the channel cannot be resized
-   */
+  /// Removes a span immediately, shifts remaining bytes and resizes the file.
+  /// The resulting cursor is at the new end of the shifted tail. A closed stream is unchanged.
+  ///
+  /// @param start the nonnegative starting byte offset
+  /// @param count the nonnegative byte count to remove
+  /// @throws IllegalArgumentException    if the span is negative
+  /// @throws UncheckedIOException        if storage access fails
+  /// @throws NonWritableChannelException if the channel cannot be resized
   @Override
   public void removeBlock(long start, long count) {
     if (!isOpen()) {
@@ -327,16 +307,14 @@ public class FileStream extends IOStream {
     truncate(writePosition);
   }
 
-  /**
-   * Moves the logical cursor relative to the selected origin and clears end-of-input status.
-   * The call has no effect when the stream is closed.
-   *
-   * @param offset the byte offset relative to the origin
-   * @param origin the reference origin
-   * @throws IllegalArgumentException if the resulting offset is negative
-   * @throws ArithmeticException      if offset arithmetic overflows
-   * @throws UncheckedIOException     if querying storage fails
-   */
+  /// Moves the logical cursor relative to the selected origin and clears end-of-input status.
+  /// The call has no effect when the stream is closed.
+  ///
+  /// @param offset the byte offset relative to the origin
+  /// @param origin the reference origin
+  /// @throws IllegalArgumentException if the resulting offset is negative
+  /// @throws ArithmeticException      if offset arithmetic overflows
+  /// @throws UncheckedIOException     if querying storage fails
   @Override
   public void seek(long offset, Position origin) {
     if (!isOpen()) {
@@ -369,12 +347,10 @@ public class FileStream extends IOStream {
     return isOpen() ? position : 0;
   }
 
-  /**
-   * Returns the stored byte length, restoring the logical cursor and clearing end-of-input status.
-   *
-   * @return the byte length, or zero when closed
-   * @throws UncheckedIOException if querying storage fails
-   */
+  /// Returns the stored byte length, restoring the logical cursor and clearing end-of-input status.
+  ///
+  /// @return the byte length, or zero when closed
+  /// @throws UncheckedIOException if querying storage fails
   @Override
   public long length() {
     return fileLength();
@@ -394,15 +370,13 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Resizes storage immediately without moving the logical cursor. Extension introduces zero
-   * bytes. A closed stream is unchanged.
-   *
-   * @param length the new nonnegative byte length
-   * @throws IllegalArgumentException    if the length is negative
-   * @throws UncheckedIOException        if storage access fails
-   * @throws NonWritableChannelException if the channel cannot be resized
-   */
+  /// Resizes storage immediately without moving the logical cursor. Extension introduces zero
+  /// bytes. A closed stream is unchanged.
+  ///
+  /// @param length the new nonnegative byte length
+  /// @throws IllegalArgumentException    if the length is negative
+  /// @throws UncheckedIOException        if storage access fails
+  /// @throws NonWritableChannelException if the channel cannot be resized
   @Override
   public void truncate(long length) {
     if (length < 0) {
@@ -428,11 +402,9 @@ public class FileStream extends IOStream {
     }
   }
 
-  /**
-   * Closes the owned channel. Repeated calls have no effect.
-   *
-   * @throws UncheckedIOException if closing storage fails
-   */
+  /// Closes the owned channel. Repeated calls have no effect.
+  ///
+  /// @throws UncheckedIOException if closing storage fails
   @Override
   public void close() {
     if (channel != null) {

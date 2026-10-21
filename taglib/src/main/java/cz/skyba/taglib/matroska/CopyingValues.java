@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/**
- * Wrapper-copy boundaries shared by owners; each owner controls its own notification timing.
- */
+/// Wrapper-copy boundaries shared by owners; each owner controls its own notification timing.
 final class CopyingValues<T> {
   private final ArrayList<T> values = new ArrayList<>();
   private final Function<T, T> copy;

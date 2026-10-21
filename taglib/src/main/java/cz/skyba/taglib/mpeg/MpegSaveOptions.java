@@ -9,33 +9,27 @@ import cz.skyba.taglib.mpeg.MpegFile.TagType;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Immutable options for saving MPEG metadata in place.
- * Selecting a tag family controls which in-memory tag is written. The unselected-tag
- * policy determines whether other supported tag families remain in storage.
- *
- * @param tags           tag families to save; an empty set selects none
- * @param unselectedTags whether unselected tag families are removed or preserved
- * @param id3v2Version   the ID3v2 output version
- * @param duplicateTags  whether missing common fields are copied between selected ID3 tags
- */
+/// Immutable options for saving MPEG metadata in place.
+/// Selecting a tag family controls which in-memory tag is written. The unselected-tag
+/// policy determines whether other supported tag families remain in storage.
+///
+/// @param tags           tag families to save; an empty set selects none
+/// @param unselectedTags whether unselected tag families are removed or preserved
+/// @param id3v2Version   the ID3v2 output version
+/// @param duplicateTags  whether missing common fields are copied between selected ID3 tags
 public record MpegSaveOptions(
   Set<TagType> tags,
   StripTags unselectedTags,
   Tag.Version id3v2Version,
   DuplicateTags duplicateTags) {
-  /**
-   * All supported tag families are selected, unselected tags are removed, and ID3v2 output
-   * uses version 4. Missing common fields are copied between selected ID3 tags.
-   */
+  /// All supported tag families are selected, unselected tags are removed, and ID3v2 output
+  /// uses version 4. Missing common fields are copied between selected ID3 tags.
   public static final MpegSaveOptions DEFAULT =
     new MpegSaveOptions(Set.of(TagType.values()), StripTags.STRIP_OTHERS, Tag.Version.V4, DuplicateTags.DUPLICATE);
 
-  /**
-   * Creates save options. Constructing options does not modify a file.
-   *
-   * @throws NullPointerException if the tag set, a tag element, a policy or the ID3v2 version is null
-   */
+  /// Creates save options. Constructing options does not modify a file.
+  ///
+  /// @throws NullPointerException if the tag set, a tag element, a policy or the ID3v2 version is null
   public MpegSaveOptions {
     tags = Set.copyOf(tags);
     Objects.requireNonNull(unselectedTags);

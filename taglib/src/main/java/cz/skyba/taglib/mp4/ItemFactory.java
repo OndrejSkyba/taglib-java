@@ -9,15 +9,11 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Extensible MP4 item decoding, serialization and common-property mappings.
- * Override parser and renderer hooks to support additional item names or encodings. Shared
- * instances reuse lazily initialized mappings; custom factory instances keep their own mappings.
- */
+/// Extensible MP4 item decoding, serialization and common-property mappings.
+/// Override parser and renderer hooks to support additional item names or encodings. Shared
+/// instances reuse lazily initialized mappings; custom factory instances keep their own mappings.
 public class ItemFactory {
-  /**
-   * The parsing and rendering strategy associated with an item name.
-   */
+  /// The parsing and rendering strategy associated with an item name.
   protected enum ItemHandlerType {
     Unknown,
     FreeForm,
@@ -36,19 +32,13 @@ public class ItemFactory {
     Text
   }
 
-  /**
-   * Parsed MP4 name and item.
-   */
+  /// Parsed MP4 name and item.
   public record ParsedItem(String name, Item item) {
   }
 
-  /**
-   * Property conversion result with copied atom-name bytes.
-   */
+  /// Property conversion result with copied atom-name bytes.
   public record PropertyItem(ByteVector name, Item item) {
-    /**
-     * Creates a conversion result, copying mutable names or text-value containers.
-     */
+    /// Creates a conversion result, copying mutable names or text-value containers.
     public PropertyItem {
       name = new ByteVector(name);
     }
@@ -59,20 +49,14 @@ public class ItemFactory {
     }
   }
 
-  /**
-   * Property conversion result with copied text values.
-   */
+  /// Property conversion result with copied text values.
   public record PropertyValue(String key, List<String> values) {
-    /**
-     * Creates a conversion result, copying the text-value list and rejecting null elements.
-     */
+    /// Creates a conversion result, copying the text-value list and rejecting null elements.
     public PropertyValue {
       values = List.copyOf(values);
     }
 
-    /**
-     * Returns an independent mutable copy of the text-value list.
-     */
+    /// Returns an independent mutable copy of the text-value list.
     @Override
     public List<String> values() {
       return new ArrayList<>(values);
@@ -181,11 +165,9 @@ public class ItemFactory {
   protected ItemFactory() {
   }
 
-  /**
-   * Returns the shared default item factory.
-   *
-   * @return the factory
-   */
+  /// Returns the shared default item factory.
+  ///
+  /// @return the factory
   public static ItemFactory instance() {
     return INSTANCE;
   }
@@ -194,12 +176,10 @@ public class ItemFactory {
     return value.decodeTerminatedText(ISO_8859_1);
   }
 
-  /**
-   * Selects the registered handler for an item name.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @return the registered mapping or fallback
-   */
+  /// Selects the registered handler for an item name.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @return the registered mapping or fallback
   protected synchronized ItemHandlerType handlerTypeForName(ByteVector name) {
     if (handlers == null) {
       handlers = new TreeMap<>(nameHandlerMap());
@@ -219,24 +199,20 @@ public class ItemFactory {
     names = reverse;
   }
 
-  /**
-   * Looks up the common property key for an item name.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @return the registered mapping or fallback
-   */
+  /// Looks up the common property key for an item name.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @return the registered mapping or fallback
   public String propertyKeyForName(ByteVector name) {
     cacheProperties();
     String key = properties.getOrDefault(name, "");
     return key.isEmpty() && name.startsWith(new ByteVector(FREE)) ? latin(name.mid(FREE.length())) : key;
   }
 
-  /**
-   * Maps a common property key to an atom name, using a free-form item name when needed.
-   *
-   * @param key the property key
-   * @return the registered mapping or fallback
-   */
+  /// Maps a common property key to an atom name, using a free-form item name when needed.
+  ///
+  /// @param key the property key
+  /// @return the registered mapping or fallback
   public ByteVector nameForPropertyKey(String key) {
     cacheProperties();
     ByteVector name = names.get(key);
@@ -244,12 +220,10 @@ public class ItemFactory {
       ? ByteVector.fromText(FREE + key, UTF_8) : new ByteVector();
   }
 
-  /**
-   * Builds a new mapping used to initialize this factory's lookup cache.
-   * Subclasses can supply additional names or mappings.
-   *
-   * @return atom-name mappings
-   */
+  /// Builds a new mapping used to initialize this factory's lookup cache.
+  /// Subclasses can supply additional names or mappings.
+  ///
+  /// @return atom-name mappings
   protected Map<ByteVector, ItemHandlerType> nameHandlerMap() {
     var result = new TreeMap<ByteVector, ItemHandlerType>();
     result.put(new ByteVector("----"), ItemHandlerType.FreeForm);
@@ -283,12 +257,10 @@ public class ItemFactory {
     return result;
   }
 
-  /**
-   * Builds a new mapping used to initialize this factory's lookup cache.
-   * Subclasses can supply additional names or mappings.
-   *
-   * @return atom-name mappings
-   */
+  /// Builds a new mapping used to initialize this factory's lookup cache.
+  /// Subclasses can supply additional names or mappings.
+  ///
+  /// @return atom-name mappings
   protected Map<ByteVector, String> namePropertyMap() {
     var result = new TreeMap<ByteVector, String>();
     result.put(new ByteVector("©nam"), "TITLE");
@@ -366,24 +338,20 @@ public class ItemFactory {
     return result;
   }
 
-  /**
-   * Decodes an item atom using its name and this factory's registered handler.
-   *
-   * @param atom the parsed item descriptor
-   * @param data encoded item content without its outer atom header
-   * @return the decoded name and item; unsupported content can yield a void item
-   */
+  /// Decodes an item atom using its name and this factory's registered handler.
+  ///
+  /// @param atom the parsed item descriptor
+  /// @param data encoded item content without its outer atom header
+  /// @return the decoded name and item; unsupported content can yield a void item
   public ParsedItem parseItem(Atom atom, ByteVector data) {
     return HANDLER_SPECS.get(handlerTypeForName(atom.name())).parser.parse(atom, data);
   }
 
-  /**
-   * Serializes a named item into metadata atom bytes.
-   *
-   * @param itemName the item name
-   * @param item     the typed value to encode
-   * @return encoded atom bytes, or an empty vector for an unsupported handler
-   */
+  /// Serializes a named item into metadata atom bytes.
+  ///
+  /// @param itemName the item name
+  /// @param item     the typed value to encode
+  /// @return encoded atom bytes, or an empty vector for an unsupported handler
   public ByteVector renderItem(String itemName, Item item) {
     if (itemName.startsWith("----")) {
       return renderFreeForm(itemName, item);
@@ -397,13 +365,11 @@ public class ItemFactory {
       && name.at(2) == '-' && name.at(3) == '-' ? ItemHandlerType.FreeForm : handlerTypeForName(name);
   }
 
-  /**
-   * Converts a common property key and text values to a typed item.
-   *
-   * @param key    the property key
-   * @param values property values
-   * @return an atom name and item; a void item indicates rejection
-   */
+  /// Converts a common property key and text values to a typed item.
+  ///
+  /// @param key    the property key
+  /// @param values property values
+  /// @return an atom name and item; a void item indicates rejection
   public PropertyItem itemFromProperty(String key, List<String> values) {
     values = List.copyOf(values);
     ByteVector name = nameForPropertyKey(key);
@@ -417,13 +383,11 @@ public class ItemFactory {
     return new PropertyItem(name, item);
   }
 
-  /**
-   * Converts a named typed item to its common text-property representation.
-   *
-   * @param name the atom-name bytes
-   * @param item the item to convert
-   * @return a property key and copied values; an empty key indicates no mapping
-   */
+  /// Converts a named typed item to its common text-property representation.
+  ///
+  /// @param name the atom-name bytes
+  /// @param item the item to convert
+  /// @return a property key and copied values; an empty key indicates no mapping
   public PropertyValue itemToProperty(ByteVector name, Item item) {
     String key = propertyKeyForName(name);
     if (!key.isEmpty()) {
@@ -432,378 +396,310 @@ public class ItemFactory {
     return new PropertyValue("", List.of());
   }
 
-  /**
-   * Decodes child data atoms from encoded item content.
-   *
-   * @param data the encoded bytes or payload
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content.
+  ///
+  /// @param data the encoded bytes or payload
+  /// @return decoded values
   protected static List<AtomData> parseData2(ByteVector data) {
     return ItemAtomCodec.parseData2(data);
   }
 
-  /**
-   * Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied.
-   *
-   * @param data          the encoded bytes or payload
-   * @param expectedFlags the selected type flags, or a negative value for any type
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied.
+  ///
+  /// @param data          the encoded bytes or payload
+  /// @param expectedFlags the selected type flags, or a negative value for any type
+  /// @return decoded values
   protected static List<AtomData> parseData2(ByteVector data, int expectedFlags) {
     return ItemAtomCodec.parseData2(data, expectedFlags);
   }
 
-  /**
-   * Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied. Free-form items include additional name and meaning children.
-   *
-   * @param data          the encoded bytes or payload
-   * @param expectedFlags the selected type flags, or a negative value for any type
-   * @param freeForm      whether the content uses a free-form item layout
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied. Free-form items include additional name and meaning children.
+  ///
+  /// @param data          the encoded bytes or payload
+  /// @param expectedFlags the selected type flags, or a negative value for any type
+  /// @param freeForm      whether the content uses a free-form item layout
+  /// @return decoded values
   protected static List<AtomData> parseData2(ByteVector data, int expectedFlags, boolean freeForm) {
     return ItemAtomCodec.parseData2(data, expectedFlags, freeForm);
   }
 
-  /**
-   * Decodes child data atoms from encoded item content.
-   *
-   * @param data the encoded bytes or payload
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content.
+  ///
+  /// @param data the encoded bytes or payload
+  /// @return decoded values
   protected static List<ByteVector> parseData(ByteVector data) {
     return ItemAtomCodec.parseData(data);
   }
 
-  /**
-   * Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied.
-   *
-   * @param data  the encoded bytes or payload
-   * @param flags the data-type flags
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied.
+  ///
+  /// @param data  the encoded bytes or payload
+  /// @param flags the data-type flags
+  /// @return decoded values
   protected static List<ByteVector> parseData(ByteVector data, int flags) {
     return ItemAtomCodec.parseData(data, flags);
   }
 
-  /**
-   * Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied. Free-form items include additional name and meaning children.
-   *
-   * @param data     the encoded bytes or payload
-   * @param flags    the data-type flags
-   * @param freeForm whether the content uses a free-form item layout
-   * @return decoded values
-   */
+  /// Decodes child data atoms from encoded item content. Only matching data-type flags are selected when a filter is supplied. Free-form items include additional name and meaning children.
+  ///
+  /// @param data     the encoded bytes or payload
+  /// @param flags    the data-type flags
+  /// @param freeForm whether the content uses a free-form item layout
+  /// @return decoded values
   protected static List<ByteVector> parseData(ByteVector data, int flags, boolean freeForm) {
     return ItemAtomCodec.parseData(data, flags, freeForm);
   }
 
-  /**
-   * Decodes a signed integer using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes a signed integer using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseInt(Atom a, ByteVector b) {
     return ItemAtomCodec.parseInt(a, b);
   }
 
-  /**
-   * Decodes an unsigned integer using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes an unsigned integer using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseUInt(Atom a, ByteVector b) {
     return ItemAtomCodec.parseUInt(a, b);
   }
 
-  /**
-   * Decodes a 64-bit integer using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes a 64-bit integer using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseLongLong(Atom a, ByteVector b) {
     return ItemAtomCodec.parseLongLong(a, b);
   }
 
-  /**
-   * Decodes an unsigned byte using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes an unsigned byte using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseByte(Atom a, ByteVector b) {
     return ItemAtomCodec.parseByte(a, b);
   }
 
-  /**
-   * Decodes a boolean using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes a boolean using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseBool(Atom a, ByteVector b) {
     return ItemAtomCodec.parseBool(a, b);
   }
 
-  /**
-   * Decodes an integer pair using this handler.
-   *
-   * @param a the item atom descriptor
-   * @param b the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes an integer pair using this handler.
+  ///
+  /// @param a the item atom descriptor
+  /// @param b the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseIntPair(Atom a, ByteVector b) {
     return ItemAtomCodec.parseIntPair(a, b);
   }
 
-  /**
-   * Decodes text or numeric metadata using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes text or numeric metadata using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseTextOrInt(Atom atom, ByteVector bytes) {
     return ItemAtomCodec.parseTextOrInt(atom, bytes);
   }
 
-  /**
-   * Decodes text metadata using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes text metadata using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseText(Atom atom, ByteVector bytes) {
     return ItemAtomCodec.parseText(atom, bytes);
   }
 
-  /**
-   * Decodes text metadata using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @param flags the data-type flags
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes text metadata using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @param flags the data-type flags
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseText(Atom atom, ByteVector bytes, int flags) {
     return ItemAtomCodec.parseText(atom, bytes, flags);
   }
 
-  /**
-   * Decodes a genre code using this handler.
-   *
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes a genre code using this handler.
+  ///
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseGnre(ByteVector bytes) {
     return ItemAtomCodec.parseGnre(bytes);
   }
 
-  /**
-   * Decodes a free-form named item using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes a free-form named item using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseFreeForm(Atom atom, ByteVector bytes) {
     return ItemAtomCodec.parseFreeForm(atom, bytes);
   }
 
-  /**
-   * Decodes cover-art values using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes cover-art values using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseCovr(Atom atom, ByteVector bytes) {
     return ItemAtomCodec.parseCovr(atom, bytes);
   }
 
-  /**
-   * Decodes Stem manifest bytes using this handler.
-   *
-   * @param atom  the item atom descriptor
-   * @param bytes the encoded item content
-   * @return the decoded item or an invalid item for unsupported data
-   */
+  /// Decodes Stem manifest bytes using this handler.
+  ///
+  /// @param atom  the item atom descriptor
+  /// @param bytes the encoded item content
+  /// @return the decoded item or an invalid item for unsupported data
   protected static ParsedItem parseStem(Atom atom, ByteVector bytes) {
     return ItemAtomCodec.parseStem(atom, bytes);
   }
 
-  /**
-   * Serializes an atom with its header without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param data the encoded bytes or payload
-   * @return encoded atom bytes
-   */
+  /// Serializes an atom with its header without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param data the encoded bytes or payload
+  /// @return encoded atom bytes
   protected static ByteVector renderAtom(ByteVector name, ByteVector data) {
     return ItemAtomCodec.renderAtom(name, data);
   }
 
-  /**
-   * Serializes typed data child atoms without writing storage.
-   *
-   * @param name   the atom-name bytes or free-form item name
-   * @param flags  the data-type flags
-   * @param values the payload values to encode
-   * @return encoded atom bytes
-   */
+  /// Serializes typed data child atoms without writing storage.
+  ///
+  /// @param name   the atom-name bytes or free-form item name
+  /// @param flags  the data-type flags
+  /// @param values the payload values to encode
+  /// @return encoded atom bytes
   protected static ByteVector renderData(ByteVector name, int flags, List<ByteVector> values) {
     return ItemAtomCodec.renderData(name, flags, values);
   }
 
-  /**
-   * Serializes a boolean item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a boolean item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderBool(ByteVector name, Item item) {
     return ItemAtomCodec.renderBool(name, item);
   }
 
-  /**
-   * Serializes a signed integer item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a signed integer item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderInt(ByteVector name, Item item) {
     return ItemAtomCodec.renderInt(name, item);
   }
 
-  /**
-   * Serializes an unsigned integer item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes an unsigned integer item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderUInt(ByteVector name, Item item) {
     return ItemAtomCodec.renderUInt(name, item);
   }
 
-  /**
-   * Serializes a 64-bit item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a 64-bit item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderLongLong(ByteVector name, Item item) {
     return ItemAtomCodec.renderLongLong(name, item);
   }
 
-  /**
-   * Serializes a byte item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a byte item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderByte(ByteVector name, Item item) {
     return ItemAtomCodec.renderByte(name, item);
   }
 
-  /**
-   * Serializes a padded integer pair without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a padded integer pair without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderIntPair(ByteVector name, Item item) {
     return ItemAtomCodec.renderIntPair(name, item);
   }
 
-  /**
-   * Serializes an integer pair without trailing padding without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes an integer pair without trailing padding without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderIntPairNoTrailing(ByteVector name, Item item) {
     return ItemAtomCodec.renderIntPairNoTrailing(name, item);
   }
 
-  /**
-   * Serializes text or integer metadata without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes text or integer metadata without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderTextOrInt(ByteVector name, Item item) {
     return ItemAtomCodec.renderTextOrInt(name, item);
   }
 
-  /**
-   * Serializes text metadata without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes text metadata without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderText(ByteVector name, Item item) {
     return ItemAtomCodec.renderText(name, item);
   }
 
-  /**
-   * Serializes text metadata without writing storage.
-   *
-   * @param name  the atom-name bytes or free-form item name
-   * @param item  the typed item value
-   * @param flags the data-type flags
-   * @return encoded atom bytes
-   */
+  /// Serializes text metadata without writing storage.
+  ///
+  /// @param name  the atom-name bytes or free-form item name
+  /// @param item  the typed item value
+  /// @param flags the data-type flags
+  /// @return encoded atom bytes
   protected static ByteVector renderText(ByteVector name, Item item, int flags) {
     return ItemAtomCodec.renderText(name, item, flags);
   }
 
-  /**
-   * Serializes cover-art values without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes cover-art values without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderCovr(ByteVector name, Item item) {
     return ItemAtomCodec.renderCovr(name, item);
   }
 
-  /**
-   * Serializes Stem manifest bytes without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes Stem manifest bytes without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderStem(ByteVector name, Item item) {
     return ItemAtomCodec.renderStem(name, item);
   }
 
-  /**
-   * Serializes a free-form named item without writing storage.
-   *
-   * @param name the atom-name bytes or free-form item name
-   * @param item the typed item value
-   * @return encoded atom bytes
-   */
+  /// Serializes a free-form named item without writing storage.
+  ///
+  /// @param name the atom-name bytes or free-form item name
+  /// @param item the typed item value
+  /// @return encoded atom bytes
   protected static ByteVector renderFreeForm(String name, Item item) {
     return ItemAtomCodec.renderFreeForm(name, item);
   }

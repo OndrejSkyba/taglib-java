@@ -11,10 +11,8 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing GEOB MIME type, filename, description and binary object.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for encapsulated binary objects (GEOB).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class GeneralEncapsulatedObjectFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(GeneralEncapsulatedObjectFrame.class.getName());
 
@@ -22,18 +20,13 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
   private String mimeType = "", fileName = "", description = "";
   private ByteVector object = new ByteVector();
 
-  /**
-   * Creates a frame containing GEOB MIME type, filename, description and binary object.
-   */
   public GeneralEncapsulatedObjectFrame() {
     super(new ByteVector("GEOB"));
   }
 
-  /**
-   * Decodes GEOB MIME type, filename, description and binary object from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes GEOB MIME type, filename, description and binary object from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public GeneralEncapsulatedObjectFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -77,11 +70,9 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
     description = Objects.requireNonNull(value);
   }
 
-  /**
-   * Returns an independent copy of the binary payload.
-   *
-   * @return payload bytes
-   */
+  /// Returns an independent copy of the binary payload.
+  ///
+  /// @return payload bytes
   public final ByteVector object() {
     return new ByteVector(object);
   }
@@ -107,9 +98,6 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
     return new ArrayList<>(List.of(description, fileName, mimeType));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseObject(data);
@@ -130,9 +118,6 @@ public class GeneralEncapsulatedObjectFrame extends Frame {
     object = data.mid(field.nextPosition());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset rendered = checkTextEncoding(List.of(fileName, description), encoding);

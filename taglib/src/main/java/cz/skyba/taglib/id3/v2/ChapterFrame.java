@@ -12,10 +12,8 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing CHAP timing, byte offsets and embedded frames.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for chapter descriptions (CHAP).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class ChapterFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(ChapterFrame.class.getName());
 
@@ -24,42 +22,36 @@ public class ChapterFrame extends Frame {
   private ByteVector elementID = new ByteVector();
   private long startTime, endTime, startOffset, endOffset;
 
-  /**
-   * Decodes CHAP timing, byte offsets and embedded frames from serialized frame bytes, including their frame header.
-   * The tag header supplies the version used for embedded-frame parsing.
-   *
-   * @param data      serialized bytes including the frame header
-   * @param tagHeader the enclosing tag header
-   */
+  /// Decodes CHAP timing, byte offsets and embedded frames from serialized frame bytes, including their frame header.
+  /// The tag header supplies the version used for embedded-frame parsing.
+  ///
+  /// @param data      serialized bytes including the frame header
+  /// @param tagHeader the enclosing tag header
   public ChapterFrame(cz.skyba.taglib.id3.v2.Header tagHeader, ByteVector data) {
     super(data);
     this.tagHeader = Objects.requireNonNull(tagHeader);
     parseChapter(fieldData(data));
   }
 
-  /**
-   * Creates a frame containing CHAP timing, byte offsets and embedded frames.
-   *
-   * @param elementID   the chapter or table identifier to copy
-   * @param startTime   the starting time in milliseconds
-   * @param endTime     the ending time in milliseconds
-   * @param startOffset the starting byte offset in the audio file
-   * @param endOffset   the ending byte offset in the audio file
-   */
+  /// Creates a frame containing CHAP timing, byte offsets and embedded frames.
+  ///
+  /// @param elementID   the chapter or table identifier to copy
+  /// @param startTime   the starting time in milliseconds
+  /// @param endTime     the ending time in milliseconds
+  /// @param startOffset the starting byte offset in the audio file
+  /// @param endOffset   the ending byte offset in the audio file
   public ChapterFrame(ByteVector elementID, long startTime, long endTime, long startOffset, long endOffset) {
     this(elementID, startTime, endTime, startOffset, endOffset, List.of());
   }
 
-  /**
-   * Creates a frame containing CHAP timing, byte offsets and embedded frames.
-   *
-   * @param elementID      the chapter or table identifier to copy
-   * @param embeddedFrames live embedded frames to retain
-   * @param startTime      the starting time in milliseconds
-   * @param endTime        the ending time in milliseconds
-   * @param startOffset    the starting byte offset in the audio file
-   * @param endOffset      the ending byte offset in the audio file
-   */
+  /// Creates a frame containing CHAP timing, byte offsets and embedded frames.
+  ///
+  /// @param elementID      the chapter or table identifier to copy
+  /// @param embeddedFrames live embedded frames to retain
+  /// @param startTime      the starting time in milliseconds
+  /// @param endTime        the ending time in milliseconds
+  /// @param startOffset    the starting byte offset in the audio file
+  /// @param endOffset      the ending byte offset in the audio file
   public ChapterFrame(
     ByteVector elementID, long startTime, long endTime, long startOffset, long endOffset,
     List<? extends Frame> embeddedFrames
@@ -82,11 +74,9 @@ public class ChapterFrame extends Frame {
     parseChapter(fieldData(data));
   }
 
-  /**
-   * Returns a copy of the element identifier bytes.
-   *
-   * @return the element identifier
-   */
+  /// Returns a copy of the element identifier bytes.
+  ///
+  /// @return the element identifier
   public final ByteVector elementID() {
     return new ByteVector(elementID);
   }
@@ -107,9 +97,7 @@ public class ChapterFrame extends Frame {
     return endOffset;
   }
 
-  /**
-   * Copies the identifier and removes one trailing NUL byte when present.
-   */
+  /// Copies the identifier and removes one trailing NUL byte when present.
   public final void setElementID(ByteVector id) {
     elementID = new ByteVector(id);
     if (elementID.endsWith(new ByteVector((byte) 0))) {
@@ -133,56 +121,44 @@ public class ChapterFrame extends Frame {
     endOffset = value & 0xffff_ffffL;
   }
 
-  /**
-   * Returns a read-only live map grouping embedded frames by identifier.
-   * An absent lookup does not create a group.
-   *
-   * @return the embedded-frame groups
-   */
+  /// Returns a read-only live map grouping embedded frames by identifier.
+  /// An absent lookup does not create a group.
+  ///
+  /// @return the embedded-frame groups
   public final Map<ByteVector, List<Frame>> embeddedFrameListMap() {
     return embedded.map();
   }
 
-  /**
-   * Returns a read-only live list of embedded frame references.
-   * Frames remain mutable; structural changes use the frame-management methods.
-   *
-   * @return live embedded frames
-   */
+  /// Returns a read-only live list of embedded frame references.
+  /// Frames remain mutable; structural changes use the frame-management methods.
+  ///
+  /// @return live embedded frames
   public final List<Frame> embeddedFrameList() {
     return embedded.list();
   }
 
-  /**
-   * Returns a read-only live list for an existing ID, or an empty list without creating a bucket.
-   */
+  /// Returns a read-only live list for an existing ID, or an empty list without creating a bucket.
   public final List<Frame> embeddedFrameList(ByteVector id) {
     return embedded.bucket(id);
   }
 
-  /**
-   * Retains an embedded frame reference without copying it. The change remains in memory.
-   *
-   * @param frame the live frame to add
-   */
+  /// Retains an embedded frame reference without copying it. The change remains in memory.
+  ///
+  /// @param frame the live frame to add
   public final void addEmbeddedFrame(Frame frame) {
     embedded.add(frame);
   }
 
-  /**
-   * Removes the supplied embedded frame reference without invalidating it for the caller.
-   *
-   * @param frame the embedded reference to remove
-   */
+  /// Removes the supplied embedded frame reference without invalidating it for the caller.
+  ///
+  /// @param frame the embedded reference to remove
   public final void removeEmbeddedFrame(Frame frame) {
     embedded.remove(frame, false);
   }
 
-  /**
-   * Removes all embedded frames with the supplied identifier.
-   *
-   * @param id the identifier bytes to match
-   */
+  /// Removes all embedded frames with the supplied identifier.
+  ///
+  /// @param id the identifier bytes to match
   public final void removeEmbeddedFrames(ByteVector id) {
     embedded.removeAll(id, false);
   }
@@ -211,13 +187,11 @@ public class ChapterFrame extends Frame {
     return PropertyMap.builder().addUnsupportedData(Id3Text.fixedLatin1(frameID()) + "/" + Id3Text.fixedLatin1(elementID)).build();
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag the tag to search
-   * @param id  the element identifier bytes to match
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag the tag to search
+  /// @param id  the element identifier bytes to match
+  /// @return the matching frame, or `null` if absent
   public static ChapterFrame findByElementID(Tag tag, ByteVector id) {
     for (Frame frame : tag.frameList(new ByteVector("CHAP"))) {
       if (frame instanceof ChapterFrame chapter && chapter.elementID().equals(id)) {
@@ -227,9 +201,6 @@ public class ChapterFrame extends Frame {
     return null;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseChapter(data);
@@ -254,9 +225,6 @@ public class ChapterFrame extends Frame {
     embedded.parseEmbedded(data, pos, tagHeader, this);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     var data = new ByteVectorOutput().append(new ByteVector(elementID)).append((byte) 0).append(ByteVector.fromUnsignedInt(startTime))

@@ -9,15 +9,11 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 
-/**
- * A mutable ASF picture value with copied image inputs and detached binary exports.
- */
+/// A mutable ASF picture value with copied image inputs and detached binary exports.
 public final class Picture {
-  /**
-   * A picture-role code that also represents unnamed integer codes.
-   *
-   * @param code the stored role code
-   */
+  /// A picture-role code that also represents unnamed integer codes.
+  ///
+  /// @param code the stored role code
   public record Type(int code) {
     public static final Type Other = new Type(0);
     public static final Type FileIcon = new Type(1);
@@ -48,18 +44,13 @@ public final class Picture {
   // Internal payloads are replaced, never mutated; copies can safely share them.
   private ByteVector bytes;
 
-  /**
-   * Creates an empty picture value.
-   */
   public Picture() {
     bytes = new ByteVector();
   }
 
-  /**
-   * Creates an independently mutable copy of a picture value.
-   *
-   * @param other the picture to copy
-   */
+  /// Creates an independently mutable copy of a picture value.
+  ///
+  /// @param other the picture to copy
   public Picture(Picture other) {
     Objects.requireNonNull(other);
     valid = other.valid;
@@ -69,21 +60,17 @@ public final class Picture {
     bytes = other.bytes;
   }
 
-  /**
-   * Decodes a serialized picture value.
-   *
-   * @param bytes encoded picture bytes
-   */
+  /// Decodes a serialized picture value.
+  ///
+  /// @param bytes encoded picture bytes
   public Picture(ByteVector bytes) {
     this();
     parse(bytes);
   }
 
-  /**
-   * Creates a picture value with its validity flag unset.
-   *
-   * @return an invalid picture value
-   */
+  /// Creates a picture value with its validity flag unset.
+  ///
+  /// @return an invalid picture value
   public static Picture fromInvalid() {
     var p = new Picture();
     p.valid = false;
@@ -118,11 +105,9 @@ public final class Picture {
     description = Objects.requireNonNull(value);
   }
 
-  /**
-   * Returns an independent copy of the image bytes.
-   *
-   * @return picture bytes
-   */
+  /// Returns an independent copy of the image bytes.
+  ///
+  /// @return picture bytes
   public ByteVector picture() {
     return new ByteVector(bytes);
   }
@@ -131,20 +116,16 @@ public final class Picture {
     bytes = new ByteVector(value);
   }
 
-  /**
-   * Returns the serialized picture value's byte size.
-   *
-   * @return the byte size
-   */
+  /// Returns the serialized picture value's byte size.
+  ///
+  /// @return the byte size
   public int dataSize() {
     return Math.addExact(9, Math.addExact(Math.multiplyExact(mime.length() + description.length(), 2), bytes.size()));
   }
 
-  /**
-   * Serializes the picture fields and image data without writing a file.
-   *
-   * @return picture bytes
-   */
+  /// Serializes the picture fields and image data without writing a file.
+  ///
+  /// @return picture bytes
   public ByteVector render() {
     if (!isValid()) {
       return new ByteVector();
@@ -153,12 +134,10 @@ public final class Picture {
       .append(stringBytes(mime)).append(stringBytes(description)).append(bytes);
   }
 
-  /**
-   * Decodes an ASF picture value, updating fields as they are read. Invalid or incomplete data
-   * leaves the validity flag unset.
-   *
-   * @param bytes serialized picture value bytes
-   */
+  /// Decodes an ASF picture value, updating fields as they are read. Invalid or incomplete data
+  /// leaves the validity flag unset.
+  ///
+  /// @param bytes serialized picture value bytes
   public void parse(ByteVector bytes) {
     valid = false;
     if (bytes.size() < 9) {
@@ -191,43 +170,19 @@ public final class Picture {
     return ByteVector.fromText(value + '\0', UTF_16LE);
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromUInt(long value) {
     long n = value & 0xffff_ffffL;
     return n < 21 ? new Type((int) n) : Type.Other;
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromByte(byte value) {
     return typeFromUInt(value & 255);
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param value the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static Type typeFromString(String value) {
     return new Type(PictureTypes.codeForName(value));
   }
 
-  /**
-   * Converts a picture role between its code and display representation.
-   *
-   * @param type the role, name or numeric code
-   * @return the corresponding role or display name
-   */
   public static String typeToString(Type type) {
     int n = type.code();
     return n >= 0 && n < 21 ? PictureTypes.nameForCode(n) : "";

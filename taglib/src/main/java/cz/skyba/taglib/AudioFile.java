@@ -40,50 +40,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * An editing session with audio format detection and live, mutable tags.
- * Text and artwork edits are staged until {@link #save()}. Closing never saves.
- * Path constructors own their file handles; supplied streams are borrowed and remain open
- * when the session closes. The session, its typed file and its live tags must be used by
- * one thread at a time.
- */
+/// An editing session for audio metadata with format detection and live tags.
+/// Metadata edits are staged until [#save()]. Closing never saves.
+/// Path constructors own their file handles; supplied streams are borrowed and remain open
+/// when the session closes. The session, its typed file and its live tags must be used by
+/// one thread at a time.
 // FileBase references are transferred to this owner or borrowed from its State, not locally closed.
 @SuppressWarnings("resource")
 public final class AudioFile implements AutoCloseable {
-  /**
-   * A custom format resolver consulted before built-in format detection.
-   * Resolvers are tried in reverse registration order. Return {@code null} to allow the
-   * next resolver to inspect an input.
-   */
+  /// A custom format resolver consulted before built-in format detection.
+  /// Resolvers are tried in reverse registration order. Return `null` to allow the
+  /// next resolver to inspect an input.
   @FunctionalInterface
   public interface FileTypeResolver {
-    /**
-     * Opens a typed file when this resolver recognizes the input.
-     * A returned file is transferred to the editing session, which closes it when finished.
-     *
-     * @param name    the path to inspect
-     * @param options read options, including the metadata allocation limit
-     * @return a usable file, or {@code null} if this resolver does not handle the input
-     * @throws IOException if the input is handled but cannot be opened or read
-     */
+    /// Opens a typed file when this resolver recognizes the input.
+    /// A returned file is transferred to the editing session, which closes it when finished.
+    ///
+    /// @param name    the path to inspect
+    /// @param options read options, including the metadata allocation limit
+    /// @return a usable file, or `null` if this resolver does not handle the input
+    /// @throws IOException if the input is handled but cannot be opened or read
     FileBase createFile(Path name, ReadOptions options) throws IOException;
   }
 
-  /**
-   * A custom resolver that supports borrowed streams as well as paths.
-   * Implement {@link #createFile(Path, ReadOptions)} for path inputs and
-   * {@link #createFileFromStream(IOStream, ReadOptions)} for stream inputs.
-   */
+  /// A format resolver for path and borrowed-stream inputs.
+  /// Resolved files follow the editing session's ownership and lifetime rules.
   public abstract static class StreamTypeResolver implements FileTypeResolver {
-    /**
-     * Opens a typed file over a borrowed stream when this resolver recognizes the input.
-     * The returned file must leave the supplied stream open when closed.
-     *
-     * @param stream  the open, seekable stream to inspect
-     * @param options read options, including the metadata allocation limit
-     * @return a usable file, or {@code null} if this resolver does not handle the input
-     * @throws IOException if the input is handled but cannot be read
-     */
+    /// Opens a typed file over a borrowed stream when this resolver recognizes the input.
+    /// The returned file must leave the supplied stream open when closed.
+    ///
+    /// @param stream  the open, seekable stream to inspect
+    /// @param options read options, including the metadata allocation limit
+    /// @return a usable file, or `null` if this resolver does not handle the input
+    /// @throws IOException if the input is handled but cannot be read
     public abstract FileBase createFileFromStream(
       IOStream stream, ReadOptions options) throws IOException;
   }
@@ -117,14 +106,12 @@ public final class AudioFile implements AutoCloseable {
   private final State state;
   private final Cleaner.Cleanable cleanable;
 
-  /**
-   * Creates a session that takes ownership of an already-open typed file.
-   * Ownership transfers only if the file is valid. Closing this session closes the supplied
-   * file; any stream borrowed by that file remains open.
-   *
-   * @param file the usable typed file to own
-   * @throws IllegalArgumentException if the file is closed or invalid
-   */
+  /// Creates a session that takes ownership of an already-open typed file.
+  /// Ownership transfers only if the file is valid. Closing this session closes the supplied
+  /// file; any stream borrowed by that file remains open.
+  ///
+  /// @param file the usable typed file to own
+  /// @throws IllegalArgumentException if the file is closed or invalid
   public AudioFile(FileBase file) {
     Objects.requireNonNull(file);
     if (!file.isValid()) {
@@ -134,89 +121,75 @@ public final class AudioFile implements AutoCloseable {
     cleanable = CLEANER.register(this, state);
   }
 
-  /**
-   * Opens an editing session for a file, taking ownership of its file handle.
-   * Uses {@link ReadOptions#DEFAULT}.
-   * Registered resolvers are consulted before built-in format detection.
-   *
-   * @param path the audio file to open
-   * @throws UncheckedIOException      if storage access or a resolver fails
-   * @throws InvalidAudioFileException if no usable format can be opened
-   */
+  /// Opens an editing session for a file, taking ownership of its file handle.
+  /// Uses [ReadOptions#DEFAULT].
+  /// Registered resolvers are consulted before built-in format detection.
+  ///
+  /// @param path the audio file to open
+  /// @throws UncheckedIOException      if storage access or a resolver fails
+  /// @throws InvalidAudioFileException if no usable format can be opened
   public AudioFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens an editing session for a file, taking ownership of its file handle.
-   * Registered resolvers are consulted before built-in format detection.
-   *
-   * @param path    the audio file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException      if storage access or a resolver fails
-   * @throws InvalidAudioFileException if no usable format can be opened
-   */
+  /// Opens an editing session for a file, taking ownership of its file handle.
+  /// Registered resolvers are consulted before built-in format detection.
+  ///
+  /// @param path    the audio file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException      if storage access or a resolver fails
+  /// @throws InvalidAudioFileException if no usable format can be opened
   public AudioFile(Path path, ReadOptions options) {
     this(resolve(path, options));
   }
 
-  /**
-   * Opens an editing session over a borrowed stream, leaving it open when the session closes.
-   * Uses {@link ReadOptions#DEFAULT}.
-   * Registered resolvers are consulted before built-in format detection.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws UncheckedIOException      if storage access or a resolver fails
-   * @throws InvalidAudioFileException if no usable format can be opened
-   * @throws IllegalStateException     if the stream is closed
-   */
+  /// Opens an editing session over a borrowed stream, leaving it open when the session closes.
+  /// Uses [ReadOptions#DEFAULT].
+  /// Registered resolvers are consulted before built-in format detection.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws UncheckedIOException      if storage access or a resolver fails
+  /// @throws InvalidAudioFileException if no usable format can be opened
+  /// @throws IllegalStateException     if the stream is closed
   public AudioFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens an editing session over a borrowed stream, leaving it open when the session closes.
-   * Registered resolvers are consulted before built-in format detection.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException      if storage access or a resolver fails
-   * @throws InvalidAudioFileException if no usable format can be opened
-   * @throws IllegalStateException     if the stream is closed
-   */
+  /// Opens an editing session over a borrowed stream, leaving it open when the session closes.
+  /// Registered resolvers are consulted before built-in format detection.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException      if storage access or a resolver fails
+  /// @throws InvalidAudioFileException if no usable format can be opened
+  /// @throws IllegalStateException     if the stream is closed
   public AudioFile(IOStream stream, ReadOptions options) {
     this(resolve(stream, options));
   }
 
-  /**
-   * Registers a resolver ahead of previously registered resolvers and built-in detection.
-   * The registry is shared by all sessions. Registration does not transfer ownership of the
-   * resolver, and removing a resolver does not close it or files it opened.
-   *
-   * @param resolver the resolver to register
-   * @param <T>      the resolver type
-   * @return the supplied resolver
-   */
+  /// Registers a resolver ahead of previously registered resolvers and built-in detection.
+  /// The registry is shared by all sessions. Registration does not transfer ownership of the
+  /// resolver, and removing a resolver does not close it or files it opened.
+  ///
+  /// @param resolver the resolver to register
+  /// @param <T>      the resolver type
+  /// @return the supplied resolver
   @SuppressWarnings("UnusedReturnValue") // Public convenience API returns the supplied resolver.
   public static synchronized <T extends FileTypeResolver> T addFileTypeResolver(T resolver) {
     RESOLVERS.addFirst(Objects.requireNonNull(resolver));
     return resolver;
   }
 
-  /**
-   * Removes all registered custom resolvers from the shared registry.
-   * Existing sessions remain open and built-in format detection remains available.
-   */
+  /// Removes all registered custom resolvers from the shared registry.
+  /// Existing sessions remain open and built-in format detection remains available.
   public static synchronized void clearFileTypeResolvers() {
     RESOLVERS.clear();
   }
 
-  /**
-   * Returns the immutable list of built-in filename extensions, without leading dots.
-   * Custom resolvers can recognize additional names or formats independently of this list.
-   *
-   * @return recognized built-in extensions
-   */
+  /// Returns the immutable list of built-in filename extensions, without leading dots.
+  /// Custom resolvers can recognize additional names or formats independently of this list.
+  ///
+  /// @return recognized built-in extensions
   public static List<String> defaultFileExtensions() {
     return EXTENSIONS;
   }
@@ -290,10 +263,8 @@ public final class AudioFile implements AutoCloseable {
     }
   }
 
-  /**
-   * Built-in detection selects one typed file; stream constructors borrow and path constructors
-   * adopt the stream.
-   */
+  /// Built-in detection selects one typed file; stream constructors borrow and path constructors
+  /// adopt the stream.
   static FileBase specializedFile(
     IOStream stream, boolean owned, ReadOptions options,
     Format format
@@ -500,10 +471,8 @@ public final class AudioFile implements AutoCloseable {
     };
   }
 
-  /**
-   * Maps a built-in typed owner to the facade's closed format vocabulary. Custom resolvers are
-   * intentionally not assigned a format that they did not declare.
-   */
+  /// Maps a built-in typed owner to the facade's closed format vocabulary. Custom resolvers are
+  /// intentionally not assigned a format that they did not declare.
   static Format builtinFormat(FileBase file) {
     return switch (file) {
       case VorbisFile _ -> Format.OGG_VORBIS;
@@ -532,12 +501,10 @@ public final class AudioFile implements AutoCloseable {
     };
   }
 
-  /**
-   * Returns the live typed file owned by this session. Its lifetime ends when the session closes.
-   *
-   * @return the typed file
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Returns the live typed file owned by this session. Its lifetime ends when the session closes.
+  ///
+  /// @return the typed file
+  /// @throws IllegalStateException if the session is closed
   public FileBase file() {
     var file = state.file;
     if (file == null) {
@@ -551,53 +518,43 @@ public final class AudioFile implements AutoCloseable {
     return file != null && file.isOpen();
   }
 
-  /**
-   * Returns the live mutable tag view. Edits through this view are staged until save().
-   *
-   * @return the mutable tag
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Returns the live mutable tag view. Edits through this view are staged until save().
+  ///
+  /// @return the mutable tag
+  /// @throws IllegalStateException if the session is closed
   public TagBase tag() {
     return file().tag();
   }
 
-  /**
-   * Returns the parsed audio properties, or {@code null} if unavailable or not requested.
-   *
-   * @return audio properties, or {@code null}
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Returns the parsed audio properties, or `null` if unavailable or not requested.
+  ///
+  /// @return audio properties, or `null`
+  /// @throws IllegalStateException if the session is closed
   public AudioProperties audioProperties() {
     return file().audioProperties();
   }
 
-  /**
-   * Returns an immutable snapshot of the text properties exposed by the live tag.
-   *
-   * @return a text property snapshot
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Returns an immutable snapshot of the text properties exposed by the live tag.
+  ///
+  /// @return a text property snapshot
+  /// @throws IllegalStateException if the session is closed
   public PropertyMap properties() {
     return file().properties();
   }
 
-  /**
-   * Replaces the supported text properties in memory. Omitted keys are cleared; rejected values
-   * are reported without preventing other values from being accepted. This does not save.
-   * Unsupported-data identifiers do not request removal of opaque metadata; use
-   * {@link #removeUnsupportedProperties(List)} for that operation.
-   */
+  /// Replaces the supported text properties in memory. Omitted keys are cleared; rejected values
+  /// are reported without preventing other values from being accepted. This does not save.
+  /// Unsupported-data identifiers do not request removal of opaque metadata; use
+  /// [#removeUnsupportedProperties(List)] for that operation.
   public PropertyUpdateResult replaceProperties(PropertyMap properties) {
     return file().replaceProperties(properties);
   }
 
-  /**
-   * Stages removal of opaque metadata identified by {@link PropertyMap#unsupportedData()}.
-   * Unrecognized identifiers are handled by the selected format. Call {@link #save()} to persist removal.
-   *
-   * @param properties opaque metadata identifiers to remove
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Stages removal of opaque metadata identified by [PropertyMap#unsupportedData()].
+  /// Unrecognized identifiers are handled by the selected format. Call [#save()] to persist removal.
+  ///
+  /// @param properties opaque metadata identifiers to remove
+  /// @throws IllegalStateException if the session is closed
   public void removeUnsupportedProperties(List<String> properties) {
     file().removeUnsupportedProperties(properties);
   }
@@ -628,29 +585,23 @@ public final class AudioFile implements AutoCloseable {
       "numColors", new Variant(picture.indexedColors()))).toList();
   }
 
-  /**
-   * Returns immutable artwork snapshots. An empty list means no artwork is present.
-   */
+  /// Returns immutable artwork snapshots. An empty list means no artwork is present.
   public List<Picture> pictures() {
     var values = file().complexProperties("PICTURE");
     return values.isEmpty() ? List.of() : snapshotPictures(values);
   }
 
-  /**
-   * Reports artwork editing support independently of existing artwork or storage writability.
-   */
+  /// Reports artwork editing support independently of existing artwork or storage writability.
   public boolean supportsPictureEditing() {
     return file().supportsPictureEditing();
   }
 
-  /**
-   * Stages replacement artwork; an empty list removes it. Call {@link #save()} to persist it.
-   * Format-specific limits and normalization are the same as for complex properties.
-   *
-   * @throws UnsupportedOperationException if the file does not accept artwork editing
-   * @throws NullPointerException          if the list or any picture is null
-   * @throws IllegalStateException         if this owner is closed
-   */
+  /// Stages replacement artwork; an empty list removes it. Call [#save()] to persist it.
+  /// Format-specific limits and normalization are the same as for complex properties.
+  ///
+  /// @throws UnsupportedOperationException if the file does not accept artwork editing
+  /// @throws NullPointerException          if the list or any picture is null
+  /// @throws IllegalStateException         if this owner is closed
   public void replacePictures(List<Picture> pictures) {
     var file = file();
     if (!file.setComplexProperties("PICTURE", complexPictures(pictures))) {
@@ -659,56 +610,46 @@ public final class AudioFile implements AutoCloseable {
     }
   }
 
-  /**
-   * Returns the complex-property categories currently present, not editing capabilities.
-   */
+  /// Returns the complex-property categories currently present, not editing capabilities.
   public List<String> complexPropertyKeys() {
     return file().complexPropertyKeys();
   }
 
-  /**
-   * Returns structured values for a complex metadata category.
-   * An unsupported or absent category returns an empty list. The structure and fields are
-   * format-specific; use {@link #pictures()} for format-independent artwork snapshots.
-   *
-   * @param key the category name, such as {@code PICTURE}
-   * @return the values exposed for the category
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Returns structured values for a complex metadata category.
+  /// An unsupported or absent category returns an empty list. The structure and fields are
+  /// format-specific; use [#pictures()] for format-independent artwork snapshots.
+  ///
+  /// @param key the category name, such as `PICTURE`
+  /// @return the values exposed for the category
+  /// @throws IllegalStateException if the session is closed
   public List<Map<String, Variant>> complexProperties(String key) {
     return file().complexProperties(key);
   }
 
-  /**
-   * Stages replacement of a complex metadata category using format-specific fields.
-   * An empty list requests removal. Call {@link #save()} to persist accepted changes.
-   *
-   * @param key    the category name
-   * @param values replacement structured values
-   * @return {@code true} if the format accepts the category; {@code false} if unsupported
-   * @throws IllegalStateException if the session is closed
-   */
+  /// Stages replacement of a complex metadata category using format-specific fields.
+  /// An empty list requests removal. Call [#save()] to persist accepted changes.
+  ///
+  /// @param key    the category name
+  /// @param values replacement structured values
+  /// @return `true` if the format accepts the category; `false` if unsupported
+  /// @throws IllegalStateException if the session is closed
   public boolean setComplexProperties(String key, List<Map<String, Variant>> values) {
     return file().setComplexProperties(key, values);
   }
 
-  /**
-   * Saves staged edits in place. A failure may leave partial changes on the underlying storage.
-   *
-   * @throws UncheckedIOException  if storage access fails
-   * @throws TagLibException       if the edits cannot be saved
-   * @throws IllegalStateException if this owner is closed
-   */
+  /// Saves staged edits in place. A failure may leave partial changes on the underlying storage.
+  ///
+  /// @throws UncheckedIOException  if storage access fails
+  /// @throws TagLibException       if the edits cannot be saved
+  /// @throws IllegalStateException if this owner is closed
   public void save() {
     file().save();
   }
 
-  /**
-   * Closes this session and its owned typed file without saving staged changes.
-   * Borrowed streams remain open. Repeated calls have no effect.
-   *
-   * @throws UncheckedIOException if closing owned storage fails
-   */
+  /// Closes this session and its owned typed file without saving staged changes.
+  /// Borrowed streams remain open. Repeated calls have no effect.
+  ///
+  /// @throws UncheckedIOException if closing owned storage fails
   @Override
   public void close() {
     cleanable.clean();

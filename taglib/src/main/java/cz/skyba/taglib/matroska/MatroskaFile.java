@@ -13,12 +13,10 @@ import java.util.*;
 
 import static cz.skyba.taglib.internal.codec.MatroskaCodec.LiveState.ElementKind.*;
 
-/**
- * An editable Matroska or WebM file with lazy metadata and attachment loading.
- * Path construction owns storage; stream construction borrows it. Tag, chapter and attachment
- * edits are staged until saving. Attachment access can read deferred payloads from storage,
- * so the file must remain open until those payloads have been loaded.
- */
+/// An editable Matroska or WebM file with lazy metadata and attachment loading.
+/// Path construction owns storage; stream construction borrows it. Tag, chapter and attachment
+/// edits are staged until saving. Attachment access can read deferred payloads from storage,
+/// so the file must remain open until those payloads have been loaded.
 public class MatroskaFile extends FileBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 
@@ -31,51 +29,43 @@ public class MatroskaFile extends FileBase {
   private Attachments attachments;
   private Properties details;
 
-  /**
-   * Opens a Matroska or WebM file and owns the file handle.
-   *
-   * @param path the file to open
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if parsing rejects the container or its metadata
-   * @see ReadOptions#DEFAULT
-   */
+  /// Opens a Matroska or WebM file and owns the file handle.
+  ///
+  /// @param path the file to open
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if parsing rejects the container or its metadata
+  /// @see ReadOptions#DEFAULT
   public MatroskaFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Matroska or WebM file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if parsing rejects the container or its metadata
-   */
+  /// Opens a Matroska or WebM file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if parsing rejects the container or its metadata
   public MatroskaFile(Path path, ReadOptions options) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options);
   }
 
-  /**
-   * Opens a Matroska or WebM file over a borrowed stream that remains open when the file closes.
-   *
-   * @param stream the open, seekable stream
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if parsing rejects the container or its metadata
-   * @see ReadOptions#DEFAULT
-   */
+  /// Opens a Matroska or WebM file over a borrowed stream that remains open when the file closes.
+  ///
+  /// @param stream the open, seekable stream
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if parsing rejects the container or its metadata
+  /// @see ReadOptions#DEFAULT
   public MatroskaFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Matroska or WebM file over a borrowed stream that remains open when the file closes.
-   *
-   * @param stream  the open, seekable stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws UncheckedIOException if storage access fails
-   * @throws TagLibException      if parsing rejects the container or its metadata
-   */
+  /// Opens a Matroska or WebM file over a borrowed stream that remains open when the file closes.
+  ///
+  /// @param stream  the open, seekable stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws UncheckedIOException if storage access fails
+  /// @throws TagLibException      if parsing rejects the container or its metadata
   public MatroskaFile(IOStream stream, ReadOptions options) {
     this(stream, false, options);
   }
@@ -127,28 +117,22 @@ public class MatroskaFile extends FileBase {
     }
   }
 
-  /**
-   * Returns the live tag view. An absent tag view is created in memory.
-   *
-   * @return the live view
-   */
+  /// Returns the live tag view. An absent tag view is created in memory.
+  ///
+  /// @return the live view
   @Override
   public Tag tag() {
     return getOrCreateTag();
   }
 
-  /**
-   * Returns the live tag view without creating one.
-   *
-   * @return the live view, or {@code null} if no view exists
-   */
+  /// Returns the live tag view without creating one.
+  ///
+  /// @return the live view, or `null` if no view exists
   public final Tag existingTag() {
     return tag;
   }
 
-  /**
-   * Returns the live tag view, creating it in memory if absent. Creation does not write storage.
-   */
+  /// Returns the live tag view, creating it in memory if absent. Creation does not write storage.
   public final Tag getOrCreateTag() {
     if (tag == null) {
       if (state != null) {
@@ -166,20 +150,16 @@ public class MatroskaFile extends FileBase {
     return tag;
   }
 
-  /**
-   * Returns the live chapters view. An absent view is not created.
-   *
-   * @return the live view, or {@code null} if no view exists
-   */
+  /// Returns the live chapters view. An absent view is not created.
+  ///
+  /// @return the live view, or `null` if no view exists
   public final Chapters chapters() {
     return chapters;
   }
 
-  /**
-   * Returns the live chapters view, creating it in memory if absent.
-   *
-   * @return the live view
-   */
+  /// Returns the live chapters view, creating it in memory if absent.
+  ///
+  /// @return the live view
   public final Chapters getOrCreateChapters() {
     if (chapters == null) {
       if (state != null) {
@@ -194,24 +174,20 @@ public class MatroskaFile extends FileBase {
     return chapters;
   }
 
-  /**
-   * Returns the live attachments view. An absent view is not created.
-   * Deferred attachment bytes are loaded before returning; the cursor can move.
-   *
-   * @return the live view, or {@code null} if no view exists
-   * @throws UncheckedIOException if loading attachment data fails
-   */
+  /// Returns the live attachments view. An absent view is not created.
+  /// Deferred attachment bytes are loaded before returning; the cursor can move.
+  ///
+  /// @return the live view, or `null` if no view exists
+  /// @throws UncheckedIOException if loading attachment data fails
   public final Attachments attachments() {
     return attachments(false);
   }
 
-  /**
-   * Returns the live attachments view, creating it in memory if absent.
-   * Deferred attachment bytes are loaded before returning; the cursor can move.
-   *
-   * @return the live view
-   * @throws UncheckedIOException if loading attachment data fails
-   */
+  /// Returns the live attachments view, creating it in memory if absent.
+  /// Deferred attachment bytes are loaded before returning; the cursor can move.
+  ///
+  /// @return the live view
+  /// @throws UncheckedIOException if loading attachment data fails
   public final Attachments getOrCreateAttachments() {
     return attachments(true);
   }
@@ -317,9 +293,7 @@ public class MatroskaFile extends FileBase {
     return true;
   }
 
-  /**
-   * Returns the names of complex-property categories currently present.
-   */
+  /// Returns the names of complex-property categories currently present.
   @Override
   public List<String> complexPropertyKeys() {
     var result = new ArrayList<>(super.complexPropertyKeys());
@@ -470,28 +444,24 @@ public class MatroskaFile extends FileBase {
     return true;
   }
 
-  /**
-   * Writes staged Matroska metadata and loaded attachment payloads in place.
-   * Rendering can discard unmodified empty views. A failure can leave partial storage changes. The layout policy is {@code Compact}.
-   *
-   * @throws UncheckedIOException  if storage access fails
-   * @throws TagLibException       if layout validation or a size-change listener rejects the save
-   * @throws IllegalStateException if the file is closed
-   */
+  /// Writes staged Matroska metadata and loaded attachment payloads in place.
+  /// Rendering can discard unmodified empty views. A failure can leave partial storage changes. The layout policy is `Compact`.
+  ///
+  /// @throws UncheckedIOException  if storage access fails
+  /// @throws TagLibException       if layout validation or a size-change listener rejects the save
+  /// @throws IllegalStateException if the file is closed
   @Override
   public void save() {
     save(WriteStyle.Compact);
   }
 
-  /**
-   * Writes staged Matroska metadata and loaded attachment payloads in place.
-   * Rendering can discard unmodified empty views. A failure can leave partial storage changes.
-   *
-   * @param style the metadata layout policy
-   * @throws UncheckedIOException  if storage access fails
-   * @throws TagLibException       if layout validation or a size-change listener rejects the save
-   * @throws IllegalStateException if the file is closed
-   */
+  /// Writes staged Matroska metadata and loaded attachment payloads in place.
+  /// Rendering can discard unmodified empty views. A failure can leave partial storage changes.
+  ///
+  /// @param style the metadata layout policy
+  /// @throws UncheckedIOException  if storage access fails
+  /// @throws TagLibException       if layout validation or a size-change listener rejects the save
+  /// @throws IllegalStateException if the file is closed
   public final void save(WriteStyle style) {
     requireWritable();
     Objects.requireNonNull(style);
@@ -557,9 +527,7 @@ public class MatroskaFile extends FileBase {
     }
   }
 
-  /**
-   * Probes the stream for this format and restores its original position.
-   */
+  /// Probes the stream for this format and restores its original position.
   public static boolean isSupported(IOStream stream) {
     if (stream == null || !stream.isOpen()) {
       return false;

@@ -13,10 +13,8 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * Mutable ID3v1 common metadata. Field width and encoding limits apply when rendering.
- * Values remain editable in memory; the owning file writes the rendered tag on save.
- */
+/// Mutable ID3v1 common metadata. Field width and encoding limits apply when rendering.
+/// Values remain editable in memory; the owning file writes the rendered tag on save.
 public class Tag extends TagBase {
   private static final System.Logger LOG = System.getLogger(Tag.class.getName());
 
@@ -25,30 +23,23 @@ public class Tag extends TagBase {
   private String title = "", artist = "", album = "", year = "", comment = "";
   private int track, genre = 255;
 
-  /**
-   * Creates an empty ID3v1 tag.
-   */
   public Tag() {
     this(null, 0);
   }
 
-  /**
-   * Decodes ID3v1 fields from a borrowed file at a byte offset.
-   *
-   * @param file      the borrowed source, or null for an empty tag
-   * @param tagOffset the absolute tag byte offset
-   */
+  /// Decodes ID3v1 fields from a borrowed file at a byte offset.
+  ///
+  /// @param file      the borrowed source, or null for an empty tag
+  /// @param tagOffset the absolute tag byte offset
   public Tag(FileBase file, long tagOffset) {
     this.file = file;
     this.tagOffset = tagOffset;
     read();
   }
 
-  /**
-   * Decodes ID3v1 fields from a 128-byte tag. Invalid size or identifier leaves default field values.
-   *
-   * @param data encoded ID3v1 bytes
-   */
+  /// Decodes ID3v1 fields from a 128-byte tag. Invalid size or identifier leaves default field values.
+  ///
+  /// @param data encoded ID3v1 bytes
   public Tag(ByteVector data) {
     file = null;
     tagOffset = 0;
@@ -62,12 +53,10 @@ public class Tag extends TagBase {
     return ByteVector.fromCString("TAG");
   }
 
-  /**
-   * Installs the shared ID3v1 text decoder and encoder. Null restores the default handler.
-   * Existing decoded tag fields are unchanged.
-   *
-   * @param handler the handler to borrow, or null for the default
-   */
+  /// Installs the shared ID3v1 text decoder and encoder. Null restores the default handler.
+  /// Existing decoded tag fields are unchanged.
+  ///
+  /// @param handler the handler to borrow, or null for the default
   public static void setStringHandler(StringHandler handler) {
     Id3v1.setStringHandler(handler);
   }
@@ -153,9 +142,6 @@ public class Tag extends TagBase {
     genre = nativeValue < 256 ? (int) nativeValue : 255;
   }
 
-  /**
-   * Serializes this tag to its stored byte representation.
-   */
   public final ByteVector render() {
     var result = fileIdentifier();
     result.append(Id3v1.renderText(title).resize(30));
@@ -167,9 +153,7 @@ public class Tag extends TagBase {
     return result;
   }
 
-  /**
-   * Decodes ID3v1 fields into this tag. A tag without a source file is unchanged.
-   */
+  /// Decodes ID3v1 fields into this tag. A tag without a source file is unchanged.
   protected final void read() {
     if (file != null && file.isValid()) {
       file.seek(tagOffset);
@@ -182,11 +166,9 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Decodes ID3v1 fields into this tag.
-   *
-   * @param data encoded tag bytes
-   */
+  /// Decodes ID3v1 fields into this tag.
+  ///
+  /// @param data encoded tag bytes
   protected final void parse(ByteVector data) {
     if (data.size() < 128) {
       throw new IllegalArgumentException("ID3v1 footer requires 128 bytes");

@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.mp4;
 
-/**
- * An MP4 data-atom type code in the unsigned byte range.
- * Named constants cover known encodings; unnamed codes remain representable.
- *
- * @param value the code from 0 to 255
- */
+/// An MP4 data-atom type code in the unsigned byte range.
+/// Named constants cover known encodings; unnamed codes remain representable.
+///
+/// @param value the code from 0 to 255
 public record AtomDataType(int value) {
-  /**
-   * Creates a data type code.
-   *
-   * @throws IllegalArgumentException if the value is outside 0 to 255
-   */
+  /// Creates a data type code.
+  ///
+  /// @throws IllegalArgumentException if the value is outside 0 to 255
   public AtomDataType {
     if (value < 0 || value > 255) {
       throw new IllegalArgumentException("Atom data type out of range");
@@ -28,12 +24,10 @@ public record AtomDataType(int value) {
     TypeRIAAPA = new AtomDataType(24), TypeUPC = new AtomDataType(25), TypeBMP = new AtomDataType(27),
     TypeUndefined = new AtomDataType(255);
 
-  /**
-   * Maps an atom flag value to a data type code.
-   *
-   * @param flags the complete type flag value
-   * @return the code, or TypeUndefined when the value is outside 0 to 255
-   */
+  /// Maps an atom flag value to a data type code.
+  ///
+  /// @param flags the complete type flag value
+  /// @return the code, or TypeUndefined when the value is outside 0 to 255
   public static AtomDataType fromFlags(int flags) {
     return flags >= 0 && flags <= 255 ? new AtomDataType(flags) : TypeUndefined;
   }

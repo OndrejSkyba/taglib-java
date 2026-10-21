@@ -14,12 +14,10 @@ import java.util.*;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Mutable Vorbis-style text comments and picture blocks.
- * Field keys are matched using ASCII uppercase. Collection containers are copied on export,
- * while picture lists retain live picture references. OggFile-bound changes require saving
- * the owner.
- */
+/// Mutable Vorbis-style text comments and picture blocks.
+/// Field keys are matched using ASCII uppercase. Collection containers are copied on export,
+/// while picture lists retain live picture references. OggFile-bound changes require saving
+/// the owner.
 public class XiphComment extends TagBase {
   private static final System.Logger LOG = System.getLogger(XiphComment.class.getName());
 
@@ -49,11 +47,9 @@ public class XiphComment extends TagBase {
   public XiphComment() {
   }
 
-  /**
-   * Decodes a comment payload into mutable text fields and pictures.
-   *
-   * @param data serialized comment payload
-   */
+  /// Decodes a comment payload into mutable text fields and pictures.
+  ///
+  /// @param data serialized comment payload
   public XiphComment(ByteVector data) {
     parseData(Objects.requireNonNull(data));
   }
@@ -90,9 +86,7 @@ public class XiphComment extends TagBase {
     return text("GENRE");
   }
 
-  /**
-   * Prefers DESCRIPTION over COMMENT and remembers the selected field for later comment updates.
-   */
+  /// Prefers DESCRIPTION over COMMENT and remembers the selected field for later comment updates.
   @Override
   public String comment() {
     if (!values("DESCRIPTION").isEmpty()) {
@@ -144,10 +138,8 @@ public class XiphComment extends TagBase {
     addField("GENRE", value);
   }
 
-  /**
-   * Updates the remembered comment field; the first write prefers an existing DESCRIPTION field
-   * over COMMENT.
-   */
+  /// Updates the remembered comment field; the first write prefers an existing DESCRIPTION field
+  /// over COMMENT.
   @Override
   public void setComment(String value) {
     if (commentField.isEmpty()) {
@@ -180,11 +172,9 @@ public class XiphComment extends TagBase {
     return fields.values().stream().allMatch(List::isEmpty);
   }
 
-  /**
-   * Counts serialized text values and picture entries.
-   *
-   * @return the comment entry count
-   */
+  /// Counts serialized text values and picture entries.
+  ///
+  /// @return the comment entry count
   public final long fieldCount() {
     long count = pictures.size();
     for (var values : fields.values()) {
@@ -193,9 +183,7 @@ public class XiphComment extends TagBase {
     return count & 0xffff_ffffL;
   }
 
-  /**
-   * Returns a read-only live map. Looking up an absent key returns {@code null} without adding it.
-   */
+  /// Returns a read-only live map. Looking up an absent key returns `null` without adding it.
   public final Map<String, List<String>> fieldListMap() {
     return Collections.unmodifiableMap(view);
   }
@@ -261,12 +249,10 @@ public class XiphComment extends TagBase {
     return true;
   }
 
-  /**
-   * Tests whether a field key uses allowed printable ASCII bytes without an equals sign.
-   *
-   * @param key the key to validate
-   * @return whether it can be represented as a comment key
-   */
+  /// Tests whether a field key uses allowed printable ASCII bytes without an equals sign.
+  ///
+  /// @param key the key to validate
+  /// @return whether it can be represented as a comment key
   public static boolean checkKey(String key) {
     return cz.skyba.taglib.internal.xiph.XiphComment.validKey(key);
   }
@@ -275,25 +261,21 @@ public class XiphComment extends TagBase {
     return vendor;
   }
 
-  /**
-   * Adds a text value after validating and ASCII-normalizing its key.
-   * Invalid keys are ignored. Empty text is not added; replacing with empty text clears prior values. Existing values are replaced.
-   *
-   * @param key   the comment field key
-   * @param value the text value
-   */
+  /// Adds a text value after validating and ASCII-normalizing its key.
+  /// Invalid keys are ignored. Empty text is not added; replacing with empty text clears prior values. Existing values are replaced.
+  ///
+  /// @param key   the comment field key
+  /// @param value the text value
   public final void addField(String key, String value) {
     addField(key, value, true);
   }
 
-  /**
-   * Adds a text value after validating and ASCII-normalizing its key.
-   * Invalid keys are ignored. Empty text is not added; replacing with empty text clears prior values.
-   *
-   * @param key     the comment field key
-   * @param value   the text value
-   * @param replace whether existing values are removed first
-   */
+  /// Adds a text value after validating and ASCII-normalizing its key.
+  /// Invalid keys are ignored. Empty text is not added; replacing with empty text clears prior values.
+  ///
+  /// @param key     the comment field key
+  /// @param value   the text value
+  /// @param replace whether existing values are removed first
   public final void addField(String key, String value, boolean replace) {
     Objects.requireNonNull(value);
     if (!checkKey(key)) {
@@ -309,63 +291,49 @@ public class XiphComment extends TagBase {
     }
   }
 
-  /**
-   * Removes all values of a normalized field key.
-   *
-   * @param key the comment field key
-   */
+  /// Removes all values of a normalized field key.
+  ///
+  /// @param key the comment field key
   public final void removeFields(String key) {
     fields.remove(upper(key));
   }
 
-  /**
-   * Removes values equal to the supplied text from a normalized field key. An absent key gains an empty list.
-   *
-   * @param key   the comment field key
-   * @param value the exact text to remove
-   */
+  /// Removes values equal to the supplied text from a normalized field key. An absent key gains an empty list.
+  ///
+  /// @param key   the comment field key
+  /// @param value the exact text to remove
   public final void removeFields(String key, String value) {
     fields.computeIfAbsent(upper(key), _ -> new ArrayList<>()).removeIf(value::equals);
   }
 
-  /**
-   * Clears all text fields in memory, preserving vendor text and pictures.
-   */
+  /// Clears all text fields in memory, preserving vendor text and pictures.
   public final void removeAllFields() {
     fields.clear();
   }
 
-  /**
-   * Tests whether a normalized field key has at least one value.
-   *
-   * @param key the key to query
-   * @return whether a nonempty value list exists
-   */
+  /// Tests whether a normalized field key has at least one value.
+  ///
+  /// @param key the key to query
+  /// @return whether a nonempty value list exists
   public final boolean contains(String key) {
     return !values(upper(key)).isEmpty();
   }
 
-  /**
-   * Returns an immutable list snapshot containing live picture references.
-   *
-   * @return the retained pictures
-   */
+  /// Returns an immutable list snapshot containing live picture references.
+  ///
+  /// @return the retained pictures
   public final List<Picture> pictureList() {
     return List.copyOf(pictures);
   }
 
-  /**
-   * Retains a live picture reference without copying it. The change is in memory.
-   *
-   * @param value the picture to retain
-   */
+  /// Retains a live picture reference without copying it. The change is in memory.
+  ///
+  /// @param value the picture to retain
   public final void addPicture(Picture value) {
     pictures.add(Objects.requireNonNull(value));
   }
 
-  /**
-   * Removes the first matching picture by identity.
-   */
+  /// Removes the first matching picture by identity.
   public final void removePicture(Picture value) {
     for (int i = 0; i < pictures.size(); i++) {
       if (pictures.get(i) == value) {
@@ -375,28 +343,22 @@ public class XiphComment extends TagBase {
     }
   }
 
-  /**
-   * Removes every picture reference in memory, preserving text fields.
-   */
+  /// Removes every picture reference in memory, preserving text fields.
   public final void removeAllPictures() {
     pictures.clear();
   }
 
-  /**
-   * Serializes text comments and picture blocks without writing storage. A framing byte is appended.
-   *
-   * @return serialized comment payload
-   */
+  /// Serializes text comments and picture blocks without writing storage. A framing byte is appended.
+  ///
+  /// @return serialized comment payload
   public final ByteVector render() {
     return render(true);
   }
 
-  /**
-   * Serializes text comments and picture blocks without writing storage.
-   *
-   * @param framing whether to append the comment framing byte
-   * @return serialized comment payload
-   */
+  /// Serializes text comments and picture blocks without writing storage.
+  ///
+  /// @param framing whether to append the comment framing byte
+  /// @return serialized comment payload
   public final ByteVector render(boolean framing) {
     var data = new ByteVectorOutput();
     var vendorData = ByteVector.fromText(vendor, UTF_8);
@@ -419,11 +381,9 @@ public class XiphComment extends TagBase {
     return data.toByteVector();
   }
 
-  /**
-   * Decodes serialized comment content into this object's fields and pictures.
-   *
-   * @param data serialized comment payload
-   */
+  /// Decodes serialized comment content into this object's fields and pictures.
+  ///
+  /// @param data serialized comment payload
   protected final void parse(ByteVector data) {
     parseData(data);
   }

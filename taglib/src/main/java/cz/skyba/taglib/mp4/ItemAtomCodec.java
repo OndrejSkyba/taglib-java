@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Atom payload parsing and rendering shared by the extensible item factory.
- */
+/// Atom payload parsing and rendering shared by the extensible item factory.
 final class ItemAtomCodec {
   private static final ByteVector DATA_NAME = new ByteVector("data");
   private static final ByteVector PNG = new ByteVector(new byte[]{(byte) 137, 'P', 'N', 'G', 13, 10, 26, 10});

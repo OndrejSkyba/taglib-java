@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.LongConsumer;
 
-/**
- * Sparse dry-run overlay: validates extents and observes preceding writes without editing audio.
- */
+/// Sparse dry-run overlay: validates extents and observes preceding writes without editing audio.
 final class TrackerWritePlan {
   @FunctionalInterface
   interface SourceReader {
@@ -122,9 +120,7 @@ final class TrackerWritePlan {
     }
   }
 
-  /**
-   * Replay the validated edits, without reading a stateful caller stream a second time.
-   */
+  /// Replay the validated edits, without reading a stateful caller stream a second time.
   void apply(BiConsumer<Long, ByteVector> writer, LongConsumer truncater, LongConsumer seeker) {
     for (Change change : changes) {
       switch (change) {

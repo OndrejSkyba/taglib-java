@@ -15,11 +15,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * Mutable ASF metadata with basic Content Description fields and live named attributes.
- * Attribute-list containers are copied when installed, while attribute values remain live.
- * Edits require saving through the owning file or {@link #save(Path)}.
- */
+/// A mutable ASF tag with live attribute values.
+/// Attribute-list containers are copied when installed, while attribute values remain live.
+/// Edits require saving through the owning file or [#save(Path)].
 public class Tag extends TagBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 
@@ -43,12 +41,10 @@ public class Tag extends TagBase {
     return Ascii.upper(key);
   }
 
-  /**
-   * Creates a tag from live named attributes. Saving to a path preserves basic Content Description
-   * fields that were not edited through this view.
-   *
-   * @param values attribute values to retain
-   */
+  /// Creates a tag from live named attributes. Saving to a path preserves basic Content Description
+  /// fields that were not edited through this view.
+  ///
+  /// @param values attribute values to retain
   public Tag(List<Attribute> values) {
     preserveBasic = true;
     for (var a : values) {
@@ -56,26 +52,22 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Reads a mutable tag from an ASF file and closes the temporary file handle.
-   *
-   * @param path the input file
-   * @return the detached tag view
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Reads a mutable tag from an ASF file and closes the temporary file handle.
+  ///
+  /// @param path the input file
+  /// @return the detached tag view
+  /// @throws UncheckedIOException if storage access fails
   public static Tag read(Path path) {
     try (var file = new AsfFile(path)) {
       return file.tag();
     }
   }
 
-  /**
-   * Writes this tag to a path in place, preserving unedited basic fields for attribute-only views.
-   * A failure can leave partial storage changes.
-   *
-   * @param path the ASF file to update
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Writes this tag to a path in place, preserving unedited basic fields for attribute-only views.
+  /// A failure can leave partial storage changes.
+  ///
+  /// @param path the ASF file to update
+  /// @throws UncheckedIOException if storage access fails
   public void save(Path path) {
     try {
       WriteGuard.run(path, () -> {
@@ -90,69 +82,53 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Live map whose lists and attribute values can be edited directly.
-   */
+  /// Live map whose lists and attribute values can be edited directly.
   public final Map<String, List<Attribute>> attributeListMap() {
     return attributes;
   }
 
-  /**
-   * Returns a detached list of named live views. Editing a value updates this tag.
-   */
+  /// Returns a detached list of named live views. Editing a value updates this tag.
   public final List<Attribute> attributes() {
     var out = new ArrayList<Attribute>();
     attributes.forEach((k, v) -> v.forEach(a -> out.add(a.namedView(k))));
     return List.copyOf(out);
   }
 
-  /**
-   * Tests whether an exact attribute-name bucket is present, including an empty bucket.
-   *
-   * @param key the stored attribute name
-   * @return whether the bucket exists
-   */
+  /// Tests whether an exact attribute-name bucket is present, including an empty bucket.
+  ///
+  /// @param key the stored attribute name
+  /// @return whether the bucket exists
   public final boolean contains(String key) {
     return attributes.containsKey(key);
   }
 
-  /**
-   * Removes the exact named attribute bucket in memory.
-   *
-   * @param key the stored attribute name
-   */
+  /// Removes the exact named attribute bucket in memory.
+  ///
+  /// @param key the stored attribute name
   public final void removeItem(String key) {
     attributes.remove(key);
   }
 
-  /**
-   * Returns live attribute values in a detached list. An absent name returns an empty list without adding it.
-   */
+  /// Returns live attribute values in a detached list. An absent name returns an empty list without adding it.
   public final List<Attribute> attribute(String name) {
     var values = attributes.get(Objects.requireNonNull(name));
     return values == null ? new ArrayList<>() : new ArrayList<>(values);
   }
 
-  /**
-   * Stores the supplied attribute by reference. Subsequent edits to it update this tag.
-   */
+  /// Stores the supplied attribute by reference. Subsequent edits to it update this tag.
   public final void setAttribute(String name, Attribute value) {
     attributes.put(name, List.of(value));
   }
 
-  /**
-   * Copies the list structure while retaining its live attribute values.
-   */
+  /// Copies the list structure while retaining its live attribute values.
   public final void setAttribute(String name, List<Attribute> values) {
     attributes.put(name, values);
   }
 
-  /**
-   * Appends a live attribute reference to the named bucket. Changes remain in memory.
-   *
-   * @param name  the attribute name
-   * @param value the live attribute to retain
-   */
+  /// Appends a live attribute reference to the named bucket. Changes remain in memory.
+  ///
+  /// @param name  the attribute name
+  /// @param value the live attribute to retain
   public final void addAttribute(String name, Attribute value) {
     Objects.requireNonNull(value);
     attributes.computeIfAbsent(Objects.requireNonNull(name), _ -> new ArrayList<>()).add(value);
@@ -239,9 +215,7 @@ public class Tag extends TagBase {
     setAttribute("WM/Year", new Attribute(Integer.toString((int) value)));
   }
 
-  /**
-   * Reads WM/TrackNumber as a DWORD or decimal text, falling back to WM/Track when absent.
-   */
+  /// Reads WM/TrackNumber as a DWORD or decimal text, falling back to WM/Track when absent.
   public long track() {
     if (contains("WM/TrackNumber")) {
       var a = first("WM/TrackNumber");
@@ -258,10 +232,8 @@ public class Tag extends TagBase {
     return super.isEmpty() && copyright().isEmpty() && rating().isEmpty() && attributes.isEmpty();
   }
 
-  /**
-   * Projects mapped ASF attributes and overlays basic text fields, reporting unmapped attribute
-   * buckets as unsupported.
-   */
+  /// Projects mapped ASF attributes and overlays basic text fields, reporting unmapped attribute
+  /// buckets as unsupported.
   public PropertyMap properties() {
     var projected = AsfCodec.propertiesForAttributes(attributes());
     var result = PropertyMap.builder().putAll(projected);
@@ -292,9 +264,7 @@ public class Tag extends TagBase {
     attributes.keySet().removeIf(key -> upper(key).equals(normalized));
   }
 
-  /**
-   * Replaces text properties in memory and reports accepted and rejected values.
-   */
+  /// Replaces text properties in memory and reports accepted and rejected values.
   public PropertyUpdateResult replaceProperties(PropertyMap values) {
     var rejected = PropertyMap.builder();
     for (String key : properties().asMap().keySet()) {
@@ -351,9 +321,7 @@ public class Tag extends TagBase {
     return contains("WM/Picture") ? List.of("PICTURE") : List.of();
   }
 
-  /**
-   * Returns the values in the requested complex-property category.
-   */
+  /// Returns the values in the requested complex-property category.
   public List<Map<String, Variant>> complexProperties(String key) {
     if (!upper(key).equals("PICTURE")) {
       return List.of();
@@ -371,9 +339,7 @@ public class Tag extends TagBase {
     return List.copyOf(result);
   }
 
-  /**
-   * Replaces the requested complex-property values and reports whether they are supported.
-   */
+  /// Replaces the requested complex-property values and reports whether they are supported.
   public boolean setComplexProperties(String key, List<Map<String, Variant>> values) {
     if (!upper(key).equals("PICTURE")) {
       return false;

@@ -8,30 +8,24 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing URL-link text.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame containing URL-link text.
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class UrlLinkFrame extends Frame {
   private String url = "";
 
-  /**
-   * Decodes URL-link text from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes URL-link text from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public UrlLinkFrame(ByteVector data) {
     super(data);
     parseUrl(fieldData(data));
   }
 
-  /**
-   * Decodes URL-link text from serialized frame bytes, including their frame header.
-   * The supplied parsed frame header is retained as a live reference.
-   *
-   * @param data   serialized bytes including the frame header
-   * @param header the live parsed frame header
-   */
+  /// Decodes URL-link text from serialized frame bytes, including their frame header.
+  /// The supplied parsed frame header is retained as a live reference.
+  ///
+  /// @param data   serialized bytes including the frame header
+  /// @param header the live parsed frame header
   protected UrlLinkFrame(ByteVector data, Header header) {
     super(header);
     parseUrl(fieldData(data));
@@ -65,9 +59,6 @@ public class UrlLinkFrame extends Frame {
     return key.isEmpty() ? Id3Text.unsupported(frameID()) : PropertyMap.builder().put(key, url()).build();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseUrl(data);
@@ -77,9 +68,6 @@ public class UrlLinkFrame extends Frame {
     url = Id3Text.fixedLatin1(data);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     return ByteVector.fromText(url, ISO_8859_1);

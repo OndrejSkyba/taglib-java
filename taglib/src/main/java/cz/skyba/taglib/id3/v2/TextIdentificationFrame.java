@@ -12,11 +12,9 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * A mutable ID3v2 frame containing text identification values.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- * Text values also support mappings for involved people and musician credits.
- */
+/// A mutable ID3v2 frame containing text identification values.
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
+/// Text values also support mappings for involved people and musician credits.
 public class TextIdentificationFrame extends Frame {
   private static final Map<String, String> ROLES = Map.of(
     "ARRANGER", "ARRANGER", "ENGINEER", "ENGINEER", "PRODUCER", "PRODUCER",
@@ -36,47 +34,39 @@ public class TextIdentificationFrame extends Frame {
     return PEOPLE.getOrDefault(key, "");
   }
 
-  /**
-   * Creates a frame containing text identification values.
-   *
-   * @param encoding the requested text encoding
-   * @param type     the frame identifier to copy
-   *                 The encoding can be adjusted when rendered to represent the field values.
-   */
+  /// Creates a frame containing text identification values.
+  ///
+  /// @param encoding the requested text encoding
+  /// @param type     the frame identifier to copy
+  ///                 The encoding can be adjusted when rendered to represent the field values.
   public TextIdentificationFrame(ByteVector type, Charset encoding) {
     super(type);
     this.encoding = Id3Text.requireEncoding(encoding);
   }
 
-  /**
-   * Decodes text identification values from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes text identification values from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public TextIdentificationFrame(ByteVector data) {
     super(data);
     parseText(fieldData(data));
   }
 
-  /**
-   * Decodes text identification values from serialized frame bytes, including their frame header.
-   * The supplied parsed frame header is retained as a live reference.
-   *
-   * @param data   serialized bytes including the frame header
-   * @param header the live parsed frame header
-   */
+  /// Decodes text identification values from serialized frame bytes, including their frame header.
+  /// The supplied parsed frame header is retained as a live reference.
+  ///
+  /// @param data   serialized bytes including the frame header
+  /// @param header the live parsed frame header
   protected TextIdentificationFrame(ByteVector data, Header header) {
     super(header);
     parseText(fieldData(data));
   }
 
-  /**
-   * Replaces the complete logical field list with copied text values.
-   * For a TXXX frame this base operation includes the description field; use its
-   * {@code setValues} operation to preserve an existing description.
-   *
-   * @param values the complete logical field list
-   */
+  /// Replaces the complete logical field list with copied text values.
+  /// For a TXXX frame this base operation includes the description field; use its
+  /// `setValues` operation to preserve an existing description.
+  ///
+  /// @param values the complete logical field list
   public final void setText(List<String> values) {
     fields = new ArrayList<>(List.copyOf(values));
   }
@@ -96,11 +86,9 @@ public class TextIdentificationFrame extends Frame {
     return new ArrayList<>(fields);
   }
 
-  /**
-   * Returns an independent list of text values, including a TXXX description when present.
-   *
-   * @return copied text fields
-   */
+  /// Returns an independent list of text values, including a TXXX description when present.
+  ///
+  /// @return copied text fields
   public final List<String> fieldList() {
     return new ArrayList<>(fields);
   }
@@ -121,19 +109,15 @@ public class TextIdentificationFrame extends Frame {
     encoding = Id3Text.requireEncoding(value);
   }
 
-  /**
-   * Returns the read-only role map. Looking up an absent key does not add it.
-   */
+  /// Returns the read-only role map. Looking up an absent key does not add it.
   public static Map<String, String> involvedPeopleMap() {
     return PEOPLE;
   }
 
-  /**
-   * Creates an involved-people frame from supported role properties.
-   *
-   * @param properties role or performer properties to convert
-   * @return the constructed credit frame
-   */
+  /// Creates an involved-people frame from supported role properties.
+  ///
+  /// @param properties role or performer properties to convert
+  /// @return the constructed credit frame
   public static TextIdentificationFrame createTIPLFrame(PropertyMap properties) {
     var frame = new TextIdentificationFrame(new ByteVector("TIPL"));
     var values = new ArrayList<String>();
@@ -148,12 +132,10 @@ public class TextIdentificationFrame extends Frame {
     return frame;
   }
 
-  /**
-   * Creates a musician-credit frame from performer properties.
-   *
-   * @param properties role or performer properties to convert
-   * @return the constructed credit frame
-   */
+  /// Creates a musician-credit frame from performer properties.
+  ///
+  /// @param properties role or performer properties to convert
+  /// @return the constructed credit frame
   public static TextIdentificationFrame createTMCLFrame(PropertyMap properties) {
     var frame = new TextIdentificationFrame(new ByteVector("TMCL"));
     var values = new ArrayList<String>();
@@ -222,9 +204,6 @@ public class TextIdentificationFrame extends Frame {
     return result.build();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseText(data);
@@ -270,9 +249,6 @@ public class TextIdentificationFrame extends Frame {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset type = checkTextEncoding(fields, encoding);

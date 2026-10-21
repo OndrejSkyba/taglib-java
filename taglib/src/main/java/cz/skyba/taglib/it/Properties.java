@@ -13,11 +13,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * Mutable IT tracker audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Mutable IT tracker audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   public static final int Stereo = 1;
   public static final int Vol0MixOptimizations = 2;
@@ -45,34 +42,25 @@ public final class Properties {
   private int panningSeparation;
   private int pitchWheelDepth;
 
-  /**
-   * Creates zero-valued mutable audio property fields.
-   *
-   * @param style the audio property read hint
-   */
   public Properties(ReadStyle style) {
     Objects.requireNonNull(style);
   }
 
-  /**
-   * Reads IT tracker audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads IT tracker audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads IT tracker audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads IT tracker audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     this(style);
     try (var file = new BinaryFile(path)) {
@@ -82,25 +70,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads IT tracker audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads IT tracker audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads IT tracker audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads IT tracker audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     this(style);
     try (var file = new BinaryFile(stream)) {
@@ -144,12 +128,6 @@ public final class Properties {
     return 0;
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return new AudioProperties(0, 0, 0, channels, 0, false);
   }

@@ -6,17 +6,13 @@ import cz.skyba.taglib.toolkit.ByteVector;
 import java.util.Arrays;
 import java.util.Objects;
 
-/**
- * Synchsafe integer encoding and ID3 unsynchronization decoding.
- */
+/// Synchsafe integer encoding and ID3 unsynchronization decoding.
 public final class SynchData {
   private SynchData() {
   }
 
-  /**
-   * Decodes up to four synchsafe bytes; a high bit selects ordinary big-endian decoding with
-   * right-side zero padding.
-   */
+  /// Decodes up to four synchsafe bytes; a high bit selects ordinary big-endian decoding with
+  /// right-side zero padding.
   public static long toUnsignedInt(ByteVector data) {
     Objects.requireNonNull(data);
     int length = Math.min(data.size(), 4);
@@ -36,9 +32,7 @@ public final class SynchData {
     return result;
   }
 
-  /**
-   * Encodes the low 28 bits as four synchsafe bytes.
-   */
+  /// Encodes the low 28 bits as four synchsafe bytes.
   public static ByteVector fromUnsignedInt(long value) {
     byte[] data = new byte[4];
     for (int i = 0; i < 4; i++) {
@@ -47,9 +41,7 @@ public final class SynchData {
     return new ByteVector(data);
   }
 
-  /**
-   * Removes ID3 unsynchronisation padding: a zero byte immediately following 0xff.
-   */
+  /// Removes ID3 unsynchronisation padding: a zero byte immediately following 0xff.
   public static ByteVector decode(ByteVector data) {
     Objects.requireNonNull(data);
     byte[] result = new byte[data.size()];

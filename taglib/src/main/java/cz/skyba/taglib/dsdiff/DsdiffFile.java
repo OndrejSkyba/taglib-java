@@ -20,19 +20,15 @@ import java.util.function.Consumer;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * An editable DSDIFF file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable DSDIFF file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class DsdiffFile extends FileBase {
   private static final System.Logger LOG = System.getLogger(DsdiffFile.class.getName());
 
   static final int DIIN = 1, ID3v2 = 2;
 
-  /**
-   * Tag families supported by this format's save and removal operations.
-   */
+  /// Tag families supported by this format's save and removal operations.
   public enum TagType {
     DIIN(DsdiffFile.DIIN), ID3V2(ID3v2);
 
@@ -51,9 +47,7 @@ public class DsdiffFile extends FileBase {
     return mask;
   }
 
-  /**
-   * The byte order used by DSDIFF chunk integers.
-   */
+  /// The byte order used by DSDIFF chunk integers.
   protected enum Endianness {BigEndian, LittleEndian}
 
   private final IOStream source;
@@ -65,80 +59,68 @@ public class DsdiffFile extends FileBase {
   private final DsdiffLayout layout = new DsdiffLayout(new LiveTarget());
   private long retainedChunks;
 
-  /**
-   * Opens a DSDIFF file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSDIFF file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsdiffFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a DSDIFF file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSDIFF file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsdiffFile(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a DSDIFF file and owns the file handle.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSDIFF file and owns the file handle.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsdiffFile(Path path, ReadOptions options, FrameFactory factory) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options, factory);
   }
 
-  /**
-   * Opens a DSDIFF file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSDIFF file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsdiffFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a DSDIFF file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSDIFF file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsdiffFile(IOStream stream, ReadOptions options) {
     this(stream, false, options, null);
   }
 
-  /**
-   * Opens a DSDIFF file over a borrowed stream that remains open when this file closes.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSDIFF file over a borrowed stream that remains open when this file closes.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsdiffFile(IOStream stream, ReadOptions options, FrameFactory factory) {
     this(stream, false, options, factory);
   }
@@ -198,11 +180,7 @@ public class DsdiffFile extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -215,33 +193,27 @@ public class DsdiffFile extends FileBase {
     return super.readBlock(length);
   }
 
-  /**
-   * Checks for a recognizable DSDIFF header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param source the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable DSDIFF header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param source the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream source) {
     var header = TagUtils.readHeader(source, 16, false);
     return header.startsWith(new ByteVector("FRM8")) && header.containsAt(new ByteVector("DSD "), 12);
   }
 
-  /**
-   * Returns the live ID3v2 tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v2 tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final Tag id3v2Tag() {
     return (Tag) tag.tag(0);
   }
 
-  /**
-   * Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final Tag getOrCreateId3v2Tag() {
     if (tag.tag(0) == null) {
       tag.set(0, new Tag(null, 0, factory));
@@ -249,20 +221,16 @@ public class DsdiffFile extends FileBase {
     return (Tag) tag.tag(0);
   }
 
-  /**
-   * Returns the live DIIN tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live DIIN tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.dsdiff.diin.Tag diinTag() {
     return (cz.skyba.taglib.dsdiff.diin.Tag) tag.tag(1);
   }
 
-  /**
-   * Returns the live DIIN tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live DIIN tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.dsdiff.diin.Tag getOrCreateDiinTag() {
     if (tag.tag(1) == null) {
       tag.set(1, new cz.skyba.taglib.dsdiff.diin.Tag());
@@ -490,26 +458,22 @@ public class DsdiffFile extends FileBase {
     }
   }
 
-  /**
-   * Writes staged metadata to storage in place using {@link DsdiffSaveOptions#DEFAULT}.
-   * Saves all supported tag families using ID3v2.4. An I/O failure can leave partial changes.
-   */
+  /// Writes staged metadata to storage in place using [DsdiffSaveOptions#DEFAULT].
+  /// Saves all supported tag families using ID3v2.4. An I/O failure can leave partial changes.
   @Override
   public void save() {
     save(DsdiffSaveOptions.DEFAULT);
   }
 
-  /**
-   * Writes staged metadata to storage in place using the supplied options.
-   * Unselected tag families are preserved with {@link StripTags#STRIP_NONE} and removed
-   * with {@link StripTags#STRIP_OTHERS}. An I/O failure can leave partial changes.
-   *
-   * @param options tag selection, preservation policy and ID3v2 output settings
-   * @throws NullPointerException         if {@code options} is null
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or the cached layout cannot be saved
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Writes staged metadata to storage in place using the supplied options.
+  /// Unselected tag families are preserved with [StripTags#STRIP_NONE] and removed
+  /// with [StripTags#STRIP_OTHERS]. An I/O failure can leave partial changes.
+  ///
+  /// @param options tag selection, preservation policy and ID3v2 output settings
+  /// @throws NullPointerException         if `options` is null
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws IllegalStateException        if the file is closed
   public final void save(DsdiffSaveOptions options) {
     requireWritable();
     int tags = tagMask(options.tags());
@@ -568,17 +532,13 @@ public class DsdiffFile extends FileBase {
     }
   }
 
-  /**
-   * Removes all supported tag types from storage immediately, without calling save().
-   */
+  /// Removes all supported tag types from storage immediately, without calling save().
   public final void strip() {
     strip(Set.of(TagType.values()));
   }
 
-  /**
-   * Validates the complete removal plan, then immediately strips the selected tag chunks and resets
-   * their live tags.
-   */
+  /// Validates the complete removal plan, then immediately strips the selected tag chunks and resets
+  /// their live tags.
   public final void strip(Set<TagType> types) {
     int tags = tagMask(types);
     if (!preflight(plan -> plan.stripImpl(tags))) {

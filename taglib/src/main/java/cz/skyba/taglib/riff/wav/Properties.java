@@ -7,24 +7,19 @@ import cz.skyba.taglib.internal.Binary;
 
 import java.util.Objects;
 
-/**
- * Parsed WAV audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Parsed WAV audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   private final AudioProperties common;
   private final long sampleFrames;
   private final int format;
 
-  /**
-   * Reads WAV audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param file  the live file to inspect without taking ownership
-   * @param style the audio property read hint
-   * @throws java.io.UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads WAV audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param file  the live file to inspect without taking ownership
+  /// @param style the audio property read hint
+  /// @throws java.io.UncheckedIOException if storage access or property decoding fails
   public Properties(WavFile file, ReadStyle style) {
     Objects.requireNonNull(style);
     Properties source = Objects.requireNonNull(file).readProperties();
@@ -39,14 +34,12 @@ public final class Properties {
     this.format = format;
   }
 
-  /**
-   * Creates properties from selected fmt, data-length and sample-count information.
-   *
-   * @param data         encoded fmt chunk bytes
-   * @param streamLength the data stream byte length
-   * @param totalSamples the sample count when supplied by a fact or extended-size chunk
-   * @return parsed audio properties
-   */
+  /// Creates properties from selected fmt, data-length and sample-count information.
+  ///
+  /// @param data         encoded fmt chunk bytes
+  /// @param streamLength the data stream byte length
+  /// @param totalSamples the sample count when supplied by a fact or extended-size chunk
+  /// @return parsed audio properties
   public static Properties fromChunks(byte[] data, long streamLength, long totalSamples) {
     Objects.requireNonNull(data);
     if (data.length < 16 || streamLength == 0) {
@@ -131,12 +124,6 @@ public final class Properties {
     return format;
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return common;
   }

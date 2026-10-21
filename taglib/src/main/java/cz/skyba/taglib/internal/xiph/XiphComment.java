@@ -13,9 +13,7 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Xiph comments, including the FLAC picture representation used by Vorbis and Opus.
- */
+/// Xiph comments, including the FLAC picture representation used by Vorbis and Opus.
 public record XiphComment(String vendor, PropertyMap properties, List<Picture> pictures) {
   public XiphComment {
     pictures = List.copyOf(pictures);
@@ -39,9 +37,7 @@ public record XiphComment(String vendor, PropertyMap properties, List<Picture> p
     return rejected.build();
   }
 
-  /**
-   * Matches upstream's tolerant parsing: return fields preceding a truncated field.
-   */
+  /// Matches upstream's tolerant parsing: return fields preceding a truncated field.
   public static XiphComment parse(byte[] bytes) {
     var fields = PropertyMap.builder();
     var pictures = new ArrayList<Picture>();
@@ -103,9 +99,7 @@ public record XiphComment(String vendor, PropertyMap properties, List<Picture> p
     return render(replacement, framingBit, null);
   }
 
-  /**
-   * A null picture replacement preserves artwork; an empty list removes it.
-   */
+  /// A null picture replacement preserves artwork; an empty list removes it.
   public byte[] render(
     PropertyMap replacement, boolean framingBit, List<Picture> replacementPictures)
     throws IOException {

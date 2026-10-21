@@ -7,9 +7,7 @@ import cz.skyba.taglib.toolkit.ByteVector;
 
 import java.util.Objects;
 
-/**
- * A parsed MPEG audio frame header. Validation can also inspect the next frame header.
- */
+/// A parsed MPEG audio frame header. Validation can also inspect the next frame header.
 public final class Header {
   private static final Version[] VERSION_VALUES = Version.values();
   private static final ChannelMode[] CHANNELMODE_VALUES = ChannelMode.values();
@@ -28,23 +26,19 @@ public final class Header {
 
   private final MpegHeaderData data;
 
-  /**
-   * Decodes header fields from borrowed file storage.
-   *
-   * @param file   the borrowed source
-   * @param offset the absolute header byte offset
-   */
+  /// Decodes header fields from borrowed file storage.
+  ///
+  /// @param file   the borrowed source
+  /// @param offset the absolute header byte offset
   public Header(FileBase file, long offset) {
     this(file, offset, true);
   }
 
-  /**
-   * Decodes header fields from borrowed file storage. Next-frame validation compares version, layer and sampling-rate fields when requested.
-   *
-   * @param file        the borrowed source
-   * @param offset      the absolute header byte offset
-   * @param checkLength whether to validate the next frame header
-   */
+  /// Decodes header fields from borrowed file storage. Next-frame validation compares version, layer and sampling-rate fields when requested.
+  ///
+  /// @param file        the borrowed source
+  /// @param offset      the absolute header byte offset
+  /// @param checkLength whether to validate the next frame header
   public Header(FileBase file, long offset, boolean checkLength) {
     Objects.requireNonNull(file);
     file.seek(offset);
@@ -67,11 +61,9 @@ public final class Header {
     data = parsed;
   }
 
-  /**
-   * Creates a copied parsed header value.
-   *
-   * @param other the parsed value to copy
-   */
+  /// Creates a copied parsed header value.
+  ///
+  /// @param other the parsed value to copy
   public Header(Header other) {
     data = Objects.requireNonNull(other).data;
   }

@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/**
- * ID3v1 metadata and the canonical TagLib/Winamp genre vocabulary.
- */
+/// ID3v1 metadata and the canonical TagLib/Winamp genre vocabulary.
 public final class Id3v1 {
   private Id3v1() {
   }
@@ -23,9 +21,7 @@ public final class Id3v1 {
   private static volatile StringHandler stringHandler = DEFAULT_HANDLER;
   private static final ScopedValue<ReadState> READ_STATE = ScopedValue.newInstance();
 
-  /**
-   * One native constructor decodes its legacy child once, then shares the decoded views.
-   */
+  /// One native constructor decodes its legacy child once, then shares the decoded views.
   public static final class ReadState {
     private byte[] source;
     private Decoded decoded;
@@ -316,9 +312,7 @@ public final class Id3v1 {
     return result;
   }
 
-  /**
-   * Native ID3v1::genreIndex, including its eight historical spellings.
-   */
+  /// Native ID3v1::genreIndex, including its eight historical spellings.
   public static int genreIndex(String name) {
     for (int i = 0; i < GENRES.length; i++) {
       if (GENRES[i].equals(name)) {
@@ -328,9 +322,7 @@ public final class Id3v1 {
     return HISTORICAL_GENRE_ALIASES.getOrDefault(name, 255);
   }
 
-  /**
-   * Actual live common projection after native base Tag::setProperties on an ID3v1 tag.
-   */
+  /// Actual live common projection after native base Tag::setProperties on an ID3v1 tag.
   public static PropertyMap nativeProperties(PropertyMap input) {
     var result = PropertyMap.builder();
     for (String key : List.of("TITLE", "ARTIST", "ALBUM", "COMMENT")) {
@@ -372,9 +364,7 @@ public final class Id3v1 {
     return decoded(tag).properties();
   }
 
-  /**
-   * Native private year string survives even when its numeric getter is zero.
-   */
+  /// Native private year string survives even when its numeric getter is zero.
   public static String yearText(byte[] tag) {
     var retained = NativeSaveState.id3v1Fields();
     if (retained != null) {

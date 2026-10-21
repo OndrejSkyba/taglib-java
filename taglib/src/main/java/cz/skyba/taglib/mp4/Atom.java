@@ -9,12 +9,10 @@ import cz.skyba.taglib.toolkit.IOStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/**
- * A parsed MP4 atom descriptor with its byte offset, full length, name and child descriptors.
- * Parsing starts at the borrowed source's current cursor and moves it past the atom. Invalid
- * extents are represented by a zero length. Descriptor mutations affect the inspection tree
- * in memory and do not rewrite storage.
- */
+/// A mutable descriptor in a parsed MP4 atom tree.
+/// Parsing starts at the borrowed source's current cursor and moves it past the atom. Invalid
+/// extents are represented by a zero length. Descriptor mutations affect the inspection tree
+/// in memory and do not rewrite storage.
 public class Atom {
   private static final Set<String> CONTAINERS = Set.of("moov", "udta", "mdia", "meta", "ilst", "stbl", "minf", "moof", "traf", "trak",
     "stsd", "stem");
@@ -49,62 +47,52 @@ public class Atom {
     }
   }
 
-  /**
-   * Parses an atom and recognized child containers at the current source cursor.
-   * The source is borrowed and remains open; its cursor advances.
-   *
-   * @param file the source to inspect
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an atom and recognized child containers at the current source cursor.
+  /// The source is borrowed and remains open; its cursor advances.
+  ///
+  /// @param file the source to inspect
+  /// @throws java.io.UncheckedIOException if storage access fails
   public Atom(FileBase file) {
     this(FileOwnerStream.properties(file));
   }
 
-  /**
-   * Parses an atom and recognized child containers at the current source cursor.
-   * The source is borrowed and remains open; its cursor advances.
-   *
-   * @param stream the source to inspect
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an atom and recognized child containers at the current source cursor.
+  /// The source is borrowed and remains open; its cursor advances.
+  ///
+  /// @param stream the source to inspect
+  /// @throws java.io.UncheckedIOException if storage access fails
   public Atom(IOStream stream) {
     this(stream, 0, new AtomCounter());
   }
 
-  /**
-   * Parses an atom and recognized child containers at the current source cursor.
-   * The source is borrowed and remains open; its cursor advances.
-   *
-   * @param file  the source to inspect
-   * @param depth the starting container nesting depth
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an atom and recognized child containers at the current source cursor.
+  /// The source is borrowed and remains open; its cursor advances.
+  ///
+  /// @param file  the source to inspect
+  /// @param depth the starting container nesting depth
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected Atom(FileBase file, int depth) {
     this(FileOwnerStream.properties(file), depth, new AtomCounter());
   }
 
-  /**
-   * Parses an atom and recognized child containers at the current source cursor.
-   * The source is borrowed and remains open; its cursor advances.
-   *
-   * @param file      the source to inspect
-   * @param depth     the starting container nesting depth
-   * @param atomCount a nonempty shared array whose first entry tracks the parsed atom count
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an atom and recognized child containers at the current source cursor.
+  /// The source is borrowed and remains open; its cursor advances.
+  ///
+  /// @param file      the source to inspect
+  /// @param depth     the starting container nesting depth
+  /// @param atomCount a nonempty shared array whose first entry tracks the parsed atom count
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected Atom(FileBase file, int depth, int[] atomCount) {
     this(FileOwnerStream.properties(file), depth, new AtomCounter(atomCount));
   }
 
-  /**
-   * Parses an atom and recognized child containers at the current source cursor.
-   * The source is borrowed and remains open; its cursor advances.
-   *
-   * @param stream    the source to inspect
-   * @param depth     the starting container nesting depth
-   * @param atomCount a nonempty shared array whose first entry tracks the parsed atom count
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Parses an atom and recognized child containers at the current source cursor.
+  /// The source is borrowed and remains open; its cursor advances.
+  ///
+  /// @param stream    the source to inspect
+  /// @param depth     the starting container nesting depth
+  /// @param atomCount a nonempty shared array whose first entry tracks the parsed atom count
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected Atom(IOStream stream, int depth, int[] atomCount) {
     this(stream, depth, new AtomCounter(atomCount));
   }
@@ -186,50 +174,40 @@ public class Atom {
     return name.equals(expected);
   }
 
-  /**
-   * Returns an unmodifiable live view of descriptor references.
-   *
-   * @return the descriptor view
-   */
+  /// Returns an unmodifiable live view of descriptor references.
+  ///
+  /// @return the descriptor view
   public final List<Atom> children() {
     return Collections.unmodifiableList(children);
   }
 
-  /**
-   * Adjusts the cached byte offset without writing storage.
-   *
-   * @param delta the signed byte adjustment
-   */
+  /// Adjusts the cached byte offset without writing storage.
+  ///
+  /// @param delta the signed byte adjustment
   public final void addToOffset(long delta) {
     offset = Math.addExact(offset, delta);
   }
 
-  /**
-   * Prepends a live child descriptor in memory without changing storage.
-   *
-   * @param atom the child descriptor to retain
-   */
+  /// Prepends a live child descriptor in memory without changing storage.
+  ///
+  /// @param atom the child descriptor to retain
   public final void prependChild(Atom atom) {
     children.addFirst(Objects.requireNonNull(atom));
   }
 
-  /**
-   * Removes a child descriptor reference in memory without changing storage.
-   *
-   * @param atom the child descriptor to remove
-   * @return whether the reference was present
-   */
+  /// Removes a child descriptor reference in memory without changing storage.
+  ///
+  /// @param atom the child descriptor to remove
+  /// @return whether the reference was present
   public final boolean removeChild(Atom atom) {
     return children.remove(atom);
   }
 
-  /**
-   * Finds the first descendant matching a child-name path. An empty path returns this atom.
-   *
-   * @param names zero to four child names, in nesting order
-   * @return the matched descriptor, or null if absent
-   * @throws IllegalArgumentException if more than four names are supplied
-   */
+  /// Finds the first descendant matching a child-name path. An empty path returns this atom.
+  ///
+  /// @param names zero to four child names, in nesting order
+  /// @return the matched descriptor, or null if absent
+  /// @throws IllegalArgumentException if more than four names are supplied
   public final Atom find(String... names) {
     if (names.length > 4) {
       throw new IllegalArgumentException("At most four atom names");
@@ -258,14 +236,12 @@ public class Atom {
     return current;
   }
 
-  /**
-   * Appends this atom and a matching descendant chain to the supplied list.
-   * A failed lookup leaves the matched prefix appended.
-   *
-   * @param path  the destination list to append to
-   * @param names child names in nesting order
-   * @return whether the complete path was found
-   */
+  /// Appends this atom and a matching descendant chain to the supplied list.
+  /// A failed lookup leaves the matched prefix appended.
+  ///
+  /// @param path  the destination list to append to
+  /// @param names child names in nesting order
+  /// @return whether the complete path was found
   public final boolean path(List<Atom> path, String... names) {
     if (names.length > 3) {
       throw new IllegalArgumentException("At most three child atom names");
@@ -286,23 +262,19 @@ public class Atom {
     return true;
   }
 
-  /**
-   * Finds child descriptors with the supplied atom name. Only immediate children are searched.
-   *
-   * @param name the atom name to match
-   * @return a detached list containing matched descriptor references
-   */
+  /// Finds child descriptors with the supplied atom name. Only immediate children are searched.
+  ///
+  /// @param name the atom name to match
+  /// @return a detached list containing matched descriptor references
   public final List<Atom> findall(String name) {
     return findall(name, false);
   }
 
-  /**
-   * Finds child descriptors with the supplied atom name.
-   *
-   * @param name      the atom name to match
-   * @param recursive whether to search all descendant containers
-   * @return a detached list containing matched descriptor references
-   */
+  /// Finds child descriptors with the supplied atom name.
+  ///
+  /// @param name      the atom name to match
+  /// @param recursive whether to search all descendant containers
+  /// @return a detached list containing matched descriptor references
   public final List<Atom> findall(String name, boolean recursive) {
     var found = new ArrayList<Atom>();
     ByteVector expected = new ByteVector(name);

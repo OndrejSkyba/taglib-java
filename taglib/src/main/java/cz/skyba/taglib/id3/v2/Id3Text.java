@@ -10,9 +10,7 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * ID3 text encoding bytes, field conversion and Latin-1 handler registration.
- */
+/// ID3 text encoding bytes, field conversion and Latin-1 handler registration.
 final class Id3Text {
   private static final Latin1StringHandler DEFAULT = new Latin1StringHandler();
   private static volatile Latin1StringHandler handler = DEFAULT;
@@ -66,9 +64,7 @@ final class Id3Text {
     return Ascii.upper(text);
   }
 
-  /**
-   * Native String's copy-on-write detach uses c_str(), truncating a copied left operand.
-   */
+  /// Native String's copy-on-write detach uses c_str(), truncating a copied left operand.
   static String detachedLeft(String text) {
     int end = text.indexOf('\0');
     return end < 0 ? text : text.substring(0, end);

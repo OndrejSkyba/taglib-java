@@ -8,28 +8,21 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing PRIV owner and private binary payload.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for owner-scoped private data (PRIV).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class PrivateFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(PrivateFrame.class.getName());
 
   private String owner = "";
   private ByteVector data = new ByteVector();
 
-  /**
-   * Creates a frame containing PRIV owner and private binary payload.
-   */
   public PrivateFrame() {
     super(new ByteVector("PRIV"));
   }
 
-  /**
-   * Decodes PRIV owner and private binary payload from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes PRIV owner and private binary payload from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public PrivateFrame(ByteVector data) {
     super(data);
     parsePrivate(fieldData(data));
@@ -61,9 +54,6 @@ public class PrivateFrame extends Frame {
     return owner;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parsePrivate(data);
@@ -80,9 +70,6 @@ public class PrivateFrame extends Frame {
     data = value.mid(end + 1);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     return ByteVector.fromText(owner, ISO_8859_1).append((byte) 0).append(data);

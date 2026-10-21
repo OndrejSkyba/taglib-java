@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/**
- * Physical Xiph entries and their original-byte retention policy.
- */
+/// Physical Xiph entries and their original-byte retention policy.
 final class XiphBlockEditor {
   private static final Set<String> ART_KEYS = Set.of("METADATA_BLOCK_PICTURE", "COVERART", "COVERARTMIME");
 

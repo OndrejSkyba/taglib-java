@@ -14,35 +14,28 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * Parsed Monkey's Audio audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Parsed Monkey's Audio audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   private final ApeCodec.Details details;
 
-  /**
-   * Reads Monkey's Audio audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param file         the live file to inspect without taking ownership
-   * @param streamLength the byte length used to calculate bitrate
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param file         the live file to inspect without taking ownership
+  /// @param streamLength the byte length used to calculate bitrate
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(ApeFile file, long streamLength) {
     this(file, streamLength, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Monkey's Audio audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param file         the live file to inspect without taking ownership
-   * @param streamLength the byte length used to calculate bitrate
-   * @param style        the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param file         the live file to inspect without taking ownership
+  /// @param streamLength the byte length used to calculate bitrate
+  /// @param style        the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(ApeFile file, long streamLength, ReadStyle style) {
     Objects.requireNonNull(file);
     Objects.requireNonNull(style);
@@ -112,25 +105,21 @@ public final class Properties {
     return new ApeCodec.Details(common, version, samples, 0, 0, 0, 0, 0, false);
   }
 
-  /**
-   * Reads Monkey's Audio audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Monkey's Audio audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(path)) {
@@ -140,25 +129,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads Monkey's Audio audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Monkey's Audio audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Monkey's Audio audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(stream)) {
@@ -196,19 +181,11 @@ public final class Properties {
     return details.version();
   }
 
-  /**
-   * Unsigned 32-bit sample-frame count, represented without sign loss.
-   */
+  /// Unsigned 32-bit sample-frame count, represented without sign loss.
   public long sampleFrames() {
     return details.sampleFrames();
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return details.common();
   }

@@ -10,51 +10,41 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
-/**
- * A view over three optional live tags in priority order.
- * Common text and numeric getters select the first populated field. Common setters update
- * every non-null child. Property and complex-property reads use the documented precedence
- * for each operation. Child references are retained without copying or taking ownership.
- */
+/// A prioritized view over optional live metadata tags.
+/// Common text and numeric getters select the first populated field. Common setters update
+/// every non-null child. Property and complex-property reads use the documented precedence
+/// for each operation. Child references are retained without copying or taking ownership.
 public final class TagUnion extends TagBase {
   private final TagBase[] tags;
 
-  /**
-   * Creates a union with three empty child slots.
-   */
+  /// Creates a union with three empty child slots.
   public TagUnion() {
     this(null, null, null);
   }
 
-  /**
-   * Creates a union over live child tags in decreasing priority order.
-   *
-   * @param first  the highest-priority tag, or {@code null}
-   * @param second the middle-priority tag, or {@code null}
-   * @param third  the lowest-priority tag, or {@code null}
-   */
+  /// Creates a union over live child tags in decreasing priority order.
+  ///
+  /// @param first  the highest-priority tag, or `null`
+  /// @param second the middle-priority tag, or `null`
+  /// @param third  the lowest-priority tag, or `null`
   public TagUnion(TagBase first, TagBase second, TagBase third) {
     tags = new TagBase[]{first, second, third};
   }
 
-  /**
-   * Returns a live child reference from a priority slot.
-   *
-   * @param index the zero-based slot, from 0 to 2
-   * @return the child tag, or {@code null} if the slot is empty
-   * @throws IndexOutOfBoundsException if the slot is outside 0 to 2
-   */
+  /// Returns a live child reference from a priority slot.
+  ///
+  /// @param index the zero-based slot, from 0 to 2
+  /// @return the child tag, or `null` if the slot is empty
+  /// @throws IndexOutOfBoundsException if the slot is outside 0 to 2
   public TagBase tag(int index) {
     return tags[index];
   }
 
-  /**
-   * Replaces a child reference without copying or closing the tag.
-   *
-   * @param index the zero-based priority slot, from 0 to 2
-   * @param tag   the new live tag, or {@code null} to clear the slot
-   * @throws IndexOutOfBoundsException if the slot is outside 0 to 2
-   */
+  /// Replaces a child reference without copying or closing the tag.
+  ///
+  /// @param index the zero-based priority slot, from 0 to 2
+  /// @param tag   the new live tag, or `null` to clear the slot
+  /// @throws IndexOutOfBoundsException if the slot is outside 0 to 2
   public void set(int index, TagBase tag) {
     tags[index] = tag;
   }
@@ -166,9 +156,7 @@ public final class TagUnion extends TagBase {
     return Arrays.stream(tags).allMatch(t -> t == null || t.isEmpty());
   }
 
-  /**
-   * Returns properties from the first non-null, nonempty tag in precedence order.
-   */
+  /// Returns properties from the first non-null, nonempty tag in precedence order.
   @Override
   public PropertyMap properties() {
     for (var tag : tags) {
@@ -194,9 +182,7 @@ public final class TagUnion extends TagBase {
     return false;
   }
 
-  /**
-   * Returns the first nonempty complex-property key list in tag precedence order.
-   */
+  /// Returns the first nonempty complex-property key list in tag precedence order.
   @Override
   public List<String> complexPropertyKeys() {
     for (var tag : tags) {
@@ -210,9 +196,7 @@ public final class TagUnion extends TagBase {
     return List.of();
   }
 
-  /**
-   * Returns the first nonempty value list for the key in tag precedence order.
-   */
+  /// Returns the first nonempty value list for the key in tag precedence order.
   @Override
   public List<Map<String, Variant>> complexProperties(String key) {
     for (var tag : tags) {
@@ -226,9 +210,7 @@ public final class TagUnion extends TagBase {
     return List.of();
   }
 
-  /**
-   * Broadcasts the values to every non-null child tag and succeeds if any child accepts them.
-   */
+  /// Broadcasts the values to every non-null child tag and succeeds if any child accepts them.
   @Override
   public boolean setComplexProperties(String key, List<Map<String, Variant>> value) {
     boolean accepted = false;

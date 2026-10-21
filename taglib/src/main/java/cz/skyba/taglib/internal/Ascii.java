@@ -3,9 +3,7 @@ package cz.skyba.taglib.internal;
 
 import java.util.Objects;
 
-/**
- * ASCII transformations shared by native-compatible property and string APIs.
- */
+/// ASCII transformations shared by native-compatible property and string APIs.
 public final class Ascii {
   private Ascii() {
   }
@@ -20,10 +18,8 @@ public final class Ascii {
     return new String(chars);
   }
 
-  /**
-   * Removes ASCII space, tab, newline, form feed and carriage return at either end.
-   * Vertical tabs and other Unicode whitespace are retained.
-   */
+  /// Removes ASCII space, tab, newline, form feed and carriage return at either end.
+  /// Vertical tabs and other Unicode whitespace are retained.
   public static String stripWhiteSpace(String value) {
     int begin = 0, end = value.length();
     while (begin < end && "\t\n\f\r ".indexOf(value.charAt(begin)) >= 0) {

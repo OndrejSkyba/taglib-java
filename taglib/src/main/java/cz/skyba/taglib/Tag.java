@@ -3,45 +3,37 @@ package cz.skyba.taglib;
 
 import cz.skyba.taglib.internal.TextNumbers;
 
-/**
- * An immutable common-field snapshot, separate from the complete text property map.
- * Year and track values retain the low 32 bits of their inputs as unsigned Java {@code long}s.
- *
- * @param title   title text
- * @param artist  artist text
- * @param album   album text
- * @param comment comment text
- * @param genre   genre text
- * @param year    unsigned 32-bit year value, with zero representing an unspecified year
- * @param track   unsigned 32-bit track value, with zero representing an unspecified track
- */
+/// An immutable common-field snapshot, separate from the complete text property map.
+/// Year and track values retain the low 32 bits of their inputs as unsigned Java `long`s.
+///
+/// @param title   title text
+/// @param artist  artist text
+/// @param album   album text
+/// @param comment comment text
+/// @param genre   genre text
+/// @param year    unsigned 32-bit year value, with zero representing an unspecified year
+/// @param track   unsigned 32-bit track value, with zero representing an unspecified track
 public record Tag(
   String title, String artist, String album, String comment, String genre, long year, long track) {
-  /**
-   * Creates a common-field snapshot, retaining the low 32 bits of the year and track values.
-   */
+  /// Creates a common-field snapshot, retaining the low 32 bits of the year and track values.
   public Tag {
     year &= 0xffff_ffffL;
     track &= 0xffff_ffffL;
   }
 
-  /**
-   * Creates a common-field snapshot using MPEG text and numeric mapping rules.
-   *
-   * @param p source properties
-   */
+  /// Creates a common-field snapshot using MPEG text and numeric mapping rules.
+  ///
+  /// @param p source properties
   public Tag(PropertyMap p) {
     this(p, Format.MPEG);
   }
 
-  /**
-   * Creates a common-field snapshot using the selected format's mapping and display rules.
-   * Multiple text values and numeric fields are projected according to the format. The input
-   * property map is unchanged.
-   *
-   * @param p      source properties
-   * @param format the format whose common-field mappings to use
-   */
+  /// Creates a common-field snapshot using the selected format's mapping and display rules.
+  /// Multiple text values and numeric fields are projected according to the format. The input
+  /// property map is unchanged.
+  ///
+  /// @param p      source properties
+  /// @param format the format whose common-field mappings to use
   public Tag(PropertyMap p, Format format) {
     this(
       text(p, "TITLE", format),

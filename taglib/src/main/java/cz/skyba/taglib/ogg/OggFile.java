@@ -12,14 +12,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/**
- * A base for Ogg logical-stream packet inspection and staged packet replacement.
- * Path construction owns storage; stream construction borrows it. Packet indexing is lazy
- * and is invalidated by external writes. Saving repaginates modified groups and can reset
- * granule positions and end-of-stream flags on replaced pages. Replacing a packet spanning
- * interleaved logical streams replaces its physical span, so this API is not a general
- * multiplexed-stream editor. Materialized packet and page groups must fit a Java byte array.
- */
+/// A base for Ogg logical-stream packet inspection and staged packet replacement.
+/// Path construction owns storage; stream construction borrows it. Packet indexing is lazy
+/// and is invalidated by external writes. Saving repaginates modified groups and can reset
+/// granule positions and end-of-stream flags on replaced pages. Replacing a packet spanning
+/// interleaved logical streams replaces its physical span, so this API is not a general
+/// multiplexed-stream editor. Materialized packet and page groups must fit a Java byte array.
 public abstract class OggFile extends FileBase {
   private static final long UNLIMITED = 0xffff_ffffL;
   private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
@@ -36,22 +34,18 @@ public abstract class OggFile extends FileBase {
   // private. This view shares exactly the FileBase cursor without taking ownership or reopening.
   private final IOStream pageStream = ownerStream();
 
-  /**
-   * Initializes an Ogg format implementation with owned path storage.
-   * The subclass supplies codec tags and audio properties.
-   *
-   * @param path the input file
-   */
+  /// Initializes an Ogg format implementation with owned path storage.
+  /// The subclass supplies codec tags and audio properties.
+  ///
+  /// @param path the input file
   protected OggFile(Path path) {
     super(path);
   }
 
-  /**
-   * Initializes an Ogg format implementation over a borrowed stream.
-   * The subclass supplies codec tags and audio properties.
-   *
-   * @param stream the open, seekable input stream
-   */
+  /// Initializes an Ogg format implementation over a borrowed stream.
+  /// The subclass supplies codec tags and audio properties.
+  ///
+  /// @param stream the open, seekable input stream
   protected OggFile(IOStream stream) {
     super(stream);
   }
@@ -60,29 +54,25 @@ public abstract class OggFile extends FileBase {
     return pageStream;
   }
 
-  /**
-   * Returns an independent copy of a packet from the selected logical stream.
-   * Reading can move the shared cursor and populate the page index.
-   *
-   * @param index the nonnegative packet index
-   * @return packet bytes, or an empty vector for an absent packet
-   * @throws IllegalArgumentException     if the packet index is negative
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Returns an independent copy of a packet from the selected logical stream.
+  /// Reading can move the shared cursor and populate the page index.
+  ///
+  /// @param index the nonnegative packet index
+  /// @return packet bytes, or an empty vector for an absent packet
+  /// @throws IllegalArgumentException     if the packet index is negative
+  /// @throws java.io.UncheckedIOException if storage access fails
   public final ByteVector packet(int index) {
     return packet(index, UNLIMITED);
   }
 
-  /**
-   * Returns an independent copy of a packet from the selected logical stream.
-   * Reading can move the shared cursor and populate the page index.
-   *
-   * @param index   the nonnegative packet index
-   * @param maxSize the maximum packet bytes to materialize
-   * @return packet bytes, or an empty vector for an absent packet or budget rejection
-   * @throws IllegalArgumentException     if the packet index is negative
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Returns an independent copy of a packet from the selected logical stream.
+  /// Reading can move the shared cursor and populate the page index.
+  ///
+  /// @param index   the nonnegative packet index
+  /// @param maxSize the maximum packet bytes to materialize
+  /// @return packet bytes, or an empty vector for an absent packet or budget rejection
+  /// @throws IllegalArgumentException     if the packet index is negative
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final ByteVector packet(int index, long maxSize) {
     packetLimitExceeded = false;
     checkIndex(index);
@@ -118,25 +108,21 @@ public abstract class OggFile extends FileBase {
     return new ByteVector(join(parts, size));
   }
 
-  /**
-   * Reports whether the last bounded packet read was rejected by its byte budget.
-   * This distinguishes rejection from an absent or genuinely empty packet.
-   *
-   * @return whether the read budget was exceeded
-   */
+  /// Reports whether the last bounded packet read was rejected by its byte budget.
+  /// This distinguishes rejection from an absent or genuinely empty packet.
+  ///
+  /// @return whether the read budget was exceeded
   protected final boolean packetLimitExceeded() {
     return packetLimitExceeded;
   }
 
-  /**
-   * Stages an independent copy of replacement packet bytes. Unknown packet indexes are ignored.
-   * Call {@link #save()} to write the replacement.
-   *
-   * @param index  the nonnegative packet index
-   * @param packet replacement bytes
-   * @throws IllegalArgumentException     if the index is negative
-   * @throws java.io.UncheckedIOException if locating the packet fails
-   */
+  /// Stages an independent copy of replacement packet bytes. Unknown packet indexes are ignored.
+  /// Call [#save()] to write the replacement.
+  ///
+  /// @param index  the nonnegative packet index
+  /// @param packet replacement bytes
+  /// @throws IllegalArgumentException     if the index is negative
+  /// @throws java.io.UncheckedIOException if locating the packet fails
   public final void setPacket(int index, ByteVector packet) {
     checkIndex(index);
     Objects.requireNonNull(packet);
@@ -145,9 +131,7 @@ public abstract class OggFile extends FileBase {
     }
   }
 
-  /**
-   * First physical page header, independently of selected logical stream, or null.
-   */
+  /// First physical page header, independently of selected logical stream, or null.
   public final PageHeader firstPageHeader() {
     if (firstHeader == null) {
       long offset = find(CAPTURE);
@@ -159,9 +143,7 @@ public abstract class OggFile extends FileBase {
     return firstHeader.isValid() ? firstHeader : null;
   }
 
-  /**
-   * Last physical capture's header, or null if that capture does not hold a valid header.
-   */
+  /// Last physical capture's header, or null if that capture does not hold a valid header.
   public final PageHeader lastPageHeader() {
     if (lastHeader == null) {
       long offset = rfind(CAPTURE);
@@ -173,9 +155,7 @@ public abstract class OggFile extends FileBase {
     return lastHeader.isValid() ? lastHeader : null;
   }
 
-  /**
-   * Writes dirty packets in index order and clears them.
-   */
+  /// Writes dirty packets in index order and clears them.
   @Override
   public void save() {
     requireWritable();
@@ -185,10 +165,8 @@ public abstract class OggFile extends FileBase {
     dirtyPackets.clear();
   }
 
-  /**
-   * Selects the first BOS page whose first packet starts with magic. Call before requesting
-   * packets. Failure retains the normal fallback to the first logical stream.
-   */
+  /// Selects the first BOS page whose first packet starts with magic. Call before requesting
+  /// packets. Failure retains the normal fallback to the first logical stream.
   protected final boolean selectStream(ByteVector magic) {
     Objects.requireNonNull(magic);
     long offset = find(CAPTURE);
@@ -283,9 +261,7 @@ public abstract class OggFile extends FileBase {
     return first;
   }
 
-  /**
-   * Internal subclass view of an already indexed complete packet's physical pages.
-   */
+  /// Internal subclass view of an already indexed complete packet's physical pages.
   protected final List<Page> cachedPacketPages(int index) {
     if (pages.isEmpty() || nextPacketIndex(pages.getLast()) <= index) {
       return List.of();

@@ -7,9 +7,7 @@ import cz.skyba.taglib.toolkit.ByteVector;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Shared native packet-group replacement/pagination for the typed Ogg File and codec writer.
- */
+/// Shared native packet-group replacement/pagination for the typed Ogg File and codec writer.
 public final class OggPacketWrite {
   private OggPacketWrite() {
   }

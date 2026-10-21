@@ -12,19 +12,15 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.*;
 
-/**
- * A mutable ID3v2 frame containing SYLT language, description and timed text.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for synchronized text (SYLT).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class SynchronizedLyricsFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(SynchronizedLyricsFrame.class.getName());
 
   private static final TimestampFormat[] TIMESTAMP_FORMATS = TimestampFormat.values();
   private static final Type[] TYPES = Type.values();
 
-  /**
-   * The unit used by frame timestamps.
-   */
+  /// The unit used by frame timestamps.
   public enum TimestampFormat {
     Unknown, AbsoluteMpegFrames, AbsoluteMilliseconds;
 
@@ -33,9 +29,7 @@ public class SynchronizedLyricsFrame extends Frame {
     }
   }
 
-  /**
-   * The category of synchronized text.
-   */
+  /// The category of synchronized text.
   public enum Type {
     Other, Lyrics, TextTranscription, Movement, Events, Chord, Trivia, WebpageUrls, ImageUrls;
 
@@ -44,18 +38,14 @@ public class SynchronizedLyricsFrame extends Frame {
     }
   }
 
-  /**
-   * An immutable timed entry. Timestamps retain their low 32 bits and use the containing frame's units.
-   *
-   * @param time the timestamp in the containing frame's selected units
-   * @param text the synchronized text
-   */
+  /// An immutable timed entry. Timestamps retain their low 32 bits and use the containing frame's units.
+  ///
+  /// @param time the timestamp in the containing frame's selected units
+  /// @param text the synchronized text
   public record SynchedText(long time, String text) {
-    /**
-     * Creates a timed entry, retaining the timestamp's low 32 bits.
-     *
-     * @throws NullPointerException if the text is null
-     */
+    /// Creates a timed entry, retaining the timestamp's low 32 bits.
+    ///
+    /// @throws NullPointerException if the text is null
     public SynchedText {
       time &= 0xffff_ffffL;
       Objects.requireNonNull(text);
@@ -69,28 +59,19 @@ public class SynchronizedLyricsFrame extends Frame {
   private String description = "";
   private final List<SynchedText> text = new ArrayList<>();
 
-  /**
-   * Creates a frame containing SYLT language, description and timed text. The initial text encoding is ISO-8859-1.
-   */
+  /// Creates a frame containing SYLT language, description and timed text. The initial text encoding is ISO-8859-1.
   public SynchronizedLyricsFrame() {
     this(ISO_8859_1);
   }
 
-  /**
-   * Creates a frame containing SYLT language, description and timed text.
-   *
-   * @param encoding the requested text encoding
-   */
   public SynchronizedLyricsFrame(Charset encoding) {
     super(new ByteVector("SYLT"));
     this.encoding = Id3Text.requireEncoding(encoding);
   }
 
-  /**
-   * Decodes SYLT language, description and timed text from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes SYLT language, description and timed text from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public SynchronizedLyricsFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -110,20 +91,16 @@ public class SynchronizedLyricsFrame extends Frame {
     encoding = Id3Text.requireEncoding(value);
   }
 
-  /**
-   * Returns an independent copy of the stored language-code bytes.
-   *
-   * @return copied language bytes
-   */
+  /// Returns an independent copy of the stored language-code bytes.
+  ///
+  /// @return copied language bytes
   public final ByteVector language() {
     return new ByteVector(language);
   }
 
-  /**
-   * Copies up to the first three language-code bytes into the live frame.
-   *
-   * @param value language bytes to copy
-   */
+  /// Copies up to the first three language-code bytes into the live frame.
+  ///
+  /// @param value language bytes to copy
   public final void setLanguage(ByteVector value) {
     language = value.mid(0, 3);
   }
@@ -152,20 +129,16 @@ public class SynchronizedLyricsFrame extends Frame {
     description = Objects.requireNonNull(value);
   }
 
-  /**
-   * Returns an independent mutable list of immutable timed text entries.
-   *
-   * @return an independent list of entries
-   */
+  /// Returns an independent mutable list of immutable timed text entries.
+  ///
+  /// @return an independent list of entries
   public final List<SynchedText> synchedText() {
     return new ArrayList<>(text);
   }
 
-  /**
-   * Replaces the timed text entries, copying the list and rejecting null entries.
-   *
-   * @param value replacement entries
-   */
+  /// Replaces the timed text entries, copying the list and rejecting null entries.
+  ///
+  /// @param value replacement entries
   public final void setSynchedText(List<SynchedText> value) {
     var copy = List.copyOf(value);
     text.clear();
@@ -177,9 +150,6 @@ public class SynchronizedLyricsFrame extends Frame {
     return description;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseLyrics(data);
@@ -232,9 +202,6 @@ public class SynchronizedLyricsFrame extends Frame {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset rendered = checkTextEncoding(List.of(description), encoding);

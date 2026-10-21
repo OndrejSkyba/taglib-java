@@ -7,9 +7,7 @@ import cz.skyba.taglib.TagBase;
 
 import java.util.Objects;
 
-/**
- * An empty metadata view for Shorten audio. Common-field setters have no effect and text properties are rejected.
- */
+/// An empty metadata view for Shorten audio. Common-field setters have no effect and text properties are rejected.
 public class Tag extends TagBase {
   @Override
   public String title() {

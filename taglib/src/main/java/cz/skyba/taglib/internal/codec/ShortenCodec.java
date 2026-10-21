@@ -13,9 +13,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * Shorten versions 1–3; reads the initial Rice-coded verbatim WAV/AIFF header.
- */
+/// Shorten versions 1–3; reads the initial Rice-coded verbatim WAV/AIFF header.
 public final class ShortenCodec implements Codec {
   public record Details(AudioProperties common, int version, int fileType, long sampleFrames) {
   }
@@ -31,9 +29,7 @@ public final class ShortenCodec implements Codec {
     return new ShortenCodec().parse(file, options, file.initialPosition()).details();
   }
 
-  /**
-   * PropertyValues' unsigned long frame count is represented by raw long bits on Linux.
-   */
+  /// PropertyValues' unsigned long frame count is represented by raw long bits on Linux.
   public static Details properties(
     int version, int fileType, int channels, int rate,
     int bits, long samples

@@ -13,11 +13,9 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * Mutable RIFF INFO text fields keyed by four-byte identifiers.
- * Unknown identifiers and empty fields can be retained. Editing changes the in-memory tag;
- * an owning RIFF file writes the tag on save.
- */
+/// Mutable RIFF INFO text fields keyed by four-byte identifiers.
+/// Unknown identifiers and empty fields can be retained. Editing changes the in-memory tag;
+/// an owning RIFF file writes the tag on save.
 public class Tag extends TagBase {
   private static final StringHandler DEFAULT_HANDLER = new StringHandler();
   private static volatile StringHandler stringHandler = DEFAULT_HANDLER;
@@ -47,51 +45,41 @@ public class Tag extends TagBase {
   public Tag() {
   }
 
-  /**
-   * Decodes an INFO payload into mutable fields.
-   *
-   * @param data serialized INFO data
-   */
+  /// Decodes an INFO payload into mutable fields.
+  ///
+  /// @param data serialized INFO data
   public Tag(ByteVector data) {
     parseFields(Objects.requireNonNull(data));
   }
 
-  /**
-   * Installs the shared INFO text decoder and encoder. Null restores the default handler.
-   * Existing decoded fields are unchanged.
-   *
-   * @param handler the handler to borrow, or null for the default
-   */
+  /// Installs the shared INFO text decoder and encoder. Null restores the default handler.
+  /// Existing decoded fields are unchanged.
+  ///
+  /// @param handler the handler to borrow, or null for the default
   public static void setStringHandler(StringHandler handler) {
     stringHandler = handler == null ? DEFAULT_HANDLER : handler;
   }
 
-  /**
-   * Returns an independent map snapshot with copied byte-vector identifiers.
-   * Editing the returned map or keys does not change this tag.
-   *
-   * @return copied field identifiers and text values
-   */
+  /// Returns an independent map snapshot with copied byte-vector identifiers.
+  /// Editing the returned map or keys does not change this tag.
+  ///
+  /// @return copied field identifiers and text values
   public final Map<ByteVector, String> fieldListMap() {
     var result = new TreeMap<ByteVector, String>();
     fields.forEach((id, value) -> result.put(new ByteVector(id), value));
     return result;
   }
 
-  /**
-   * Looks up a text field without creating it.
-   *
-   * @param id the four-byte field identifier
-   * @return the field value, or an empty string when absent
-   */
+  /// Looks up a text field without creating it.
+  ///
+  /// @param id the four-byte field identifier
+  /// @return the field value, or an empty string when absent
   public final String fieldText(ByteVector id) {
     return fields.getOrDefault(id, "");
   }
 
-  /**
-   * Sets a valid four-byte INFO field; invalid identifiers are ignored and empty text removes the
-   * field.
-   */
+  /// Sets a valid four-byte INFO field; invalid identifiers are ignored and empty text removes the
+  /// field.
   public final void setFieldText(ByteVector id, String value) {
     Objects.requireNonNull(id);
     Objects.requireNonNull(value);
@@ -105,11 +93,9 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Removes a field in memory.
-   *
-   * @param id the field identifier to remove
-   */
+  /// Removes a field in memory.
+  ///
+  /// @param id the field identifier to remove
   public final void removeField(ByteVector id) {
     fields.remove(Objects.requireNonNull(id));
   }
@@ -211,11 +197,9 @@ public class Tag extends TagBase {
     return fields.isEmpty();
   }
 
-  /**
-   * Exports mapped INFO fields and records an empty opaque-data identifier for each unknown field ID.
-   *
-   * @return the projected properties
-   */
+  /// Exports mapped INFO fields and records an empty opaque-data identifier for each unknown field ID.
+  ///
+  /// @return the projected properties
   @Override
   public PropertyMap properties() {
     var result = PropertyMap.builder();
@@ -257,9 +241,6 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Serializes this tag to its stored byte representation.
-   */
   public final ByteVector render() {
     var data = new ByteVectorOutput();
     data.append(new byte[]{'I', 'N', 'F', 'O'});
@@ -280,12 +261,10 @@ public class Tag extends TagBase {
     return data.size() == 4 ? new ByteVector() : data.toByteVector();
   }
 
-  /**
-   * Decodes field chunks beginning at byte offset four of the supplied data. An INFO signature
-   * is not required by this operation.
-   *
-   * @param data the bytes to decode
-   */
+  /// Decodes field chunks beginning at byte offset four of the supplied data. An INFO signature
+  /// is not required by this operation.
+  ///
+  /// @param data the bytes to decode
   protected final void parse(ByteVector data) {
     parseFields(data);
   }

@@ -9,9 +9,7 @@ import cz.skyba.taglib.toolkit.MutablePropertyMap;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-/**
- * Live tracker tag. Only title, comment and trackerName retain assigned values.
- */
+/// Live tracker tag. Only title, comment and trackerName retain assigned values.
 public class Tag extends TagBase {
   private String title = "";
   private String comment = "";
@@ -90,11 +88,9 @@ public class Tag extends TagBase {
     trackerName = Objects.requireNonNull(value);
   }
 
-  /**
-   * Exports title and comment, including an empty single value, and nonempty tracker-name text.
-   *
-   * @return the common tracker properties
-   */
+  /// Exports title and comment, including an empty single value, and nonempty tracker-name text.
+  ///
+  /// @return the common tracker properties
   @Override
   public PropertyMap properties() {
     var values = PropertyMap.builder().put("TITLE", title).put("COMMENT", comment);

@@ -13,17 +13,13 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * An editable FLAC file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable FLAC file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class FlacFile extends FileBase {
   private static final System.Logger LOG = System.getLogger(FlacFile.class.getName());
 
-  /**
-   * Tag families supported by this format's removal operations.
-   */
+  /// Tag families supported by this format's removal operations.
   public enum TagType {XIPH_COMMENT, ID3V1, ID3V2}
 
   private final IOStream source;
@@ -38,80 +34,68 @@ public class FlacFile extends FileBase {
   private String xml = "";
   private boolean hasXml, hasBext;
 
-  /**
-   * Opens a FLAC file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a FLAC file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public FlacFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a FLAC file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a FLAC file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public FlacFile(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a FLAC file and owns the file handle.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a FLAC file and owns the file handle.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public FlacFile(Path path, ReadOptions options, FrameFactory factory) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options, factory);
   }
 
-  /**
-   * Opens a FLAC file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param stream the open, seekable audio stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a FLAC file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param stream the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public FlacFile(IOStream stream) {
     this(stream, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a FLAC file over a borrowed stream that remains open when this file closes.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a FLAC file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public FlacFile(IOStream stream, ReadOptions options) {
     this(stream, false, options, null);
   }
 
-  /**
-   * Opens a FLAC file over a borrowed stream that remains open when this file closes.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   *
-   * @param stream  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a FLAC file over a borrowed stream that remains open when this file closes.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  ///
+  /// @param stream  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public FlacFile(IOStream stream, ReadOptions options, FrameFactory factory) {
     this(stream, false, options, factory);
   }
@@ -274,29 +258,21 @@ public class FlacFile extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
 
-  /**
-   * Returns the live ID3v2 tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v2 tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.id3.v2.Tag id3v2Tag() {
     return (cz.skyba.taglib.id3.v2.Tag) tags.tag(1);
   }
 
-  /**
-   * Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live ID3v2 tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.id3.v2.Tag getOrCreateId3v2Tag() {
     if (tags.tag(1) == null) {
       tags.set(1, new cz.skyba.taglib.id3.v2.Tag(null, 0, factory));
@@ -304,20 +280,16 @@ public class FlacFile extends FileBase {
     return (cz.skyba.taglib.id3.v2.Tag) tags.tag(1);
   }
 
-  /**
-   * Returns the live ID3v1 tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live ID3v1 tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.id3.v1.Tag id3v1Tag() {
     return (cz.skyba.taglib.id3.v1.Tag) tags.tag(2);
   }
 
-  /**
-   * Returns the live ID3v1 tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live ID3v1 tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.id3.v1.Tag getOrCreateId3v1Tag() {
     if (tags.tag(2) == null) {
       tags.set(2, new cz.skyba.taglib.id3.v1.Tag());
@@ -325,20 +297,16 @@ public class FlacFile extends FileBase {
     return (cz.skyba.taglib.id3.v1.Tag) tags.tag(2);
   }
 
-  /**
-   * Returns the live Vorbis comment tag without creating one.
-   *
-   * @return the live tag object, or {@code null} if no object exists
-   */
+  /// Returns the live Vorbis comment tag without creating one.
+  ///
+  /// @return the live tag object, or `null` if no object exists
   public final cz.skyba.taglib.ogg.XiphComment xiphComment() {
     return (cz.skyba.taglib.ogg.XiphComment) tags.tag(0);
   }
 
-  /**
-   * Returns the live Vorbis comment tag, creating an empty tag in memory if absent. Creation does not write storage.
-   *
-   * @return the live tag object
-   */
+  /// Returns the live Vorbis comment tag, creating an empty tag in memory if absent. Creation does not write storage.
+  ///
+  /// @return the live tag object
   public final cz.skyba.taglib.ogg.XiphComment getOrCreateXiphComment() {
     if (tags.tag(0) == null) {
       tags.set(0, new cz.skyba.taglib.ogg.XiphComment());
@@ -370,70 +338,56 @@ public class FlacFile extends FileBase {
     return xml;
   }
 
-  /**
-   * Stages replacement of the iXML text.
-   * An empty value requests removal when the file is saved.
-   *
-   * @param value the replacement text
-   */
+  /// Stages replacement of the iXML text.
+  /// An empty value requests removal when the file is saved.
+  ///
+  /// @param value the replacement text
   public final void setiXMLData(String value) {
     xml = Objects.requireNonNull(value);
   }
 
-  /**
-   * Returns an independent copy of the stored Broadcast Wave extension bytes.
-   *
-   * @return copied extension bytes
-   */
+  /// Returns an independent copy of the stored Broadcast Wave extension bytes.
+  ///
+  /// @return copied extension bytes
   public final byte[] BEXTData() {
     return bext.toByteArray();
   }
 
-  /**
-   * Stages replacement of the Broadcast Wave extension bytes, copying the input.
-   * An empty value requests removal when the file is saved.
-   *
-   * @param value the replacement bytes
-   */
+  /// Stages replacement of the Broadcast Wave extension bytes, copying the input.
+  /// An empty value requests removal when the file is saved.
+  ///
+  /// @param value the replacement bytes
   public final void setBEXTData(byte[] value) {
     bext = new ByteVector(value);
   }
 
-  /**
-   * Stages replacement of the Broadcast Wave extension bytes, copying the input.
-   * An empty value requests removal when the file is saved.
-   *
-   * @param value the replacement bytes
-   */
+  /// Stages replacement of the Broadcast Wave extension bytes, copying the input.
+  /// An empty value requests removal when the file is saved.
+  ///
+  /// @param value the replacement bytes
   public final void setBEXTData(ByteVector value) {
     bext = new ByteVector(value);
   }
 
-  /**
-   * Returns an immutable list snapshot containing live FLAC picture objects.
-   * Editing a picture object stages changes for the next save.
-   *
-   * @return the live picture references
-   */
+  /// Returns an immutable list snapshot containing live FLAC picture objects.
+  /// Editing a picture object stages changes for the next save.
+  ///
+  /// @return the live picture references
   public final List<Picture> pictureList() {
     return blocks.stream().filter(Picture.class::isInstance).map(Picture.class::cast).toList();
   }
 
-  /**
-   * Appends a live FLAC picture object without copying it. The change is staged until save().
-   *
-   * @param picture the object to retain
-   */
+  /// Appends a live FLAC picture object without copying it. The change is staged until save().
+  ///
+  /// @param picture the object to retain
   public final void addPicture(Picture picture) {
     blocks.add(Objects.requireNonNull(picture));
   }
 
-  /**
-   * Stages removal of the first picture object identical to the supplied reference.
-   * An equal but different object is not removed.
-   *
-   * @param picture the retained object to remove
-   */
+  /// Stages removal of the first picture object identical to the supplied reference.
+  /// An equal but different object is not removed.
+  ///
+  /// @param picture the retained object to remove
   public final void removePicture(Picture picture) {
     for (int i = 0; i < blocks.size(); i++) {
       if (blocks.get(i) == picture) {
@@ -443,40 +397,32 @@ public class FlacFile extends FileBase {
     }
   }
 
-  /**
-   * Stages removal of every FLAC picture block; other metadata is retained.
-   */
+  /// Stages removal of every FLAC picture block; other metadata is retained.
   public final void removePictures() {
     blocks.removeIf(Picture.class::isInstance);
   }
 
-  /**
-   * Returns immutable, format-independent artwork snapshots with copied image bytes.
-   *
-   * @return artwork snapshots
-   */
+  /// Returns immutable, format-independent artwork snapshots with copied image bytes.
+  ///
+  /// @return artwork snapshots
   public final List<cz.skyba.taglib.Picture> pictures() {
     return pictureList().stream().map(Picture::snapshot).toList();
   }
 
-  /**
-   * Copies a format-independent artwork snapshot into a new FLAC picture block.
-   * The addition is staged until save().
-   *
-   * @param value artwork to copy
-   */
+  /// Copies a format-independent artwork snapshot into a new FLAC picture block.
+  /// The addition is staged until save().
+  ///
+  /// @param value artwork to copy
   public final void addPicture(cz.skyba.taglib.Picture value) {
     var p = new Picture();
     p.parse(cz.skyba.taglib.internal.xiph.XiphComment.renderPicture(value));
     addPicture(p);
   }
 
-  /**
-   * Stages complete artwork replacement with copies of the supplied snapshots.
-   * An empty list removes all pictures on save.
-   *
-   * @param values replacement artwork
-   */
+  /// Stages complete artwork replacement with copies of the supplied snapshots.
+  /// An empty list removes all pictures on save.
+  ///
+  /// @param values replacement artwork
   public final void setPictures(List<cz.skyba.taglib.Picture> values) {
     removePictures();
     values.forEach(this::addPicture);
@@ -513,17 +459,13 @@ public class FlacFile extends FileBase {
     return true;
   }
 
-  /**
-   * Stages removal of all supported tag types; storage changes only on {@link #save()}.
-   */
+  /// Stages removal of all supported tag types; storage changes only on [#save()].
   public final void removeTags() {
     removeTags(Set.of(TagType.values()));
   }
 
-  /**
-   * Stages removal of selected tag types from cached metadata; storage changes only
-   * on {@link #save()}.
-   */
+  /// Stages removal of selected tag types from cached metadata; storage changes only
+  /// on [#save()].
   public final void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     if (types.contains(TagType.ID3V1)) {
@@ -541,14 +483,12 @@ public class FlacFile extends FileBase {
     }
   }
 
-  /**
-   * Checks for a recognizable FLAC header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param stream the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable FLAC header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param stream the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream stream) {
     return TagUtils.readHeader(stream, 1024, true).find(new ByteVector("fLaC")) >= 0;
   }

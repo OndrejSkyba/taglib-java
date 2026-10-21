@@ -13,9 +13,7 @@ import java.util.*;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * Physical MP4 metadata, retaining duplicate atoms, typed data values, and track scope.
- */
+/// Physical MP4 metadata, retaining duplicate atoms, typed data values, and track scope.
 public final class Mp4Document extends AbstractDocument {
   private final Mp4Tree tree;
   private final List<Block> blocks = new ArrayList<>();

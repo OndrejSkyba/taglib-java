@@ -11,9 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
-/**
- * Positional reads avoid shared seek state and never allocate based on unchecked file fields.
- */
+/// Positional reads avoid shared seek state and never allocate based on unchecked file fields.
 public final class BinaryFile implements AutoCloseable {
   private final FileChannel channel;
   private final Path path;
@@ -31,9 +29,7 @@ public final class BinaryFile implements AutoCloseable {
     retainReadData = true;
   }
 
-  /**
-   * Borrows a caller-owned native-style stream; closing this view never closes the stream.
-   */
+  /// Borrows a caller-owned native-style stream; closing this view never closes the stream.
   public BinaryFile(IOStream stream) throws IOException {
     this(stream, false);
   }
@@ -53,9 +49,7 @@ public final class BinaryFile implements AutoCloseable {
     }
   }
 
-  /**
-   * Whether this construction pass can reuse immutable parsed data without bypassing custom I/O.
-   */
+  /// Whether this construction pass can reuse immutable parsed data without bypassing custom I/O.
   public boolean retainReadData() {
     return retainReadData;
   }
@@ -64,9 +58,7 @@ public final class BinaryFile implements AutoCloseable {
     return size;
   }
 
-  /**
-   * The backing path, or null when this view borrows an IOStream.
-   */
+  /// The backing path, or null when this view borrows an IOStream.
   public Path path() {
     return path;
   }
@@ -78,9 +70,7 @@ public final class BinaryFile implements AutoCloseable {
     return path;
   }
 
-  /**
-   * Borrowed stream used for a native in-place save, never owned by this view.
-   */
+  /// Borrowed stream used for a native in-place save, never owned by this view.
   public IOStream stream() {
     return stream;
   }
@@ -96,9 +86,7 @@ public final class BinaryFile implements AutoCloseable {
     return initialPosition;
   }
 
-  /**
-   * Native readBlock semantics: EOF returns the available prefix and advances to that point.
-   */
+  /// Native readBlock semantics: EOF returns the available prefix and advances to that point.
   public byte[] readNative(long offset, int length) throws IOException {
     if (offset < 0 || length < 0) {
       throw new IOException("Invalid stream read");

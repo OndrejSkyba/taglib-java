@@ -5,9 +5,7 @@ import cz.skyba.taglib.MetadataReadException;
 
 import java.io.Serial;
 
-/**
- * A metadata allocation or aggregate byte budget was exceeded.
- */
+/// A metadata allocation or aggregate byte budget was exceeded.
 public final class MetadataLimitException extends MetadataReadException {
   @Serial
   private static final long serialVersionUID = 1L;

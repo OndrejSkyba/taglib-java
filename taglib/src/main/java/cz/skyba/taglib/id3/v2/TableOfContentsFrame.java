@@ -14,10 +14,8 @@ import java.util.stream.Collectors;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing CTOC child identifiers and embedded frames.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for chapter navigation (CTOC).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class TableOfContentsFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(TableOfContentsFrame.class.getName());
 
@@ -27,45 +25,37 @@ public class TableOfContentsFrame extends Frame {
   private List<ByteVector> children = new ArrayList<>();
   private boolean topLevel, ordered;
 
-  /**
-   * Decodes CTOC child identifiers and embedded frames from serialized frame bytes, including their frame header.
-   * The tag header supplies the version used for embedded-frame parsing.
-   *
-   * @param data      serialized bytes including the frame header
-   * @param tagHeader the enclosing tag header
-   */
+  /// Decodes CTOC child identifiers and embedded frames from serialized frame bytes, including their frame header.
+  /// The tag header supplies the version used for embedded-frame parsing.
+  ///
+  /// @param data      serialized bytes including the frame header
+  /// @param tagHeader the enclosing tag header
   public TableOfContentsFrame(cz.skyba.taglib.id3.v2.Header tagHeader, ByteVector data) {
     super(data);
     this.tagHeader = Objects.requireNonNull(tagHeader);
     parseContents(fieldData(data));
   }
 
-  /**
-   * Creates a frame containing CTOC child identifiers and embedded frames.
-   *
-   * @param elementID the chapter or table identifier to copy
-   */
+  /// Creates a frame containing CTOC child identifiers and embedded frames.
+  ///
+  /// @param elementID the chapter or table identifier to copy
   public TableOfContentsFrame(ByteVector elementID) {
     this(elementID, List.of());
   }
 
-  /**
-   * Creates a frame containing CTOC child identifiers and embedded frames.
-   *
-   * @param elementID the chapter or table identifier to copy
-   * @param children  child identifiers to copy
-   */
+  /// Creates a frame containing CTOC child identifiers and embedded frames.
+  ///
+  /// @param elementID the chapter or table identifier to copy
+  /// @param children  child identifiers to copy
   public TableOfContentsFrame(ByteVector elementID, List<ByteVector> children) {
     this(elementID, children, List.of());
   }
 
-  /**
-   * Creates a frame containing CTOC child identifiers and embedded frames.
-   *
-   * @param elementID      the chapter or table identifier to copy
-   * @param children       child identifiers to copy
-   * @param embeddedFrames live embedded frames to retain
-   */
+  /// Creates a frame containing CTOC child identifiers and embedded frames.
+  ///
+  /// @param elementID      the chapter or table identifier to copy
+  /// @param children       child identifiers to copy
+  /// @param embeddedFrames live embedded frames to retain
   public TableOfContentsFrame(ByteVector elementID, List<ByteVector> children, List<? extends Frame> embeddedFrames) {
     super(new ByteVector("CTOC"));
     tagHeader = null;
@@ -82,11 +72,9 @@ public class TableOfContentsFrame extends Frame {
     parseContents(fieldData(data));
   }
 
-  /**
-   * Returns a copy of the element identifier bytes.
-   *
-   * @return the element identifier
-   */
+  /// Returns a copy of the element identifier bytes.
+  ///
+  /// @return the element identifier
   public final ByteVector elementID() {
     return new ByteVector(elementID);
   }
@@ -103,18 +91,14 @@ public class TableOfContentsFrame extends Frame {
     return children.size();
   }
 
-  /**
-   * Returns independent copies of the child identifier bytes.
-   *
-   * @return an independent mutable list of copied child identifiers
-   */
+  /// Returns independent copies of the child identifier bytes.
+  ///
+  /// @return an independent mutable list of copied child identifiers
   public final List<ByteVector> childElements() {
     return children.stream().map(ByteVector::new).collect(Collectors.toCollection(ArrayList::new));
   }
 
-  /**
-   * Copies the identifier and removes one trailing NUL byte when present.
-   */
+  /// Copies the identifier and removes one trailing NUL byte when present.
   public final void setElementID(ByteVector id) {
     elementID = new ByteVector(id);
   }
@@ -127,29 +111,23 @@ public class TableOfContentsFrame extends Frame {
     ordered = value;
   }
 
-  /**
-   * Replaces the child identifiers, copying the list and every byte vector.
-   *
-   * @param values the identifiers to copy; neither the list nor its elements may be null
-   */
+  /// Replaces the child identifiers, copying the list and every byte vector.
+  ///
+  /// @param values the identifiers to copy; neither the list nor its elements may be null
   public final void setChildElements(List<ByteVector> values) {
     children = values.stream().map(ByteVector::new).collect(Collectors.toCollection(ArrayList::new));
   }
 
-  /**
-   * Appends a copy of a child identifier.
-   *
-   * @param id the identifier to add
-   */
+  /// Appends a copy of a child identifier.
+  ///
+  /// @param id the identifier to add
   public final void addChildElement(ByteVector id) {
     children.add(new ByteVector(id));
   }
 
-  /**
-   * Removes matching child identifiers from the table of contents.
-   *
-   * @param id the identifier to remove
-   */
+  /// Removes matching child identifiers from the table of contents.
+  ///
+  /// @param id the identifier to remove
   public final void removeChildElement(ByteVector id) {
     int index = children.indexOf(id);
     // Native cE + ByteVector("\0") appends an empty C-string; it does not add a NUL.
@@ -158,56 +136,44 @@ public class TableOfContentsFrame extends Frame {
     }
   }
 
-  /**
-   * Returns a read-only live map grouping embedded frames by identifier.
-   * An absent lookup does not create a group.
-   *
-   * @return the embedded-frame groups
-   */
+  /// Returns a read-only live map grouping embedded frames by identifier.
+  /// An absent lookup does not create a group.
+  ///
+  /// @return the embedded-frame groups
   public final Map<ByteVector, List<Frame>> embeddedFrameListMap() {
     return embedded.map();
   }
 
-  /**
-   * Returns a read-only live list of embedded frame references.
-   * Frames remain mutable; structural changes use the frame-management methods.
-   *
-   * @return live embedded frames
-   */
+  /// Returns a read-only live list of embedded frame references.
+  /// Frames remain mutable; structural changes use the frame-management methods.
+  ///
+  /// @return live embedded frames
   public final List<Frame> embeddedFrameList() {
     return embedded.list();
   }
 
-  /**
-   * Returns a read-only live list for an existing ID, or an empty list without creating a bucket.
-   */
+  /// Returns a read-only live list for an existing ID, or an empty list without creating a bucket.
   public final List<Frame> embeddedFrameList(ByteVector id) {
     return embedded.bucket(id);
   }
 
-  /**
-   * Retains an embedded frame reference without copying it. The change remains in memory.
-   *
-   * @param frame the live frame to add
-   */
+  /// Retains an embedded frame reference without copying it. The change remains in memory.
+  ///
+  /// @param frame the live frame to add
   public final void addEmbeddedFrame(Frame frame) {
     embedded.add(frame);
   }
 
-  /**
-   * Removes the supplied embedded frame reference without invalidating it for the caller.
-   *
-   * @param frame the embedded reference to remove
-   */
+  /// Removes the supplied embedded frame reference without invalidating it for the caller.
+  ///
+  /// @param frame the embedded reference to remove
   public final void removeEmbeddedFrame(Frame frame) {
     embedded.remove(frame, true);
   }
 
-  /**
-   * Removes all embedded frames with the supplied identifier.
-   *
-   * @param id the identifier bytes to match
-   */
+  /// Removes all embedded frames with the supplied identifier.
+  ///
+  /// @param id the identifier bytes to match
   public final void removeEmbeddedFrames(ByteVector id) {
     embedded.removeAll(id, true);
   }
@@ -230,13 +196,11 @@ public class TableOfContentsFrame extends Frame {
     return PropertyMap.builder().addUnsupportedData(Id3Text.fixedLatin1(frameID()) + "/" + Id3Text.fixedLatin1(elementID)).build();
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag the tag to search
-   * @param id  the element identifier bytes to match
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag the tag to search
+  /// @param id  the element identifier bytes to match
+  /// @return the matching frame, or `null` if absent
   public static TableOfContentsFrame findByElementID(Tag tag, ByteVector id) {
     for (Frame frame : tag.frameList(new ByteVector("CTOC"))) {
       if (frame instanceof TableOfContentsFrame toc && toc.elementID().equals(id)) {
@@ -246,12 +210,10 @@ public class TableOfContentsFrame extends Frame {
     return null;
   }
 
-  /**
-   * Returns the first live top-level table-of-contents frame from a tag.
-   *
-   * @param tag the tag to search
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live top-level table-of-contents frame from a tag.
+  ///
+  /// @param tag the tag to search
+  /// @return the matching frame, or `null` if absent
   public static TableOfContentsFrame findTopLevel(Tag tag) {
     for (Frame frame : tag.frameList(new ByteVector("CTOC"))) {
       if (frame instanceof TableOfContentsFrame toc && toc.isTopLevel()) {
@@ -261,9 +223,6 @@ public class TableOfContentsFrame extends Frame {
     return null;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseContents(data);
@@ -288,9 +247,6 @@ public class TableOfContentsFrame extends Frame {
     embedded.parseEmbedded(data, position, tagHeader, this);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     var data = new ByteVectorOutput().append(new ByteVector(elementID)).append((byte) 0).append((byte) ((topLevel ? 2 : 0) | (ordered ? 1 : 0)))

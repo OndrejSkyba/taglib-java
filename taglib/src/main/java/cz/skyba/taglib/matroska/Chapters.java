@@ -10,10 +10,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A mutable chapter edition collection. Incoming values and exported collection values are copied.
- * MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
- */
+/// A mutable chapter edition collection. Incoming values and exported collection values are copied.
+/// MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
 public class Chapters {
   private final CopyingValues<ChapterEdition> values = new CopyingValues<>(ChapterEdition::new);
   private final ArrayList<ChapterEdition> editions = values.stored();
@@ -25,11 +23,9 @@ public class Chapters {
     snapshotValue = false;
   }
 
-  /**
-   * Creates a collection with copied input values.
-   *
-   * @param values the values to copy
-   */
+  /// Creates a collection with copied input values.
+  ///
+  /// @param values the values to copy
   public Chapters(List<ChapterEdition> values) {
     snapshotValue = true;
     this.values.addAll(values);
@@ -41,52 +37,42 @@ public class Chapters {
     this.changed = changed;
   }
 
-  /**
-   * Appends a copy of the supplied value in memory and marks a bound container changed.
-   *
-   * @param value the value to copy
-   */
+  /// Appends a copy of the supplied value in memory and marks a bound container changed.
+  ///
+  /// @param value the value to copy
   public final void addChapterEdition(ChapterEdition value) {
     values.add(value);
     changed.run();
   }
 
-  /**
-   * Removes the first stored value with the matching UID in memory.
-   * The container is marked changed only when a match exists.
-   *
-   * @param uid the UID bit pattern to match
-   */
+  /// Removes the first stored value with the matching UID in memory.
+  /// The container is marked changed only when a match exists.
+  ///
+  /// @param uid the UID bit pattern to match
   public final void removeChapterEdition(long uid) {
     if (values.removeFirst(value -> value.uid() == uid)) {
       changed.run();
     }
   }
 
-  /**
-   * Clears the collection in memory and marks a bound container changed.
-   */
+  /// Clears the collection in memory and marks a bound container changed.
   public final void clear() {
     this.values.clear();
     changed.run();
   }
 
-  /**
-   * Returns an immutable list snapshot with copied values.
-   *
-   * @return detached collection values
-   */
+  /// Returns an immutable list snapshot with copied values.
+  ///
+  /// @return detached collection values
   public final List<ChapterEdition> chapterEditionList() {
     return values.snapshot();
   }
 
-  /**
-   * Reads chapter edition values from a file and closes temporary handles.
-   *
-   * @param path the Matroska file to inspect
-   * @return the decoded collection
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Reads chapter edition values from a file and closes temporary handles.
+  ///
+  /// @param path the Matroska file to inspect
+  /// @return the decoded collection
+  /// @throws UncheckedIOException if storage access fails
   public static Chapters read(Path path) {
     try {
       return new Chapters(MatroskaCodec.readChapters(path));
@@ -95,13 +81,11 @@ public class Chapters {
     }
   }
 
-  /**
-   * Writes this chapter edition collection to the supplied path in place.
-   * An empty collection requests removal. A failure can leave partial changes.
-   *
-   * @param path the Matroska file to update
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Writes this chapter edition collection to the supplied path in place.
+  /// An empty collection requests removal. A failure can leave partial changes.
+  ///
+  /// @param path the Matroska file to update
+  /// @throws UncheckedIOException if storage access fails
   public final void save(Path path) {
     try {
       WriteGuard.run(path, () -> MatroskaCodec.writeChapters(path, chapterEditionList()));

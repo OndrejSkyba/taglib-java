@@ -6,9 +6,7 @@ import cz.skyba.taglib.toolkit.ByteVector;
 import java.io.ByteArrayOutputStream;
 import java.util.Objects;
 
-/**
- * Checked local serialization buffer; appends consume their input immediately.
- */
+/// Checked local serialization buffer; appends consume their input immediately.
 public final class ByteVectorOutput {
   private static final class Buffer extends ByteArrayOutputStream {
     ByteVector vector(int padding) {

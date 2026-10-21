@@ -8,20 +8,16 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * An immutable value with an explicit type and no numeric coercions.
- * Conversions return zero or an empty value if the stored type differs. Extraction methods
- * also report whether the type matched. Mutable byte inputs are copied, and returned byte
- * values are independent copies. Stored collection values are immutable snapshots.
- */
+/// An immutable value with an explicit type and no numeric coercions.
+/// Conversions return zero or an empty value if the stored type differs. Extraction methods
+/// also report whether the type matched. Mutable byte inputs are copied, and returned byte
+/// values are independent copies. Stored collection values are immutable snapshots.
 public final class Variant {
   private static final int STREAM_PRECISION = 6;
   private static final MathContext STREAM_CONTEXT =
     new MathContext(STREAM_PRECISION, RoundingMode.HALF_EVEN);
 
-  /**
-   * The exact stored type of a variant.
-   */
+  /// The exact stored type of a variant.
   public enum Type {
     VOID,
     BOOL,
@@ -38,14 +34,12 @@ public final class Variant {
     VARIANT_MAP
   }
 
-  /**
-   * A converted value and a success indicator.
-   * A zero or empty value can be a successful result; inspect {@code ok} rather than the value.
-   *
-   * @param value the converted value or type-specific fallback
-   * @param ok    whether extraction or parsing succeeded
-   * @param <T>   the converted Java type
-   */
+  /// A converted value and a success indicator.
+  /// A zero or empty value can be a successful result; inspect `ok` rather than the value.
+  ///
+  /// @param value the converted value or type-specific fallback
+  /// @param ok    whether extraction or parsing succeeded
+  /// @param <T>   the converted Java type
   public record Extraction<T>(T value, boolean ok) {
   }
 
@@ -93,82 +87,46 @@ public final class Variant {
 
   private final Payload payload;
 
-  /**
-   * Creates an empty variant with type {@code VOID}.
-   */
+  /// Creates an empty variant with type `VOID`.
   public Variant() {
     this(new VoidPayload());
   }
 
-  /**
-   * Creates a variant storing the exact supplied value type.
-   *
-   * @param value the value to store
-   */
   public Variant(boolean value) {
     this(new BoolPayload(value));
   }
 
-  /**
-   * Creates a variant storing the exact supplied value type.
-   *
-   * @param value the value to store
-   */
   public Variant(int value) {
     this(new IntPayload(value));
   }
 
-  /**
-   * Creates a variant storing the exact supplied value type.
-   *
-   * @param value the value to store
-   */
   public Variant(long value) {
     this(new LongPayload(value));
   }
 
-  /**
-   * Creates a variant storing the exact supplied value type.
-   *
-   * @param value the value to store
-   */
   public Variant(double value) {
     this(new DoublePayload(value));
   }
 
-  /**
-   * Creates a variant storing the exact supplied value type.
-   *
-   * @param value the value to store
-   */
   public Variant(String value) {
     this(new TextPayload(Objects.requireNonNull(value)));
   }
 
-  /**
-   * Creates a variant storing the exact supplied byte value, copying its bytes.
-   *
-   * @param value the value to store
-   */
+  /// Creates a variant storing the exact supplied byte value, copying its bytes.
+  ///
+  /// @param value the value to store
   public Variant(ByteVector value) {
     this(new BytesPayload(new ByteVector(value)));
   }
 
-  /**
-   * Creates a variant containing a copied byte value.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing a copied byte value.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromByteArray(byte[] value) {
     return new Variant(new BytesPayload(new ByteVector(value)));
   }
 
-  /**
-   * Creates a variant storing the exact supplied immutable variant value.
-   *
-   * @param value the value to store
-   */
   public Variant(Variant value) {
     this(value.payload);
   }
@@ -177,62 +135,50 @@ public final class Variant {
     this.payload = payload;
   }
 
-  /**
-   * Creates a variant containing an unsigned 32-bit value using the input's low 32 bits.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an unsigned 32-bit value using the input's low 32 bits.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromUnsignedInt(long value) {
     return new Variant(new UIntPayload(value & 0xffffffffL));
   }
 
-  /**
-   * Creates a variant containing an unsigned 64-bit value retaining the complete bit pattern.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an unsigned 64-bit value retaining the complete bit pattern.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromUnsignedLong(long value) {
     return new Variant(new ULongPayload(value));
   }
 
-  /**
-   * Creates a variant containing an immutable copy of the string list.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an immutable copy of the string list.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromStringList(List<String> value) {
     return new Variant(new TextsPayload(List.copyOf(value)));
   }
 
-  /**
-   * Creates a variant containing an independent copy of every vector in the list.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an independent copy of every vector in the list.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromByteVectorList(List<ByteVector> value) {
     return new Variant(new ByteListsPayload(value.stream().map(ByteVector::new).toList()));
   }
 
-  /**
-   * Creates a variant containing an immutable copy of the variant list.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an immutable copy of the variant list.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromList(List<Variant> value) {
     return new Variant(new VariantsPayload(List.copyOf(value)));
   }
 
-  /**
-   * Creates a variant containing an immutable map snapshot with sorted string keys.
-   *
-   * @param value the values or bit pattern to store
-   * @return the typed variant
-   */
+  /// Creates a variant containing an immutable map snapshot with sorted string keys.
+  ///
+  /// @param value the values or bit pattern to store
+  /// @return the typed variant
   public static Variant fromMap(Map<String, Variant> value) {
     var copy = new TreeMap<String, Variant>();
     value.forEach((k, v) -> copy.put(Objects.requireNonNull(k), Objects.requireNonNull(v)));
@@ -257,82 +203,64 @@ public final class Variant {
     };
   }
 
-  /**
-   * Tests whether the stored type is {@code VOID}. Stored zero, false, empty text and empty
-   * collections are values and are not considered empty variants.
-   *
-   * @return whether the variant has no stored value
-   */
+  /// Tests whether the stored type is `VOID`. Stored zero, false, empty text and empty
+  /// collections are values and are not considered empty variants.
+  ///
+  /// @return whether the variant has no stored value
   public boolean isEmpty() {
     return payload instanceof VoidPayload;
   }
 
-  /**
-   * Returns the stored signed 32-bit integer, or zero if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored signed 32-bit integer, or zero if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public int toInt() {
     return payload instanceof IntPayload(var value) ? value : 0;
   }
 
-  /**
-   * Returns the stored unsigned 32-bit integer, or zero if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored unsigned 32-bit integer, or zero if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public long toUnsignedInt() {
     return payload instanceof UIntPayload(var value) ? value : 0L;
   }
 
-  /**
-   * Returns the stored signed 64-bit integer, or zero if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored signed 64-bit integer, or zero if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public long toLong() {
     return payload instanceof LongPayload(var value) ? value : 0L;
   }
 
-  /**
-   * Returns the stored unsigned 64-bit integer bit pattern, or zero if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored unsigned 64-bit integer bit pattern, or zero if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public long toUnsignedLong() {
     return payload instanceof ULongPayload(var value) ? value : 0L;
   }
 
-  /**
-   * Returns the stored boolean, or false if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored boolean, or false if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public boolean toBoolean() {
     return payload instanceof BoolPayload(var value) && value;
   }
 
-  /**
-   * Returns the stored double, or zero if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored double, or zero if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public double toDouble() {
     return payload instanceof DoublePayload(var value) ? value : 0.0;
   }
 
-  /**
-   * Returns the stored string, or an empty string if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored string, or an empty string if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public String toText() {
     return payload instanceof TextPayload(var value) ? value : "";
   }
 
-  /**
-   * Returns a diagnostic value representation; use {@link #toText()} for string extraction.
-   */
+  /// Returns a diagnostic value representation; use [#toText()] for string extraction.
   @Override
   public String toString() {
     return switch (payload) {
@@ -343,197 +271,159 @@ public final class Variant {
     };
   }
 
-  /**
-   * Returns the stored string list, or an empty list if the type differs. The returned collection is immutable.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored string list, or an empty list if the type differs. The returned collection is immutable.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public List<String> toStringList() {
     return payload instanceof TextsPayload(var value) ? value : List.of();
   }
 
-  /**
-   * Returns the stored byte vector, or an empty vector if the type differs. Byte storage is copied.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored byte vector, or an empty vector if the type differs. Byte storage is copied.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public ByteVector toByteVector() {
     return payload instanceof BytesPayload(var value) ? new ByteVector(value) : new ByteVector();
   }
 
-  /**
-   * Returns an independent mutable list of copied byte vectors, or an empty list if the type differs.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns an independent mutable list of copied byte vectors, or an empty list if the type differs.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public List<ByteVector> toByteVectorList() {
     return payload instanceof ByteListsPayload(var value)
       ? value.stream().map(ByteVector::new).collect(Collectors.toCollection(ArrayList::new))
       : new ArrayList<>();
   }
 
-  /**
-   * Returns the stored variant list, or an empty list if the type differs. The returned collection is immutable.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored variant list, or an empty list if the type differs. The returned collection is immutable.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public List<Variant> toList() {
     return payload instanceof VariantsPayload(var value) ? value : List.of();
   }
 
-  /**
-   * Returns the stored variant map, or an empty map if the type differs. The returned collection is immutable.
-   *
-   * @return the exact stored value or its type-specific fallback
-   */
+  /// Returns the stored variant map, or an empty map if the type differs. The returned collection is immutable.
+  ///
+  /// @return the exact stored value or its type-specific fallback
   public Map<String, Variant> toMap() {
     return payload instanceof MappingPayload(var value) ? value : Map.of();
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Integer> extractInt() {
     return new Extraction<>(toInt(), type() == Type.INT);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Long> extractUnsignedInt() {
     return new Extraction<>(toUnsignedInt(), type() == Type.UNSIGNED_INT);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Long> extractLong() {
     return new Extraction<>(toLong(), type() == Type.LONG);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Long> extractUnsignedLong() {
     return new Extraction<>(toUnsignedLong(), type() == Type.UNSIGNED_LONG);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Boolean> extractBoolean() {
     return new Extraction<>(toBoolean(), type() == Type.BOOL);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Double> extractDouble() {
     return new Extraction<>(toDouble(), type() == Type.DOUBLE);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<String> extractString() {
     return new Extraction<>(toText(), type() == Type.STRING);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<List<String>> extractStringList() {
     return new Extraction<>(toStringList(), type() == Type.STRING_LIST);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<ByteVector> extractByteVector() {
     return new Extraction<>(toByteVector(), type() == Type.BYTE_VECTOR);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<List<ByteVector>> extractByteVectorList() {
     return new Extraction<>(toByteVectorList(), type() == Type.BYTE_VECTOR_LIST);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<List<Variant>> extractList() {
     return new Extraction<>(toList(), type() == Type.VARIANT_LIST);
   }
 
-  /**
-   * Extracts the exact stored type and reports whether it matched.
-   * The fallback is zero or empty when the type differs; a stored zero or empty value is
-   * still a successful extraction.
-   *
-   * @return the converted value and type-match flag
-   */
+  /// Extracts the exact stored type and reports whether it matched.
+  /// The fallback is zero or empty when the type differs; a stored zero or empty value is
+  /// still a successful extraction.
+  ///
+  /// @return the converted value and type-match flag
   public Extraction<Map<String, Variant>> extractMap() {
     return new Extraction<>(toMap(), type() == Type.VARIANT_MAP);
   }
 
-  /**
-   * Compares exact types and stored values using Java value equality. NaNs compare equal;
-   * positive and negative floating-point zero are distinct, including in nested values.
-   */
+  /// Compares exact types and stored values using Java value equality. NaNs compare equal;
+  /// positive and negative floating-point zero are distinct, including in nested values.
   @Override
   public boolean equals(Object other) {
     return other instanceof Variant v && payload.equals(v.payload);
   }
 
-  /**
-   * Hashes the exact type and stored value consistently with {@link #equals(Object)}.
-   */
+  /// Hashes the exact type and stored value consistently with [#equals(Object)].
   @Override
   public int hashCode() {
     return 31 * type().hashCode() + payload.hashCode();
@@ -600,14 +490,12 @@ public final class Variant {
     return prefix + rounded.stripTrailingZeros().toPlainString();
   }
 
-  /**
-   * Formats the value as structured text with brackets for collections and quoted strings.
-   * Doubles use six significant digits. Binary values use hex escapes up to the first NUL.
-   * String quotes are escaped, but control characters and backslashes are not JSON-escaped;
-   * this output is not JSON.
-   *
-   * @return the structured representation
-   */
+  /// Formats the value as structured text with brackets for collections and quoted strings.
+  /// Doubles use six significant digits. Binary values use hex escapes up to the first NUL.
+  /// String quotes are escaped, but control characters and backslashes are not JSON-escaped;
+  /// this output is not JSON.
+  ///
+  /// @return the structured representation
   public String render() {
     return switch (payload) {
       case VoidPayload _ -> "null";

@@ -19,9 +19,7 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Native FLAC metadata; compressed audio, application blocks and seek tables are preserved.
- */
+/// Native FLAC metadata; compressed audio, application blocks and seek tables are preserved.
 public final class FlacCodec implements Codec {
   @Override
   public PropertyMap unsupportedProperties(PropertyMap properties) {
@@ -42,9 +40,7 @@ public final class FlacCodec implements Codec {
     boolean hasXiphComment) {
   }
 
-  /**
-   * Constructor-owned physical tags, before TagUnion chooses its property fallback.
-   */
+  /// Constructor-owned physical tags, before TagUnion chooses its property fallback.
   public static NativeTags nativeTags(BinaryFile file, ReadOptions options) throws IOException {
     Layout parsed = layout(file, options.maxMetadataBytes());
     PropertyMap xiph = PropertyMap.EMPTY;
@@ -67,9 +63,7 @@ public final class FlacCodec implements Codec {
     return new NativeTags(xiph, id3v2, id3v1, hasXiphComment);
   }
 
-  /**
-   * Internal parsed carrier for the upstream-shaped FLAC File API.
-   */
+  /// Internal parsed carrier for the upstream-shaped FLAC File API.
   public record Details(
     Properties properties,
     boolean hasXiphComment,
@@ -228,9 +222,7 @@ public final class FlacCodec implements Codec {
     throw new IOException("Too many FLAC metadata blocks");
   }
 
-  /**
-   * File::find scans bounded buffers and restores the incoming cursor on every outcome.
-   */
+  /// File::find scans bounded buffers and restores the incoming cursor on every outcome.
   private static long findMarker(BinaryFile file, long start) throws IOException {
     long cursor = file.stream() == null ? 0 : file.stream().tell();
     byte[] pattern = Binary.bytes("fLaC");
@@ -339,9 +331,7 @@ public final class FlacCodec implements Codec {
       first.track() == 0 ? second.track() : first.track());
   }
 
-  /**
-   * Shared with the Ogg FLAC mapping. Rounding follows upstream behavior.
-   */
+  /// Shared with the Ogg FLAC mapping. Rounding follows upstream behavior.
   public static AudioProperties audio(byte[] info, long streamLength) {
     if (info == null || info.length < 18) {
       return AudioProperties.EMPTY;

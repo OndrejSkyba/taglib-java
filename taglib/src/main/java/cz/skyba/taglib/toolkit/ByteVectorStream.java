@@ -1,30 +1,24 @@
 // SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
 package cz.skyba.taglib.toolkit;
 
-/**
- * A writable memory stream with independent initial byte storage.
- * The cursor can move beyond the data. Writing beyond the end or extending storage fills the
- * gap with zero bytes. Materialized storage must fit a Java byte array. The stream remains
- * open and usable after {@link #close()}, which has no resources to release.
- */
+/// A writable memory stream with independent initial byte storage.
+/// The cursor can move beyond the data. Writing beyond the end or extending storage fills the
+/// gap with zero bytes. Materialized storage must fit a Java byte array. The stream remains
+/// open and usable after [#close()], which has no resources to release.
 public class ByteVectorStream extends IOStream {
   private final ByteVector data;
   private long position;
 
-  /**
-   * Creates a writable memory stream by copying the supplied bytes.
-   *
-   * @param data initial stream bytes
-   */
+  /// Creates a writable memory stream by copying the supplied bytes.
+  ///
+  /// @param data initial stream bytes
   public ByteVectorStream(ByteVector data) {
     this.data = new ByteVector(data);
   }
 
-  /**
-   * Creates a writable memory stream by copying the supplied bytes.
-   *
-   * @param data initial stream bytes
-   */
+  /// Creates a writable memory stream by copying the supplied bytes.
+  ///
+  /// @param data initial stream bytes
   public ByteVectorStream(byte[] data) {
     this.data = new ByteVector(data);
   }
@@ -66,15 +60,13 @@ public class ByteVectorStream extends IOStream {
     position = end;
   }
 
-  /**
-   * Inserts bytes or replaces a span in memory and positions the cursor after the inserted bytes.
-   *
-   * @param value   bytes to insert
-   * @param start   the nonnegative byte offset
-   * @param replace the nonnegative byte count to replace
-   * @throws IllegalArgumentException if the span is negative or a growing replacement exceeds storage
-   * @throws ArithmeticException      if the resulting span exceeds Java array representation
-   */
+  /// Inserts bytes or replaces a span in memory and positions the cursor after the inserted bytes.
+  ///
+  /// @param value   bytes to insert
+  /// @param start   the nonnegative byte offset
+  /// @param replace the nonnegative byte count to replace
+  /// @throws IllegalArgumentException if the span is negative or a growing replacement exceeds storage
+  /// @throws ArithmeticException      if the resulting span exceeds Java array representation
   @Override
   public void insert(ByteVector value, long start, long replace) {
     if (start < 0 || replace < 0) {
@@ -96,15 +88,13 @@ public class ByteVectorStream extends IOStream {
     writeBlock(value);
   }
 
-  /**
-   * Removes a byte span, moves the tail and positions the cursor at the resulting stored length.
-   * If the starting offset is beyond the data, storage is extended to that offset.
-   *
-   * @param start the nonnegative starting byte offset
-   * @param count the nonnegative byte count to remove
-   * @throws IllegalArgumentException if the span is negative
-   * @throws ArithmeticException      if span arithmetic or the resulting length exceeds representation
-   */
+  /// Removes a byte span, moves the tail and positions the cursor at the resulting stored length.
+  /// If the starting offset is beyond the data, storage is extended to that offset.
+  ///
+  /// @param start the nonnegative starting byte offset
+  /// @param count the nonnegative byte count to remove
+  /// @throws IllegalArgumentException if the span is negative
+  /// @throws ArithmeticException      if span arithmetic or the resulting length exceeds representation
   @Override
   public void removeBlock(long start, long count) {
     if (start < 0 || count < 0) {
@@ -154,13 +144,11 @@ public class ByteVectorStream extends IOStream {
     return data.size();
   }
 
-  /**
-   * Changes the memory buffer length without moving the cursor. Extension introduces zero bytes.
-   *
-   * @param length the new nonnegative byte length
-   * @throws IllegalArgumentException if the length is negative
-   * @throws ArithmeticException      if the length exceeds Java array representation
-   */
+  /// Changes the memory buffer length without moving the cursor. Extension introduces zero bytes.
+  ///
+  /// @param length the new nonnegative byte length
+  /// @throws IllegalArgumentException if the length is negative
+  /// @throws ArithmeticException      if the length exceeds Java array representation
   @Override
   public void truncate(long length) {
     if (length < 0) {
@@ -169,12 +157,10 @@ public class ByteVectorStream extends IOStream {
     data.resize(Math.toIntExact(length));
   }
 
-  /**
-   * Returns the live mutable byte vector backing this stream.
-   * Changes through it affect stream storage directly and do not adjust the cursor.
-   *
-   * @return the live storage vector
-   */
+  /// Returns the live mutable byte vector backing this stream.
+  /// Changes through it affect stream storage directly and do not adjust the cursor.
+  ///
+  /// @return the live storage vector
   public ByteVector data() {
     return data;
   }

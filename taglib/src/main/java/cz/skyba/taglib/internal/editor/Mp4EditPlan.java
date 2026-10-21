@@ -8,9 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Original-node replacements and parent appendices belonging to one physical edit.
- */
+/// Original-node replacements and parent appendices belonging to one physical edit.
 final class Mp4EditPlan {
   final Map<Integer, byte[]> replacements;
   final Map<Integer, byte[]> appendices;

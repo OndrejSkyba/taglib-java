@@ -10,35 +10,24 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing COMM language, description and comment text.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for language-specific comments (COMM).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class CommentsFrame extends Frame {
   private final LanguageText fields = new LanguageText();
 
-  /**
-   * Creates a frame containing COMM language, description and comment text. The initial text encoding is ISO-8859-1.
-   */
+  /// Creates a frame containing COMM language, description and comment text. The initial text encoding is ISO-8859-1.
   public CommentsFrame() {
     this(ISO_8859_1);
   }
 
-  /**
-   * Creates a frame containing COMM language, description and comment text.
-   *
-   * @param encoding the requested text encoding
-   */
   public CommentsFrame(Charset encoding) {
     super(new ByteVector("COMM"));
     fields.encoding = Id3Text.requireEncoding(encoding);
   }
 
-  /**
-   * Decodes COMM language, description and comment text from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes COMM language, description and comment text from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public CommentsFrame(ByteVector data) {
     super(data);
     parseComment(fieldData(data));
@@ -49,11 +38,9 @@ public class CommentsFrame extends Frame {
     parseComment(fieldData(data));
   }
 
-  /**
-   * Returns an independent copy of the stored language-code bytes.
-   *
-   * @return copied language bytes
-   */
+  /// Returns an independent copy of the stored language-code bytes.
+  ///
+  /// @return copied language bytes
   public final ByteVector language() {
     return new ByteVector(fields.language);
   }
@@ -66,11 +53,9 @@ public class CommentsFrame extends Frame {
     return fields.text;
   }
 
-  /**
-   * Copies up to the first three language-code bytes into the live frame.
-   *
-   * @param value language bytes to copy
-   */
+  /// Copies up to the first three language-code bytes into the live frame.
+  ///
+  /// @param value language bytes to copy
   public final void setLanguage(ByteVector value) {
     fields.language = value.mid(0, 3);
   }
@@ -103,24 +88,20 @@ public class CommentsFrame extends Frame {
     return PropertyMap.builder().put(key.isEmpty() || key.equals("COMMENT") ? "COMMENT" : "COMMENT:" + key, fields.text).build();
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag   the tag to search
-   * @param value the owner or description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag   the tag to search
+  /// @param value the owner or description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static CommentsFrame findByDescription(Tag tag, String value) {
     return findByDescription(tag.frameList(new ByteVector("COMM")), value);
   }
 
-  /**
-   * Returns the first live matching frame from the supplied frame sequence.
-   *
-   * @param frames      the frames to search in iteration order
-   * @param description the description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from the supplied frame sequence.
+  ///
+  /// @param frames      the frames to search in iteration order
+  /// @param description the description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static CommentsFrame findByDescription(Iterable<? extends Frame> frames, String description) {
     for (Frame frame : frames) {
       if (frame instanceof CommentsFrame comment && comment.description().equals(description)) {
@@ -130,9 +111,6 @@ public class CommentsFrame extends Frame {
     return null;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseComment(data);
@@ -142,9 +120,6 @@ public class CommentsFrame extends Frame {
     fields.parse(data, "A comment frame must contain at least 5 bytes.");
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset type = checkTextEncoding(List.of(fields.description), fields.encoding);

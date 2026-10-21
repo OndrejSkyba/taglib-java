@@ -14,66 +14,54 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * An editable Musepack file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- */
+/// An editable Musepack file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
 public class MpcFile extends ApeTaggedFile {
-  /**
-   * Tag families supported by this format's removal operations.
-   */
+  /// Tag families supported by this format's removal operations.
   public enum TagType {ID3V1, ID3V2, APE}
 
   private Properties details;
   private boolean prefixStripped;
   private long id3v2Location = -1, id3v2Size;
 
-  /**
-   * Opens a Musepack file and owns the file handle. Uses default read options.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a Musepack file and owns the file handle. Uses default read options.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public MpcFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Musepack file and owns the file handle.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   */
+  /// Opens a Musepack file and owns the file handle.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
   public MpcFile(Path path, ReadOptions options) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options);
   }
 
-  /**
-   * Opens a Musepack file over a borrowed stream that remains open when this file closes. Uses default read options.
-   *
-   * @param source the open, seekable audio stream
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a Musepack file over a borrowed stream that remains open when this file closes. Uses default read options.
+  ///
+  /// @param source the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public MpcFile(IOStream source) {
     this(source, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a Musepack file over a borrowed stream that remains open when this file closes.
-   *
-   * @param source  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException    if storage access fails
-   * @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
-   * @throws IllegalStateException           if the supplied stream is closed
-   */
+  /// Opens a Musepack file over a borrowed stream that remains open when this file closes.
+  ///
+  /// @param source  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException    if storage access fails
+  /// @throws cz.skyba.taglib.TagLibException if parsing rejects the format or its metadata
+  /// @throws IllegalStateException           if the supplied stream is closed
   public MpcFile(IOStream source, ReadOptions options) {
     this(source, false, options);
   }
@@ -105,11 +93,7 @@ public class MpcFile extends ApeTaggedFile {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -123,17 +107,13 @@ public class MpcFile extends ApeTaggedFile {
     }
   }
 
-  /**
-   * Stages removal of all supported tag types; storage changes only on {@link #save()}.
-   */
+  /// Stages removal of all supported tag types; storage changes only on [#save()].
   public void removeTags() {
     removeTags(Set.of(TagType.values()));
   }
 
-  /**
-   * Stages removal of selected tag types, including a leading ID3v2 tag; storage changes only
-   * on {@link #save()}.
-   */
+  /// Stages removal of selected tag types, including a leading ID3v2 tag; storage changes only
+  /// on [#save()].
   public void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     stripTags(types.contains(TagType.ID3V1), types.contains(TagType.APE));
@@ -145,14 +125,12 @@ public class MpcFile extends ApeTaggedFile {
     }
   }
 
-  /**
-   * Checks for a recognizable Musepack header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param source the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable Musepack header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param source the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream source) {
     var header = TagUtils.readHeader(source, 4, true);
     return header.equals(new ByteVector("MPCK"))

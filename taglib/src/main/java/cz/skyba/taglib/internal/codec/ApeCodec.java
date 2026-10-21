@@ -17,9 +17,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * APE-tagged Monkey's Audio, WavPack and Musepack containers.
- */
+/// APE-tagged Monkey's Audio, WavPack and Musepack containers.
 public final class ApeCodec implements Codec {
   private static final int[] WAVPACK_RATES = {
     6000, 8000, 9600, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000,
@@ -276,9 +274,7 @@ public final class ApeCodec implements Codec {
     return new AudioProperties(duration, bitrate, rate, channels, bits, lossless);
   }
 
-  /**
-   * Codec-internal detailed property snapshot shared with the public format views.
-   */
+  /// Codec-internal detailed property snapshot shared with the public format views.
   public record Details(
     AudioProperties common,
     int version,
@@ -291,9 +287,7 @@ public final class ApeCodec implements Codec {
     boolean dsd) {
   }
 
-  /**
-   * Reads detailed properties using the same tag boundaries as the format's native File.
-   */
+  /// Reads detailed properties using the same tag boundaries as the format's native File.
   public static Details readProperties(BinaryFile file, Format format) throws IOException {
     long begin = audioStart(file, format);
     long end = ApeTag.read(file, ReadOptions.DEFAULT).offset();
@@ -384,9 +378,7 @@ public final class ApeCodec implements Codec {
       new AudioProperties(duration, bitrate, rate, channels, bits, true), version, samples);
   }
 
-  /**
-   * Bounded forward find and native 1024-byte rfind windows; end is exclusive.
-   */
+  /// Bounded forward find and native 1024-byte rfind windows; end is exclusive.
   private static long findMarker(BinaryFile f, String marker, long start, long end, boolean reverse)
     throws IOException {
     byte[] needle = marker.getBytes(StandardCharsets.ISO_8859_1);
@@ -667,9 +659,7 @@ public final class ApeCodec implements Codec {
   private record Varint(long value, long next, boolean terminated) {
   }
 
-  /**
-   * Native unsigned-long accumulation, streamed so long continuation runs do not allocate.
-   */
+  /// Native unsigned-long accumulation, streamed so long continuation runs do not allocate.
   private static Varint varint(BinaryFile f, long at, long end) throws IOException {
     long value = 0;
     while (at < end) {

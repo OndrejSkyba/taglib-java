@@ -10,35 +10,24 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing USLT language, description and lyrics.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for unsynchronized lyrics (USLT).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class UnsynchronizedLyricsFrame extends Frame {
   private final LanguageText fields = new LanguageText();
 
-  /**
-   * Creates a frame containing USLT language, description and lyrics. The initial text encoding is ISO-8859-1.
-   */
+  /// Creates a frame containing USLT language, description and lyrics. The initial text encoding is ISO-8859-1.
   public UnsynchronizedLyricsFrame() {
     this(ISO_8859_1);
   }
 
-  /**
-   * Creates a frame containing USLT language, description and lyrics.
-   *
-   * @param encoding the requested text encoding
-   */
   public UnsynchronizedLyricsFrame(Charset encoding) {
     super(new ByteVector("USLT"));
     fields.encoding = Id3Text.requireEncoding(encoding);
   }
 
-  /**
-   * Decodes USLT language, description and lyrics from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes USLT language, description and lyrics from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public UnsynchronizedLyricsFrame(ByteVector data) {
     super(data);
     parseLyrics(fieldData(data));
@@ -49,11 +38,9 @@ public class UnsynchronizedLyricsFrame extends Frame {
     parseLyrics(fieldData(data));
   }
 
-  /**
-   * Returns an independent copy of the stored language-code bytes.
-   *
-   * @return copied language bytes
-   */
+  /// Returns an independent copy of the stored language-code bytes.
+  ///
+  /// @return copied language bytes
   public final ByteVector language() {
     return new ByteVector(fields.language);
   }
@@ -66,11 +53,9 @@ public class UnsynchronizedLyricsFrame extends Frame {
     return fields.text;
   }
 
-  /**
-   * Copies up to the first three language-code bytes into the live frame.
-   *
-   * @param value language bytes to copy
-   */
+  /// Copies up to the first three language-code bytes into the live frame.
+  ///
+  /// @param value language bytes to copy
   public final void setLanguage(ByteVector value) {
     fields.language = value.mid(0, 3);
   }
@@ -103,24 +88,20 @@ public class UnsynchronizedLyricsFrame extends Frame {
     return PropertyMap.builder().put(key.isEmpty() || key.equals("LYRICS") ? "LYRICS" : "LYRICS:" + key, fields.text).build();
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag   the tag to search
-   * @param value the owner or description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag   the tag to search
+  /// @param value the owner or description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UnsynchronizedLyricsFrame findByDescription(Tag tag, String value) {
     return findByDescription(tag.frameList(new ByteVector("USLT")), value);
   }
 
-  /**
-   * Returns the first live matching frame from the supplied frame sequence.
-   *
-   * @param frames      the frames to search in iteration order
-   * @param description the description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from the supplied frame sequence.
+  ///
+  /// @param frames      the frames to search in iteration order
+  /// @param description the description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UnsynchronizedLyricsFrame findByDescription(Iterable<? extends Frame> frames, String description) {
     for (Frame frame : frames) {
       if (frame instanceof UnsynchronizedLyricsFrame lyrics && lyrics.description().equals(description)) {
@@ -130,9 +111,6 @@ public class UnsynchronizedLyricsFrame extends Frame {
     return null;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseLyrics(data);
@@ -142,9 +120,6 @@ public class UnsynchronizedLyricsFrame extends Frame {
     fields.parse(data, "An unsynchronized lyrics frame must contain at least 5 bytes.");
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset type = checkTextEncoding(List.of(fields.description, fields.text), fields.encoding);

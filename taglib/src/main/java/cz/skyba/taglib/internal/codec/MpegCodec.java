@@ -19,9 +19,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.u32be;
 
-/**
- * MPEG layer I/II/III and ADTS elementary streams with ID3 and APE tags.
- */
+/// MPEG layer I/II/III and ADTS elementary streams with ID3 and APE tags.
 public final class MpegCodec implements Codec {
   private Id3Location nativeId3Location;
   private long nativeId3OriginalSize;
@@ -58,18 +56,14 @@ public final class MpegCodec implements Codec {
   private record Located(long offset, Header header) {
   }
 
-  /**
-   * Shared mpegproperties.cpp result, including nullable validated VBR state.
-   */
+  /// Shared mpegproperties.cpp result, including nullable validated VBR state.
   public record Details(AudioProperties common, MpegHeaderData header,
                         XingHeader xingHeader) {
     private static final Details EMPTY = new Details(AudioProperties.EMPTY,
       MpegHeaderData.parse(new byte[0], 0), null);
   }
 
-  /**
-   * Reads the specialized MPEG codec directly, without AudioFile extension/sniff dispatch.
-   */
+  /// Reads the specialized MPEG codec directly, without AudioFile extension/sniff dispatch.
   public static Details readProperties(BinaryFile file, ReadStyle style) throws IOException {
     var codec = new MpegCodec();
     codec.readNative(file, new ReadOptions(true, style, ReadOptions.DEFAULT.maxMetadataBytes()));
@@ -79,9 +73,7 @@ public final class MpegCodec implements Codec {
   public record Id3Location(long offset, int size) {
   }
 
-  /**
-   * Mirrors upstream AudioFile sniffing: two coherent headers within 1 KiB after a leading ID3 tag.
-   */
+  /// Mirrors upstream AudioFile sniffing: two coherent headers within 1 KiB after a leading ID3 tag.
   public static boolean isSupported(Path path) throws IOException {
     try (var file = new BinaryFile(path)) {
       return isSupported(file);
@@ -455,9 +447,7 @@ public final class MpegCodec implements Codec {
     return new Id3Location(offset, (int) Math.min(size, file.size() - offset));
   }
 
-  /**
-   * One property calculation for positional reads and native borrowed-stream cursor effects.
-   */
+  /// One property calculation for positional reads and native borrowed-stream cursor effects.
   private static Details properties(
     BinaryFile file, long begin, long end, ReadStyle style, boolean nativeProtocol)
     throws IOException {
@@ -491,9 +481,7 @@ public final class MpegCodec implements Codec {
     byte[] frame(Located at) throws IOException;
   }
 
-  /**
-   * Shares the property arithmetic while retaining the actual MpegFile's cached offsets/read hooks.
-   */
+  /// Shares the property arithmetic while retaining the actual MpegFile's cached offsets/read hooks.
   public static Details readProperties(MpegFile file, ReadStyle style) {
     try {
       return properties(new PropertySource() {
@@ -623,9 +611,7 @@ public final class MpegCodec implements Codec {
       && (u32be(first, at) & 0xfffe0c00L) == (u32be(next, nextAt) & 0xfffe0c00L);
   }
 
-  /**
-   * Chunked scanning bounds memory and avoids a system call per potential sync byte.
-   */
+  /// Chunked scanning bounds memory and avoids a system call per potential sync byte.
   private static Located find(BinaryFile file, long begin, long end, boolean backwards)
     throws IOException {
     final int block = 65536;

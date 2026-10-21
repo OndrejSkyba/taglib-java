@@ -8,21 +8,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * A typed MP4 metadata value with mutable atom data-type metadata.
- * Construction copies mutable lists and byte values; exports return independent mutable copies.
- * Scalar conversion requires the exact stored type, except that an empty string-list value
- * converts to a zero scalar. A void item is not valid.
- */
+/// A typed MP4 metadata value with mutable atom data-type metadata.
+/// Construction copies mutable lists and byte values; exports return independent mutable copies.
+/// Scalar conversion requires the exact stored type, except that an empty string-list value
+/// converts to a zero scalar. A void item is not valid.
 public final class Item {
-  /**
-   * The exact stored payload type of an MP4 item.
-   */
+  /// The exact stored payload type of an MP4 item.
   public enum Type {VOID, BOOL, INT, INT_PAIR, BYTE, UNSIGNED_INT, LONG, STRING_LIST, BYTE_VECTOR_LIST, COVER_ART_LIST, STEM}
 
-  /**
-   * Two integer fields stored in a paired MP4 metadata value.
-   */
+  /// Two integer fields stored in a paired MP4 metadata value.
   public record IntPair(int first, int second) {
   }
 
@@ -69,134 +63,87 @@ public final class Item {
     this.payload = payload;
   }
 
-  /**
-   * Creates a void item.
-   */
+  /// Creates a void item.
   public Item() {
     this(new VoidPayload());
   }
 
-  /**
-   * Copies atom data-type metadata independently; immutable stored payload state can be shared.
-   *
-   * @param other the item to copy
-   */
+  /// Copies atom data-type metadata independently; immutable stored payload state can be shared.
+  ///
+  /// @param other the item to copy
   public Item(Item other) {
     Objects.requireNonNull(other);
     payload = other.payload;
     atomType = other.atomType;
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param value the payload to store
-   */
   public Item(boolean value) {
     this(new BoolPayload(value));
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param value the payload to store
-   */
   public Item(int value) {
     this(new IntPayload(value));
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param value the payload to store
-   */
   public Item(byte value) {
     this(new BytePayload(value & 255));
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param value the payload to store
-   */
   public Item(long value) {
     this(new LongPayload(value));
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param first  the first integer
-   * @param second the second integer
-   */
   public Item(int first, int second) {
     this(new PairPayload(new IntPair(first, second)));
   }
 
-  /**
-   * Creates a text-list item, preserving value order and copying the list.
-   *
-   * @param values the text values; neither the list nor its elements may be null
-   * @return the text-list item
-   */
+  /// Creates a text-list item, preserving value order and copying the list.
+  ///
+  /// @param values the text values; neither the list nor its elements may be null
+  /// @return the text-list item
   public static Item textValues(List<String> values) {
     return new Item(new TextsPayload(List.copyOf(values)));
   }
 
-  /**
-   * Creates a binary-list item, copying the list and every byte array.
-   *
-   * @param values the binary values; neither the list nor its elements may be null
-   * @return the binary-list item
-   */
+  /// Creates a binary-list item, copying the list and every byte array.
+  ///
+  /// @param values the binary values; neither the list nor its elements may be null
+  /// @return the binary-list item
   public static Item binaryValues(List<byte[]> values) {
     return new Item(new BytesPayload(values.stream().map(ByteVector::new).toList()));
   }
 
-  /**
-   * Creates an artwork-list item, copying the list of immutable cover-art values.
-   *
-   * @param values the artwork; neither the list nor its elements may be null
-   * @return the artwork-list item
-   */
+  /// Creates an artwork-list item, copying the list of immutable cover-art values.
+  ///
+  /// @param values the artwork; neither the list nor its elements may be null
+  /// @return the artwork-list item
   public static Item coverArt(List<CoverArt> values) {
     return new Item(new CoversPayload(List.copyOf(values)));
   }
 
-  /**
-   * Creates a binary-list item, copying the list and every byte vector.
-   *
-   * @param values the binary values; neither the list nor its elements may be null
-   */
+  /// Creates a binary-list item, copying the list and every byte vector.
+  ///
+  /// @param values the binary values; neither the list nor its elements may be null
   public Item(List<ByteVector> values) {
     this(new BytesPayload(values.stream().map(ByteVector::new).toList()));
   }
 
-  /**
-   * Creates an item storing the supplied value, copying mutable input data.
-   *
-   * @param value the payload to store
-   */
   public Item(Stem value) {
     this(new StemPayload(Objects.requireNonNull(value)));
   }
 
-  /**
-   * Creates an unsigned 32-bit item from the low 32 bits of a Java long.
-   *
-   * @param value the bit pattern
-   * @return the unsigned integer item
-   */
+  /// Creates an unsigned 32-bit item from the low 32 bits of a Java long.
+  ///
+  /// @param value the bit pattern
+  /// @return the unsigned integer item
   public static Item fromUnsignedInt(long value) {
     return new Item(new UIntPayload(value & 0xffff_ffffL));
   }
 
-  /**
-   * Creates an unsigned byte item from the low eight bits of an integer.
-   *
-   * @param value the bit pattern
-   * @return the byte item
-   */
+  /// Creates an unsigned byte item from the low eight bits of an integer.
+  ///
+  /// @param value the bit pattern
+  /// @return the byte item
   public static Item fromByte(int value) {
     return new Item((byte) value);
   }
@@ -246,82 +193,66 @@ public final class Item {
     return rawValue();
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public boolean toBoolean() {
     return (boolean) scalar(Type.BOOL);
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public int toInt() {
     return (int) scalar(Type.INT);
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public int toByte() {
     return (int) scalar(Type.BYTE);
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public long toUnsignedInt() {
     return (long) scalar(Type.UNSIGNED_INT);
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public long toLong() {
     return (long) scalar(Type.LONG);
   }
 
-  /**
-   * Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
-   *
-   * @return the stored scalar or zero value
-   * @throws IllegalStateException if the stored type differs and is not an empty string list
-   */
+  /// Returns the exact stored scalar type. An empty string-list item yields a zero scalar.
+  ///
+  /// @return the stored scalar or zero value
+  /// @throws IllegalStateException if the stored type differs and is not an empty string list
   public IntPair toIntPair() {
     return (IntPair) scalar(Type.INT_PAIR);
   }
 
-  /**
-   * Returns an independent mutable list of the stored text values.
-   * A type mismatch returns an empty list.
-   *
-   * @return the stored payload or an empty value
-   */
+  /// Returns an independent mutable list of the stored text values.
+  /// A type mismatch returns an empty list.
+  ///
+  /// @return the stored payload or an empty value
   public List<String> toStringList() {
     return new ArrayList<>(textValues());
   }
 
-  /**
-   * Returns a mutable list containing independent copies of the stored byte arrays.
-   * A type mismatch returns an empty list.
-   *
-   * @return copied binary values, or an empty list
-   */
+  /// Returns a mutable list containing independent copies of the stored byte arrays.
+  /// A type mismatch returns an empty list.
+  ///
+  /// @return copied binary values, or an empty list
   public List<byte[]> toByteArrays() {
     var result = new ArrayList<byte[]>();
     for (var value : byteValues()) {
@@ -330,32 +261,26 @@ public final class Item {
     return result;
   }
 
-  /**
-   * Returns an independent mutable list of copied byte vectors.
-   * A type mismatch returns an empty list.
-   *
-   * @return the stored payload or an empty value
-   */
+  /// Returns an independent mutable list of copied byte vectors.
+  /// A type mismatch returns an empty list.
+  ///
+  /// @return the stored payload or an empty value
   public List<ByteVector> toByteVectorList() {
     return byteValues().stream().map(ByteVector::new).collect(Collectors.toCollection(ArrayList::new));
   }
 
-  /**
-   * Returns an independent mutable list of the immutable cover-art values.
-   * A type mismatch returns an empty list.
-   *
-   * @return the stored payload or an empty value
-   */
+  /// Returns an independent mutable list of the immutable cover-art values.
+  /// A type mismatch returns an empty list.
+  ///
+  /// @return the stored payload or an empty value
   public List<CoverArt> toCoverArtList() {
     return new ArrayList<>(coverValues());
   }
 
-  /**
-   * Returns the immutable Stem payload.
-   * A type mismatch returns an empty value.
-   *
-   * @return the stored payload or an empty value
-   */
+  /// Returns the immutable Stem payload.
+  /// A type mismatch returns an empty value.
+  ///
+  /// @return the stored payload or an empty value
   public Stem toStem() {
     return payload instanceof StemPayload(var value) ? value : new Stem();
   }
@@ -388,9 +313,7 @@ public final class Item {
     };
   }
 
-  /**
-   * Compares valid items by type, atom type and payload. Invalid items are equal only to themselves.
-   */
+  /// Compares valid items by type, atom type and payload. Invalid items are equal only to themselves.
   @Override
   public boolean equals(Object other) {
     return this == other || other instanceof Item item && isValid() && item.isValid()

@@ -12,18 +12,14 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing APIC MIME type, picture role, description and image bytes.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for embedded artwork (APIC).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class AttachedPictureFrame extends Frame {
   private static final System.Logger LOG = System.getLogger(AttachedPictureFrame.class.getName());
 
   private static final Type[] TYPE_VALUES = Type.values();
 
-  /**
-   * The picture role recorded in an APIC frame.
-   */
+  /// The picture role recorded in an APIC frame.
   public enum Type {
     Other, FileIcon, OtherFileIcon, FrontCover, BackCover, LeafletPage, Media,
     LeadArtist, Artist, Conductor, Band, Composer, Lyricist, RecordingLocation,
@@ -40,18 +36,13 @@ public class AttachedPictureFrame extends Frame {
   private Type type = Type.Other;
   private ByteVector picture = new ByteVector();
 
-  /**
-   * Creates a frame containing APIC MIME type, picture role, description and image bytes.
-   */
   public AttachedPictureFrame() {
     super(new ByteVector("APIC"));
   }
 
-  /**
-   * Decodes APIC MIME type, picture role, description and image bytes from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes APIC MIME type, picture role, description and image bytes from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public AttachedPictureFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -63,43 +54,35 @@ public class AttachedPictureFrame extends Frame {
     parsePicture(fieldData(data));
   }
 
-  /**
-   * Returns the display name for a picture role.
-   *
-   * @param value the role or code to convert
-   * @return the converted picture role or its display name
-   */
+  /// Returns the display name for a picture role.
+  ///
+  /// @param value the role or code to convert
+  /// @return the converted picture role or its display name
   public static String typeToString(Type value) {
     return PictureTypes.nameForCode(Objects.requireNonNull(value).code());
   }
 
-  /**
-   * Looks up a picture role by its display name.
-   *
-   * @param value the role or code to convert
-   * @return the converted picture role or its display name
-   */
+  /// Looks up a picture role by its display name.
+  ///
+  /// @param value the role or code to convert
+  /// @return the converted picture role or its display name
   public static Type typeFromString(String value) {
     return TYPE_VALUES[PictureTypes.codeForName(value)];
   }
 
-  /**
-   * Maps the low eight bits of a numeric code to a picture role.
-   *
-   * @param value the role or code to convert
-   * @return the converted picture role or its display name
-   */
+  /// Maps the low eight bits of a numeric code to a picture role.
+  ///
+  /// @param value the role or code to convert
+  /// @return the converted picture role or its display name
   public static Type typeFromUInt(long value) {
     long narrowed = value & 0xffff_ffffL;
     return narrowed < TYPE_VALUES.length ? TYPE_VALUES[(int) narrowed] : Type.Other;
   }
 
-  /**
-   * Maps an unsigned byte code to a picture role.
-   *
-   * @param value the role or code to convert
-   * @return the converted picture role or its display name
-   */
+  /// Maps an unsigned byte code to a picture role.
+  ///
+  /// @param value the role or code to convert
+  /// @return the converted picture role or its display name
   public static Type typeFromByte(byte value) {
     return typeFromUInt(value & 255);
   }
@@ -155,9 +138,6 @@ public class AttachedPictureFrame extends Frame {
     return new ArrayList<>(List.of(description, mimeType));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parsePicture(data);
@@ -205,9 +185,6 @@ public class AttachedPictureFrame extends Frame {
     picture = data.mid(field.nextPosition());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     Charset rendered = checkTextEncoding(List.of(description), encoding);

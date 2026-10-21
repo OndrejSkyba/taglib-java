@@ -8,30 +8,24 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing UFID owner and binary identifier.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- */
+/// A mutable ID3v2 frame for file identification (UFID).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
 public class UniqueFileIdentifierFrame extends Frame {
   private String owner = "";
   private ByteVector identifier = new ByteVector();
 
-  /**
-   * Decodes UFID owner and binary identifier from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes UFID owner and binary identifier from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public UniqueFileIdentifierFrame(ByteVector data) {
     super(data);
     parseIdentifier(fieldData(data));
   }
 
-  /**
-   * Creates a frame containing UFID owner and binary identifier.
-   *
-   * @param owner      the owner identifier
-   * @param identifier binary identifier bytes to copy
-   */
+  /// Creates a frame containing UFID owner and binary identifier.
+  ///
+  /// @param owner      the owner identifier
+  /// @param identifier binary identifier bytes to copy
   public UniqueFileIdentifierFrame(String owner, ByteVector identifier) {
     super(new ByteVector("UFID"));
     this.owner = Objects.requireNonNull(owner);
@@ -71,24 +65,20 @@ public class UniqueFileIdentifierFrame extends Frame {
       : PropertyMap.builder().addUnsupportedData(Id3Text.fixedLatin1(frameID()) + "/" + owner).build();
   }
 
-  /**
-   * Returns the first live matching frame from a tag.
-   *
-   * @param tag   the tag to search
-   * @param value the owner or description to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from a tag.
+  ///
+  /// @param tag   the tag to search
+  /// @param value the owner or description to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UniqueFileIdentifierFrame findByOwner(Tag tag, String value) {
     return findByOwner(tag.frameList(new ByteVector("UFID")), value);
   }
 
-  /**
-   * Returns the first live matching frame from the supplied frame sequence.
-   *
-   * @param frames the frames to search in iteration order
-   * @param owner  the owner identifier to match exactly
-   * @return the matching frame, or {@code null} if absent
-   */
+  /// Returns the first live matching frame from the supplied frame sequence.
+  ///
+  /// @param frames the frames to search in iteration order
+  /// @param owner  the owner identifier to match exactly
+  /// @return the matching frame, or `null` if absent
   public static UniqueFileIdentifierFrame findByOwner(Iterable<? extends Frame> frames, String owner) {
     for (Frame frame : frames) {
       if (frame instanceof UniqueFileIdentifierFrame id && id.owner().equals(owner)) {
@@ -98,9 +88,6 @@ public class UniqueFileIdentifierFrame extends Frame {
     return null;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parseIdentifier(data);
@@ -115,9 +102,6 @@ public class UniqueFileIdentifierFrame extends Frame {
     identifier = data.mid(field.nextPosition());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     return ByteVector.fromText(owner, ISO_8859_1).append((byte) 0).append(identifier);

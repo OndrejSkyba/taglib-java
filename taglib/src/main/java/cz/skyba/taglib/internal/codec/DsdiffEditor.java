@@ -15,9 +15,7 @@ import java.util.OptionalInt;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * Constructor-owned root and child chunks, including upstream's physical update ordering.
- */
+/// Constructor-owned root and child chunks, including upstream's physical update ordering.
 final class DsdiffEditor {
   private static final class Chunk {
     final String id;

@@ -14,35 +14,28 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/**
- * Parsed Musepack audio property fields.
- * Common projections report duration in milliseconds, sample rate in hertz and bitrate in
- * kilobits per second. Unknown numeric fields use zero. Parsed values do not own a file handle.
- */
+/// Parsed Musepack audio properties.
+/// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   private final ApeCodec.Details details;
 
-  /**
-   * Reads Musepack audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param file         the live file to inspect without taking ownership
-   * @param streamLength the byte length used to calculate bitrate
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param file         the live file to inspect without taking ownership
+  /// @param streamLength the byte length used to calculate bitrate
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(MpcFile file, long streamLength) {
     this(file, streamLength, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Musepack audio properties from the supplied parsed file or encoded property data.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param file         the live file to inspect without taking ownership
-   * @param streamLength the byte length used to calculate bitrate
-   * @param style        the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from the supplied parsed file or encoded property data.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param file         the live file to inspect without taking ownership
+  /// @param streamLength the byte length used to calculate bitrate
+  /// @param style        the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(MpcFile file, long streamLength, ReadStyle style) {
     Objects.requireNonNull(file);
     Objects.requireNonNull(style);
@@ -235,25 +228,21 @@ public final class Properties {
       samples, frames, trackGain, trackPeak, albumGain, albumPeak, false);
   }
 
-  /**
-   * Reads Musepack audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param path the audio file to inspect
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param path the audio file to inspect
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path) {
     this(path, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Musepack audio properties from a file, closing its temporary handle.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param path  the audio file to inspect
-   * @param style the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from a file, closing its temporary handle.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param path  the audio file to inspect
+  /// @param style the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(Path path, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(path)) {
@@ -263,25 +252,21 @@ public final class Properties {
     }
   }
 
-  /**
-   * Reads Musepack audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
-   *
-   * @param stream the open, seekable input stream
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream) {
     this(stream, ReadStyle.AVERAGE);
   }
 
-  /**
-   * Reads Musepack audio properties from a borrowed stream, leaving it open.
-   * Reading can move the source cursor. Values are independent of the source handle.
-   *
-   * @param stream the open, seekable input stream
-   * @param style  the audio property read hint
-   * @throws UncheckedIOException if storage access or property decoding fails
-   */
+  /// Reads Musepack audio properties from a borrowed stream, leaving it open.
+  /// Reading can move the source cursor. Values are independent of the source handle.
+  ///
+  /// @param stream the open, seekable input stream
+  /// @param style  the audio property read hint
+  /// @throws UncheckedIOException if storage access or property decoding fails
   public Properties(IOStream stream, ReadStyle style) {
     Objects.requireNonNull(style);
     try (var file = new BinaryFile(stream)) {
@@ -315,9 +300,7 @@ public final class Properties {
     return details.version();
   }
 
-  /**
-   * unsigned-long count; use Long.toUnsignedString for out-of-signed-range SV8 values.
-   */
+  /// unsigned-long count; use Long.toUnsignedString for out-of-signed-range SV8 values.
   public long sampleFrames() {
     return details.sampleFrames();
   }
@@ -342,12 +325,6 @@ public final class Properties {
     return details.albumPeak();
   }
 
-  /**
-   * Creates the immutable common audio-property projection.
-   * Unknown or unsupported fields use zero.
-   *
-   * @return common audio properties
-   */
   public AudioProperties common() {
     return details.common();
   }

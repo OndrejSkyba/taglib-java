@@ -18,9 +18,7 @@ import java.util.regex.Pattern;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * Physical MP4 item values. All unknown payloads remain opaque and losslessly removable.
- */
+/// Physical MP4 item values. All unknown payloads remain opaque and losslessly removable.
 final class Mp4Items {
   private static final Pattern SIGNED_INTEGER = Pattern.compile("-?[0-9]+");
   private static final Pattern UNSIGNED_INTEGER = Pattern.compile("[0-9]+");

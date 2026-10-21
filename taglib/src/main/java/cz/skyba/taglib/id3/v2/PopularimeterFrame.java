@@ -9,28 +9,21 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable ID3v2 frame containing POPM email, rating and play counter.
- * Editing a frame does not write a file; use the owning file's save operation to persist changes.
- * The rating is stored as a Java integer and encoded using its low eight bits.
- */
+/// A mutable ID3v2 frame for popularity information (POPM).
+/// Editing a frame does not write a file; use the owning file's save operation to persist changes.
+/// The rating is stored as a Java integer and encoded using its low eight bits.
 public class PopularimeterFrame extends Frame {
   private String email = "";
   private int rating;
   private long counter;
 
-  /**
-   * Creates a frame containing POPM email, rating and play counter.
-   */
   public PopularimeterFrame() {
     super(new ByteVector("POPM"));
   }
 
-  /**
-   * Decodes POPM email, rating and play counter from serialized frame bytes, including their frame header.
-   *
-   * @param data serialized bytes including the frame header
-   */
+  /// Decodes POPM email, rating and play counter from serialized frame bytes, including their frame header.
+  ///
+  /// @param data serialized bytes including the frame header
   public PopularimeterFrame(ByteVector data) {
     super(data);
     header().setData(data);
@@ -77,9 +70,6 @@ public class PopularimeterFrame extends Frame {
     return new ArrayList<>(List.of(email, Integer.toString(rating), Integer.toString((int) counter)));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected void parseFields(ByteVector data) {
     parsePopularimeter(data);
@@ -99,9 +89,6 @@ public class PopularimeterFrame extends Frame {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   protected ByteVector renderFields() {
     return ByteVector.fromText(email, ISO_8859_1).append((byte) 0)

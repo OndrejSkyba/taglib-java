@@ -19,10 +19,8 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A mutable APE tag with copied item inputs and exports, a live footer and case-normalized keys.
- * Editing and rendering operate in memory; an owning audio file persists the result on save.
- */
+/// A mutable APE tag with copied item inputs and exports, a live footer and case-normalized keys.
+/// Editing and rendering operate in memory; an owning audio file persists the result on save.
 public class Tag extends TagBase {
   private static final System.Logger LOG = System.getLogger(Tag.class.getName());
 
@@ -51,22 +49,18 @@ public class Tag extends TagBase {
     this(null, 0);
   }
 
-  /**
-   * Reads an APE tag from a borrowed file using the supplied footer offset.
-   *
-   * @param file           the source file, or null for an empty tag
-   * @param footerLocation the absolute footer byte offset
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an APE tag from a borrowed file using the supplied footer offset.
+  ///
+  /// @param file           the source file, or null for an empty tag
+  /// @param footerLocation the absolute footer byte offset
+  /// @throws java.io.UncheckedIOException if storage access fails
   public Tag(FileBase file, long footerLocation) {
     this.file = file;
     this.footerLocation = footerLocation;
     read();
   }
 
-  /**
-   * Reads footer and item bytes from the borrowed source. A tag without a source is unchanged.
-   */
+  /// Reads footer and item bytes from the borrowed source. A tag without a source is unchanged.
   protected final void read() {
     if (file != null && file.isValid()) {
       file.seek(footerLocation);
@@ -83,9 +77,7 @@ public class Tag extends TagBase {
     return Ascii.upper(key);
   }
 
-  /**
-   * Tests whether the supplied key is valid for this tag format.
-   */
+  /// Tests whether the supplied key is valid for this tag format.
   public static boolean checkKey(String key) {
     if (key.length() < 2 || key.length() > 255) {
       return false;
@@ -109,12 +101,10 @@ public class Tag extends TagBase {
     return footer;
   }
 
-  /**
-   * Returns a structurally read-only live map of normalized keys. Item values exported
-   * through this map are independent copies; editing those copies does not change the tag.
-   *
-   * @return the live key view with copied item values
-   */
+  /// Returns a structurally read-only live map of normalized keys. Item values exported
+  /// through this map are independent copies; editing those copies does not change the tag.
+  ///
+  /// @return the live key view with copied item values
   public final Map<String, Item> itemListMap() {
     return Collections.unmodifiableMap(new ItemMap());
   }
@@ -171,22 +161,18 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Removes a case-normalized item key from this tag in memory.
-   *
-   * @param key the item key
-   */
+  /// Removes a case-normalized item key from this tag in memory.
+  ///
+  /// @param key the item key
   public final void removeItem(String key) {
     items.remove(upper(key));
   }
 
-  /**
-   * Copies an item into a normalized key when the key is valid. Invalid keys are ignored.
-   * Changes remain in memory.
-   *
-   * @param key  the destination key
-   * @param item the value to copy
-   */
+  /// Copies an item into a normalized key when the key is valid. Invalid keys are ignored.
+  /// Changes remain in memory.
+  ///
+  /// @param key  the destination key
+  /// @param item the value to copy
   public final void setItem(String key, Item item) {
     if (checkKey(key)) {
       items.put(upper(key), new Item(item));
@@ -195,10 +181,8 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Replaces the key with a binary item; an empty byte vector removes the existing item without
-   * adding one.
-   */
+  /// Replaces the key with a binary item; an empty byte vector removes the existing item without
+  /// adding one.
   public final void setData(String key, ByteVector value) {
     removeItem(key);
     if (!value.isEmpty()) {
@@ -206,20 +190,16 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Adds text to a normalized item key, replacing existing values by default.
-   *
-   * @param key   the item key
-   * @param value the text value
-   */
+  /// Adds text to a normalized item key, replacing existing values by default.
+  ///
+  /// @param key   the item key
+  /// @param value the text value
   public final void addValue(String key, String value) {
     addValue(key, value, true);
   }
 
-  /**
-   * Replaces existing values when requested, then appends nonempty text; an empty replacement only
-   * removes the previous item.
-   */
+  /// Replaces existing values when requested, then appends nonempty text; an empty replacement only
+  /// removes the previous item.
   public final void addValue(String key, String value, boolean replace) {
     if (replace) {
       removeItem(key);
@@ -330,9 +310,7 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Maps APE text items to standard keys, reporting non-text items and empty keys as unsupported.
-   */
+  /// Maps APE text items to standard keys, reporting non-text items and empty keys as unsupported.
   @Override
   public PropertyMap properties() {
     var result = new MutablePropertyMap();
@@ -470,9 +448,6 @@ public class Tag extends TagBase {
     return true;
   }
 
-  /**
-   * Serializes this tag to its stored byte representation.
-   */
   public final ByteVector render() {
     var output = new ByteVectorOutput();
     items.values().forEach(item -> output.append(item.render()));
@@ -483,11 +458,9 @@ public class Tag extends TagBase {
     return footer.renderHeader().append(data).append(footer.renderFooter());
   }
 
-  /**
-   * Decodes serialized APE item data into the live item map.
-   *
-   * @param data encoded item bytes
-   */
+  /// Decodes serialized APE item data into the live item map.
+  ///
+  /// @param data encoded item bytes
   protected final void parse(ByteVector data) {
     long position = 0;
     for (long i = 0; i < footer.itemCount() && position <= data.size() - 11L; i++) {

@@ -7,9 +7,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.io.IOException;
 
-/**
- * Native tag detection reads, including failed probes and their observable cursors.
- */
+/// Native tag detection reads, including failed probes and their observable cursors.
 public final class NativeTagIO {
   private static final int MAX_DUPLICATE_ID3V2_TAGS = 100_000;
 
@@ -19,9 +17,7 @@ public final class NativeTagIO {
   public record Span(long offset, long length) {
   }
 
-  /**
-   * Footer::completeTagSize trusts the header-present flag even when magic is absent.
-   */
+  /// Footer::completeTagSize trusts the header-present flag even when magic is absent.
   public static Span apeSpan(BinaryFile file, ApeTag.Data parsed)
     throws IOException {
     if (parsed.length() == 0) {
@@ -38,9 +34,7 @@ public final class NativeTagIO {
     return stream.readBlock(length).toByteArray();
   }
 
-  /**
-   * ID3v2::Tag::read: body read, consecutive duplicate extents, and final header probe.
-   */
+  /// ID3v2::Tag::read: body read, consecutive duplicate extents, and final header probe.
   public static Span id3v2(IOStream stream, long offset) throws IOException {
     byte[] header = read(stream, offset, 10);
     long body = id3Body(header), complete = 10 + body + id3Footer(header);
@@ -58,9 +52,7 @@ public final class NativeTagIO {
     return new Span(offset, complete + extra);
   }
 
-  /**
-   * Same declared replacement extent for positional/path writers, without reading the body.
-   */
+  /// Same declared replacement extent for positional/path writers, without reading the body.
   public static Span id3v2(BinaryFile file, long offset) throws IOException {
     if (offset < 0 || offset > file.size()) {
       throw new IOException("Invalid ID3 tag offset");

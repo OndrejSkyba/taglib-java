@@ -15,9 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Ogg Vorbis, Opus, Speex and the current and historical FLAC mappings.
- */
+/// Ogg Vorbis, Opus, Speex and the current and historical FLAC mappings.
 public final class OggCodec implements Codec {
   private final Format preferred;
   private final boolean tryVorbis;
@@ -26,9 +24,7 @@ public final class OggCodec implements Codec {
   private boolean picturesRemoved;
   private OggPages.Headers nativeHeaders;
 
-  /**
-   * Native Vorbis/Opus/Speex identification values alongside their common projection.
-   */
+  /// Native Vorbis/Opus/Speex identification values alongside their common projection.
   public record Details(AudioProperties common, int version, int bitrateMaximum,
                         int bitrateNominal, int bitrateMinimum, int inputSampleRate, int outputGain,
                         int speexMode, boolean speexVbr) {
@@ -45,9 +41,7 @@ public final class OggCodec implements Codec {
     Long lastGranule() throws IOException;
   }
 
-  /**
-   * Snapshot construction reads the specialized codec directly and retains no file handle.
-   */
+  /// Snapshot construction reads the specialized codec directly and retains no file handle.
   public static Details readProperties(BinaryFile file, Format format, ReadStyle style)
     throws IOException {
     Objects.requireNonNull(style);
@@ -69,9 +63,7 @@ public final class OggCodec implements Codec {
     }
   }
 
-  /**
-   * Existing-file construction reuses its packet index and exact native cursor effects.
-   */
+  /// Existing-file construction reuses its packet index and exact native cursor effects.
   public static Details readProperties(OggFile file, Format format, ReadStyle style)
     throws IOException {
     Objects.requireNonNull(file);
@@ -123,9 +115,7 @@ public final class OggCodec implements Codec {
     return preferred == null ? detected(file) : preferred;
   }
 
-  /**
-   * Retains extension-selected construction and the native .oga FLAC-then-Vorbis retry.
-   */
+  /// Retains extension-selected construction and the native .oga FLAC-then-Vorbis retry.
   public Format fileRefFormat(BinaryFile file) throws IOException {
     return format(file);
   }
@@ -314,9 +304,7 @@ public final class OggCodec implements Codec {
     }, format);
   }
 
-  /**
-   * Shares native identification parsing, signedness, partial state and granule arithmetic.
-   */
+  /// Shares native identification parsing, signedness, partial state and granule arithmetic.
   private static Details details(PropertySource source, Format format) throws IOException {
     byte[] id = source.packet(0);
     int rate, channels, preSkip = 0, nominal = 0, maximum = 0, minimum = 0;
@@ -382,9 +370,7 @@ public final class OggCodec implements Codec {
       version, maximum, nominal, minimum, inputRate, gain, speexMode, speexVbr);
   }
 
-  /**
-   * Native ByteVector numeric conversions decode an available suffix, without sign extension.
-   */
+  /// Native ByteVector numeric conversions decode an available suffix, without sign extension.
   private static int availableLittleEndian(byte[] data, int offset, int width) {
     int value = 0;
     for (int i = 0; i < width && offset + i < data.length; i++) {

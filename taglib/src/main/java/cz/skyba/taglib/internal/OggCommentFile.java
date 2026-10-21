@@ -11,9 +11,7 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * Ogg codec metadata with a live comment view and staged packet persistence.
- */
+/// Ogg codec metadata with a live comment view and staged packet persistence.
 public abstract class OggCommentFile extends OggFile {
   private static final System.Logger LOG = System.getLogger(OggCommentFile.class.getName());
 

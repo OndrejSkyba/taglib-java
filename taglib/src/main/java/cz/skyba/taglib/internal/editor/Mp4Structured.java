@@ -15,9 +15,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * Structured MP4 values use the same validated movie/index rewrite engine as physical edits.
- */
+/// Structured MP4 values use the same validated movie/index rewrite engine as physical edits.
 public final class Mp4Structured {
   private Mp4Structured() {
   }

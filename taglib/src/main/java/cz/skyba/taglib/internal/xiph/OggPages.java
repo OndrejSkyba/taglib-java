@@ -26,9 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Ogg packet assembly and native contiguous-span packet replacement/pagination.
- */
+/// Ogg packet assembly and native contiguous-span packet replacement/pagination.
 public final class OggPages {
   private OggPages() {
   }
@@ -99,9 +97,7 @@ public final class OggPages {
     return decodedPage(offset, bytes, bytes.length - 27, header.dataSize());
   }
 
-  /**
-   * Uses the same native packet index as the public Ogg base, without extra format validation.
-   */
+  /// Uses the same native packet index as the public Ogg base, without extra format validation.
   public static final class Reader implements AutoCloseable {
     private final BinaryFile source;
     private final IOStream input;
@@ -453,9 +449,7 @@ public final class OggPages {
     }
   }
 
-  /**
-   * Native renumbering covers every serial and stops at the first EOS or invalid header.
-   */
+  /// Native renumbering covers every serial and stops at the first EOS or invalid header.
   private static void renumberTail(Path path, long offset, int delta) throws IOException {
     try (var input = new FileStream(path, true);
          var channel = FileChannel.open(path, StandardOpenOption.WRITE)) {

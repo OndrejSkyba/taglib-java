@@ -14,12 +14,10 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/**
- * An editable DSF file with live metadata and format-specific audio properties.
- * Path construction owns storage; stream construction borrows it. Metadata edits require
- * {@link #save()} unless an operation explicitly writes immediately. Closing does not save.
- * Audio properties are parsed even when optional property reading is disabled.
- */
+/// An editable DSF file with live metadata and format-specific audio properties.
+/// Path construction owns storage; stream construction borrows it. Metadata edits require
+/// [#save()] unless an operation explicitly writes immediately. Closing does not save.
+/// Audio properties are parsed even when optional property reading is disabled.
 public class DsfFile extends FileBase {
   private static final System.Logger LOG = System.getLogger(DsfFile.class.getName());
 
@@ -30,86 +28,74 @@ public class DsfFile extends FileBase {
   private Properties details;
   private Tag tag;
 
-  /**
-   * Opens a DSF file and owns the file handle. Uses default read options.
-   * Audio property parsing is required for this format.
-   *
-   * @param path the file to open
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSF file and owns the file handle. Uses default read options.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param path the file to open
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsfFile(Path path) {
     this(path, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a DSF file and owns the file handle.
-   * Audio property parsing is required for this format.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSF file and owns the file handle.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsfFile(Path path, ReadOptions options) {
     this(path, options, null);
   }
 
-  /**
-   * Opens a DSF file and owns the file handle.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   * Audio property parsing is required for this format.
-   *
-   * @param path    the file to open
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   */
+  /// Opens a DSF file and owns the file handle.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param path    the file to open
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
   public DsfFile(Path path, ReadOptions options, FrameFactory factory) {
     Objects.requireNonNull(options);
     this(new FileStream(path), true, options, factory);
   }
 
-  /**
-   * Opens a DSF file over a borrowed stream that remains open when this file closes. Uses default read options.
-   * Audio property parsing is required for this format.
-   *
-   * @param source the open, seekable audio stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSF file over a borrowed stream that remains open when this file closes. Uses default read options.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param source the open, seekable audio stream
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsfFile(IOStream source) {
     this(source, ReadOptions.DEFAULT);
   }
 
-  /**
-   * Opens a DSF file over a borrowed stream that remains open when this file closes.
-   * Audio property parsing is required for this format.
-   *
-   * @param source  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSF file over a borrowed stream that remains open when this file closes.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param source  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsfFile(IOStream source, ReadOptions options) {
     this(source, false, options, null);
   }
 
-  /**
-   * Opens a DSF file over a borrowed stream that remains open when this file closes.
-   * The frame factory controls ID3v2 parsing; null selects the shared default factory.
-   * Audio property parsing is required for this format.
-   *
-   * @param source  the open, seekable audio stream
-   * @param options audio property selection and metadata allocation limit
-   * @param factory the frame decoder factory, or {@code null} for the default
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if parsing rejects the format or its metadata
-   * @throws IllegalStateException        if the supplied stream is closed
-   */
+  /// Opens a DSF file over a borrowed stream that remains open when this file closes.
+  /// The frame factory controls ID3v2 parsing; null selects the shared default factory.
+  /// Audio property parsing is required for this format.
+  ///
+  /// @param source  the open, seekable audio stream
+  /// @param options audio property selection and metadata allocation limit
+  /// @param factory the frame decoder factory, or `null` for the default
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if parsing rejects the format or its metadata
+  /// @throws IllegalStateException        if the supplied stream is closed
   public DsfFile(IOStream source, ReadOptions options, FrameFactory factory) {
     this(source, false, options, factory);
   }
@@ -139,11 +125,7 @@ public class DsfFile extends FileBase {
     return details == null ? null : details.common();
   }
 
-  /**
-   * Returns the format-specific parsed audio properties.
-   *
-   * @return the detailed properties, or {@code null} if properties were not read or are unavailable
-   */
+  /// @return the detailed properties, or `null` if properties were not read or are unavailable
   public Properties detailedProperties() {
     return details;
   }
@@ -156,14 +138,12 @@ public class DsfFile extends FileBase {
     return super.readBlock(length);
   }
 
-  /**
-   * Checks for a recognizable DSF header without validating the complete file.
-   * The input cursor is restored after inspection.
-   *
-   * @param source the stream to inspect
-   * @return whether a format header is recognized
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Checks for a recognizable DSF header without validating the complete file.
+  /// The input cursor is restored after inspection.
+  ///
+  /// @param source the stream to inspect
+  /// @return whether a format header is recognized
+  /// @throws java.io.UncheckedIOException if storage access fails
   public static boolean isSupported(IOStream source) {
     return TagUtils.readHeader(source, 4, false).startsWith(new ByteVector("DSD "));
   }
@@ -206,14 +186,12 @@ public class DsfFile extends FileBase {
     save(Tag.Version.V4);
   }
 
-  /**
-   * Writes staged metadata to storage in place. An I/O failure can leave partial changes.
-   *
-   * @param version the ID3v2 output version
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws TagLibException              if storage is read-only or the cached layout cannot be saved
-   * @throws IllegalStateException        if the file is closed
-   */
+  /// Writes staged metadata to storage in place. An I/O failure can leave partial changes.
+  ///
+  /// @param version the ID3v2 output version
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws IllegalStateException        if the file is closed
   public final void save(Tag.Version version) {
     requireWritable();
     Objects.requireNonNull(version);

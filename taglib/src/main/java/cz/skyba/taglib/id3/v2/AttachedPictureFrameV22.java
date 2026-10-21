@@ -3,10 +3,8 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 
-/**
- * An ID3v2.2 PIC picture frame created by the frame factory.
- * Rendering emits an APIC frame with an ID3v2.4 header.
- */
+/// An ID3v2.2 PIC picture frame created by the frame factory.
+/// Rendering emits an APIC frame with an ID3v2.4 header.
 public class AttachedPictureFrameV22 extends AttachedPictureFrame {
   AttachedPictureFrameV22(ByteVector data, Header header) {
     super();

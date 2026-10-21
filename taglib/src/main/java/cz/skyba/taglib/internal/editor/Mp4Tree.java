@@ -16,9 +16,7 @@ import java.util.function.Supplier;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * Bounded physical movie tree. Media bytes are never materialized and relocation is staged.
- */
+/// Bounded physical movie tree. Media bytes are never materialized and relocation is staged.
 final class Mp4Tree {
   static final int LIMIT = 64 * 1024 * 1024;
   private static final Set<String> CONTAINERS =
@@ -269,9 +267,7 @@ final class Mp4Tree {
     throw new MetadataEditException("Could not update the MP4 file structure safely.");
   }
 
-  /**
-   * Consecutive changed siblings can share padding without changing any parent or media offset.
-   */
+  /// Consecutive changed siblings can share padding without changing any parent or media offset.
   private boolean fixedSizeEdits(
     Node parent,
     Map<Integer, byte[]> replacements,
@@ -312,9 +308,7 @@ final class Mp4Tree {
     return true;
   }
 
-  /**
-   * Keep the full renderer's malformed-offset checks, without allocating or rendering tables.
-   */
+  /// Keep the full renderer's malformed-offset checks, without allocating or rendering tables.
   private void validateOffsets(Node node) {
     if (node.name.equals("stco") || node.name.equals("co64")) {
       var table = offsetTable(source, node, Mp4Tree::damagedAudio, Mp4Tree::damagedAudio);
@@ -330,9 +324,7 @@ final class Mp4Tree {
     }
   }
 
-  /**
-   * Native TagLib's saveExisting policy, scoped to each physical ilst and its adjacent free atoms.
-   */
+  /// Native TagLib's saveExisting policy, scoped to each physical ilst and its adjacent free atoms.
   private void reusePadding(Node parent, Map<Integer, byte[]> replacements, Set<Integer> claimed) {
     var children = parent.children;
     for (int i = 0; i < children.size(); i++) {

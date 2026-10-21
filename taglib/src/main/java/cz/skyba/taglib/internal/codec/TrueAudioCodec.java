@@ -14,9 +14,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/**
- * TrueAudio 1 lossless stream headers and ID3 metadata.
- */
+/// TrueAudio 1 lossless stream headers and ID3 metadata.
 public final class TrueAudioCodec implements Codec {
   private int nativeId3Size = -1;
   private long nativeId3OriginalSize;
@@ -26,9 +24,7 @@ public final class TrueAudioCodec implements Codec {
 
   private Details nativeDetails = new Details(AudioProperties.EMPTY, 0, 0);
 
-  /**
-   * Native ByteVector constructor decoding, shared with the complete file reader.
-   */
+  /// Native ByteVector constructor decoding, shared with the complete file reader.
   public static Details properties(byte[] header, long streamLength) {
     if (header.length < 4 || !ascii(header, 0, 3).equals("TTA")) {
       return new Details(AudioProperties.EMPTY, 0, 0);
@@ -54,9 +50,7 @@ public final class TrueAudioCodec implements Codec {
     return new Details(new AudioProperties(duration, bitrate, rate, channels, bits, true), version, frames);
   }
 
-  /**
-   * Constructs the native File/property snapshot, including tag-span and cursor effects.
-   */
+  /// Constructs the native File/property snapshot, including tag-span and cursor effects.
   public static Details readProperties(BinaryFile file, ReadStyle style) throws IOException {
     var codec = new TrueAudioCodec();
     codec.readNative(file, new ReadOptions(true, style, ReadOptions.DEFAULT.maxMetadataBytes()));

@@ -7,9 +7,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.Objects;
 
-/**
- * Bounded read window used only while constructing an ordinary owned file.
- */
+/// Bounded read window used only while constructing an ordinary owned file.
 public final class ConstructionReadStream extends IOStream {
   private static final int WINDOW_SIZE = 4096;
   private final IOStream source;
@@ -30,9 +28,7 @@ public final class ConstructionReadStream extends IOStream {
     return source instanceof ConstructionReadStream prepared ? prepared : new ConstructionReadStream(source, owned, false);
   }
 
-  /**
-   * Wraps I/O for AudioFile's built-in file adapter, which inherits the library's read and seek operations.
-   */
+  /// Wraps I/O for AudioFile's built-in file adapter, which inherits the library's read and seek operations.
   public static ConstructionReadStream wrapForFileRef(IOStream source, boolean owned) {
     return source instanceof ConstructionReadStream prepared ? prepared : new ConstructionReadStream(source, owned, true);
   }

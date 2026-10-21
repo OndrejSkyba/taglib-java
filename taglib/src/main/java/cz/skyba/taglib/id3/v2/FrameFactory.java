@@ -14,20 +14,16 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Decodes and constructs ID3v2 frames, with protected hooks for custom frame types.
- * Configuration applies to future operations through this factory. The shared default instance
- * is also used when decoding embedded frames, independently of an outer tag's custom factory.
- */
+/// Decodes and constructs ID3v2 frames, with protected hooks for custom frame types.
+/// Configuration applies to future operations through this factory. The shared default instance
+/// is also used when decoding embedded frames, independently of an outer tag's custom factory.
 public class FrameFactory {
   private static final System.Logger LOG = System.getLogger(FrameFactory.class.getName());
 
-  /**
-   * The result of frame-header preparation.
-   *
-   * @param header    the prepared live frame header, or null if the input is invalid
-   * @param supported whether the frame can be decoded by a supported frame implementation
-   */
+  /// The result of frame-header preparation.
+  ///
+  /// @param header    the prepared live frame header, or null if the input is invalid
+  /// @param supported whether the frame can be decoded by a supported frame implementation
   public record Preparation(Frame.Header header, boolean supported) {
   }
 
@@ -54,9 +50,7 @@ public class FrameFactory {
     return defaultEncoding;
   }
 
-  /**
-   * Sets the default text encoding, using the charsets supported by {@link Frame}.
-   */
+  /// Sets the default text encoding, using the charsets supported by [Frame].
   public final void setDefaultTextEncoding(Charset encoding) {
     defaultEncoding = Id3Text.requireEncoding(encoding);
     useDefaultEncoding = true;
@@ -66,15 +60,13 @@ public class FrameFactory {
     return useDefaultEncoding;
   }
 
-  /**
-   * Prepares a frame header using the enclosing tag version and normalizes eligible data.
-   * Unsynchronization handling can modify the supplied byte vector. Unsupported recognizable
-   * frames retain a header; malformed identifiers or extents return a null header.
-   *
-   * @param data      mutable serialized frame bytes
-   * @param tagHeader the enclosing tag header
-   * @return the prepared header and support status
-   */
+  /// Prepares a frame header using the enclosing tag version and normalizes eligible data.
+  /// Unsynchronization handling can modify the supplied byte vector. Unsupported recognizable
+  /// frames retain a header; malformed identifiers or extents return a null header.
+  ///
+  /// @param data      mutable serialized frame bytes
+  /// @param tagHeader the enclosing tag header
+  /// @return the prepared header and support status
   protected final Preparation prepareFrameHeader(ByteVector data, Header tagHeader) {
     long version = Objects.requireNonNull(tagHeader).majorVersion();
     return prepareFrameHeader(data, tagHeader, new Frame.Header(data, version));
@@ -116,13 +108,11 @@ public class FrameFactory {
     return new Preparation(header, true);
   }
 
-  /**
-   * Decodes a serialized frame without changing the supplied input bytes.
-   *
-   * @param original  serialized frame bytes
-   * @param tagHeader the enclosing tag header
-   * @return the decoded frame, an unknown frame for recognizable unsupported data, or null for invalid input
-   */
+  /// Decodes a serialized frame without changing the supplied input bytes.
+  ///
+  /// @param original  serialized frame bytes
+  /// @param tagHeader the enclosing tag header
+  /// @return the decoded frame, an unknown frame for recognizable unsupported data, or null for invalid input
   public Frame createFrame(ByteVector original, Header tagHeader) {
     ByteVector data = new ByteVector(original);
     Preparation result = prepareFrameHeader(data, tagHeader);
@@ -172,14 +162,12 @@ public class FrameFactory {
     }
   }
 
-  /**
-   * Decodes a serialized frame using a prepared frame header and this factory's custom dispatch hook.
-   *
-   * @param data      prepared serialized frame bytes
-   * @param header    the prepared live frame header
-   * @param tagHeader the enclosing tag header
-   * @return the decoded frame, an unknown frame for recognizable unsupported data, or null for invalid input
-   */
+  /// Decodes a serialized frame using a prepared frame header and this factory's custom dispatch hook.
+  ///
+  /// @param data      prepared serialized frame bytes
+  /// @param header    the prepared live frame header
+  /// @param tagHeader the enclosing tag header
+  /// @return the decoded frame, an unknown frame for recognizable unsupported data, or null for invalid input
   protected Frame createFrame(ByteVector data, Frame.Header header, Header tagHeader) {
     String id = new String(header.frameID().data(), StandardCharsets.ISO_8859_1);
     Frame frame;
@@ -233,13 +221,11 @@ public class FrameFactory {
     }
   }
 
-  /**
-   * Normalizes recognized frame identifiers for their version. Unsupported obsolete frame types
-   * are reported as unsupported without creating a concrete frame.
-   *
-   * @param header the live header to update
-   * @return whether the frame type is supported
-   */
+  /// Normalizes recognized frame identifiers for their version. Unsupported obsolete frame types
+  /// are reported as unsupported without creating a concrete frame.
+  ///
+  /// @param header the live header to update
+  /// @return whether the frame type is supported
   protected boolean updateFrame(Frame.Header header) {
     String id = Id3Text.fixedLatin1(header.frameID());
     if (header.version() == 2) {
@@ -266,9 +252,7 @@ public class FrameFactory {
     return true;
   }
 
-  /**
-   * Creates a representable ID3v2 frame for the supplied text property.
-   */
+  /// Creates a representable ID3v2 frame for the supplied text property.
   public Frame createFrameForProperty(String key, List<String> values) {
     Objects.requireNonNull(key);
     values = List.copyOf(values);
@@ -317,9 +301,7 @@ public class FrameFactory {
     return new UserTextIdentificationFrame(UserTextIdentificationFrame.keyToTXXX(key), values, UTF_8);
   }
 
-  /**
-   * Rebuilds aggregate date and credit frames for the tag version.
-   */
+  /// Rebuilds aggregate date and credit frames for the tag version.
   public void rebuildAggregateFrames(Tag tag) {
     if (tag.header().majorVersion() < 4) {
       var years = tag.frameList(new ByteVector("TDRC"));

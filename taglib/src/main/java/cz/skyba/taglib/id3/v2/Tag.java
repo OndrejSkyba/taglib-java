@@ -18,21 +18,17 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_16;
 
-/**
- * A mutable ID3v2 tag containing live frame objects and a live tag header.
- * Frame list and map views are read-only but reflect structural edits. Frame objects remain
- * mutable. Editing and rendering operate in memory; the owning file writes serialized bytes
- * when saved.
- */
+/// A mutable ID3v2 tag containing live frame objects and a live tag header.
+/// Frame list and map views are read-only but reflect structural edits. Frame objects remain
+/// mutable. Editing and rendering operate in memory; the owning file writes serialized bytes
+/// when saved.
 public class Tag extends TagBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 
   private static final Set<String> V4_ONLY_FRAME_IDS =
     Set.of("ASPI", "EQU2", "RVA2", "SEEK", "SIGN", "TDRL", "TDTG", "TMOO", "TPRO", "TSST");
 
-  /**
-   * The output ID3v2 major version.
-   */
+  /// The output ID3v2 major version.
   public enum Version {
     V3, V4;
 
@@ -48,37 +44,31 @@ public class Tag extends TagBase {
   private ExtendedHeader extendedHeader;
   private final FrameCollection frames = new FrameCollection();
 
-  /**
-   * Creates an empty in-memory ID3v2 tag using the shared frame factory.
-   */
+  /// Creates an empty in-memory ID3v2 tag using the shared frame factory.
   public Tag() {
     factory = FrameFactory.instance();
     file = null;
     tagOffset = 0;
   }
 
-  /**
-   * Reads an ID3v2 tag from a borrowed file at an absolute byte offset.
-   *
-   * @param file   the borrowed source, or null to create an empty tag
-   * @param offset the absolute tag-header byte offset
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws IllegalStateException        if a required frame factory is unavailable
-   */
+  /// Reads an ID3v2 tag from a borrowed file at an absolute byte offset.
+  ///
+  /// @param file   the borrowed source, or null to create an empty tag
+  /// @param offset the absolute tag-header byte offset
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalStateException        if a required frame factory is unavailable
   public Tag(FileBase file, long offset) {
     this(file, offset, FrameFactory.instance());
   }
 
-  /**
-   * Reads an ID3v2 tag from a borrowed file at an absolute byte offset.
-   * A null factory leaves frame construction unavailable; operations that require it fail.
-   *
-   * @param file    the borrowed source, or null to create an empty tag
-   * @param offset  the absolute tag-header byte offset
-   * @param factory the decoder and frame-creation factory
-   * @throws java.io.UncheckedIOException if storage access fails
-   * @throws IllegalStateException        if a required frame factory is unavailable
-   */
+  /// Reads an ID3v2 tag from a borrowed file at an absolute byte offset.
+  /// A null factory leaves frame construction unavailable; operations that require it fail.
+  ///
+  /// @param file    the borrowed source, or null to create an empty tag
+  /// @param offset  the absolute tag-header byte offset
+  /// @param factory the decoder and frame-creation factory
+  /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalStateException        if a required frame factory is unavailable
   public Tag(FileBase file, long offset, FrameFactory factory) {
     this.file = file;
     tagOffset = offset;
@@ -103,54 +93,42 @@ public class Tag extends TagBase {
     return extendedHeader;
   }
 
-  /**
-   * Returns a read-only live map. Looking up an absent ID returns {@code null} without adding it.
-   */
+  /// Returns a read-only live map. Looking up an absent ID returns `null` without adding it.
   public final Map<ByteVector, List<Frame>> frameListMap() {
     return frames.map();
   }
 
-  /**
-   * Returns a read-only live list of frame references in tag order.
-   * Frame objects are mutable; use frame-management methods for structural changes.
-   *
-   * @return the live frame list
-   */
+  /// Returns a read-only live list of frame references in tag order.
+  /// Frame objects are mutable; use frame-management methods for structural changes.
+  ///
+  /// @return the live frame list
   public final List<Frame> frameList() {
     return frames.list();
   }
 
-  /**
-   * Returns the read-only live list for an existing ID, or an empty list when absent.
-   * An absent lookup does not create a bucket; query again after adding frames for a new ID.
-   */
+  /// Returns the read-only live list for an existing ID, or an empty list when absent.
+  /// An absent lookup does not create a bucket; query again after adding frames for a new ID.
   public final List<Frame> frameList(ByteVector id) {
     return frames.bucket(id);
   }
 
-  /**
-   * Retains a live frame reference in this tag without copying it.
-   *
-   * @param frame the frame to add
-   */
+  /// Retains a live frame reference in this tag without copying it.
+  ///
+  /// @param frame the frame to add
   public final void addFrame(Frame frame) {
     frames.add(frame);
   }
 
-  /**
-   * Removes the supplied frame reference without invalidating it for the caller.
-   *
-   * @param frame the retained frame to remove
-   */
+  /// Removes the supplied frame reference without invalidating it for the caller.
+  ///
+  /// @param frame the retained frame to remove
   public final void removeFrame(Frame frame) {
     frames.remove(frame, false);
   }
 
-  /**
-   * Removes all frames with the supplied identifier.
-   *
-   * @param id the frame identifier to match
-   */
+  /// Removes all frames with the supplied identifier.
+  ///
+  /// @param id the frame identifier to match
   public final void removeFrames(ByteVector id) {
     frames.removeAll(id, false);
   }
@@ -180,9 +158,7 @@ public class Tag extends TagBase {
     return common("TALB");
   }
 
-  /**
-   * Prefers a comment with an empty description, falling back to the first comment when none matches.
-   */
+  /// Prefers a comment with an empty description, falling back to the first comment when none matches.
   @Override
   public String comment() {
     var list = frameList(new ByteVector("COMM"));
@@ -197,11 +173,9 @@ public class Tag extends TagBase {
     return list.getFirst().toString();
   }
 
-  /**
-   * Expands ID3 genre codes and joins nonempty genre names using the common-field separator.
-   *
-   * @return displayed genre text
-   */
+  /// Expands ID3 genre codes and joins nonempty genre names using the common-field separator.
+  ///
+  /// @return displayed genre text
   @Override
   public String genre() {
     var list = frameList(new ByteVector("TCON"));
@@ -224,11 +198,9 @@ public class Tag extends TagBase {
     return joinTagValues(values);
   }
 
-  /**
-   * Parses the leading date text as an unsigned 32-bit year.
-   *
-   * @return the year, or zero when absent or invalid
-   */
+  /// Parses the leading date text as an unsigned 32-bit year.
+  ///
+  /// @return the year, or zero when absent or invalid
   @Override
   public long year() {
     var list = frameList(new ByteVector("TDRC"));
@@ -284,10 +256,8 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Updates an empty-description comment or the first existing comment, creating one only when
-   * absent. An empty value removes all comments.
-   */
+  /// Updates an empty-description comment or the first existing comment, creating one only when
+  /// absent. An empty value removes all comments.
   @Override
   public void setComment(String value) {
     Objects.requireNonNull(value);
@@ -311,10 +281,8 @@ public class Tag extends TagBase {
     comment.setText(value);
   }
 
-  /**
-   * Merges frame property exports, collecting identifiers for frames that cannot be represented as
-   * ordinary text.
-   */
+  /// Merges frame property exports, collecting identifiers for frames that cannot be represented as
+  /// ordinary text.
   @Override
   public PropertyMap properties() {
     var properties = new MutablePropertyMap();
@@ -324,9 +292,7 @@ public class Tag extends TagBase {
     return properties.snapshot();
   }
 
-  /**
-   * Removes metadata identified by the supplied unsupported-data keys.
-   */
+  /// Removes metadata identified by the supplied unsupported-data keys.
   @Override
   public void removeUnsupportedProperties(List<String> properties) {
     for (String property : properties) {
@@ -401,9 +367,7 @@ public class Tag extends TagBase {
     return true;
   }
 
-  /**
-   * Reports PICTURE and GENERALOBJECT when their APIC or GEOB frame-ID buckets exist.
-   */
+  /// Reports PICTURE and GENERALOBJECT when their APIC or GEOB frame-ID buckets exist.
   @Override
   public List<String> complexPropertyKeys() {
     var result = new ArrayList<String>();
@@ -479,25 +443,21 @@ public class Tag extends TagBase {
     return map.getOrDefault(key, EMPTY_VARIANT);
   }
 
-  /**
-   * Serializes this tag in memory, updating live header sizes, output version and writable flags.
-   * Frames not representable in the selected version can be converted or omitted. No file is written. The output version is ID3v2.4.
-   *
-   * @return tag bytes including header and padding
-   * @throws IllegalArgumentException if the result exceeds Java byte-vector representation
-   */
+  /// Serializes this tag in memory, updating live header sizes, output version and writable flags.
+  /// Frames not representable in the selected version can be converted or omitted. No file is written. The output version is ID3v2.4.
+  ///
+  /// @return tag bytes including header and padding
+  /// @throws IllegalArgumentException if the result exceeds Java byte-vector representation
   public final ByteVector render() {
     return render(Version.V4);
   }
 
-  /**
-   * Serializes this tag in memory, updating live header sizes, output version and writable flags.
-   * Frames not representable in the selected version can be converted or omitted. No file is written.
-   *
-   * @param version the target output version
-   * @return tag bytes including header and padding
-   * @throws IllegalArgumentException if the result exceeds Java byte-vector representation
-   */
+  /// Serializes this tag in memory, updating live header sizes, output version and writable flags.
+  /// Frames not representable in the selected version can be converted or omitted. No file is written.
+  ///
+  /// @param version the target output version
+  /// @return tag bytes including header and padding
+  /// @throws IllegalArgumentException if the result exceeds Java byte-vector representation
   public final ByteVector render(Version version) {
     Objects.requireNonNull(version);
     var selected = new ArrayList<Frame>();
@@ -533,30 +493,24 @@ public class Tag extends TagBase {
     return data;
   }
 
-  /**
-   * Returns the shared decoder for fields marked as ISO-8859-1.
-   *
-   * @return the active decoder
-   */
+  /// Returns the shared decoder for fields marked as ISO-8859-1.
+  ///
+  /// @return the active decoder
   public static Latin1StringHandler latin1StringHandler() {
     return Id3Text.handler();
   }
 
-  /**
-   * Installs a decoder shared by ID3v2 text parsing. The handler is borrowed and is not closed.
-   * Passing null restores the default decoder.
-   *
-   * @param handler the decoder to install, or null to restore the default
-   */
+  /// Installs a decoder shared by ID3v2 text parsing. The handler is borrowed and is not closed.
+  /// Passing null restores the default decoder.
+  ///
+  /// @param handler the decoder to install, or null to restore the default
   public static void setLatin1StringHandler(Latin1StringHandler handler) {
     Id3Text.setHandler(handler);
   }
 
-  /**
-   * Reads the tag from its borrowed file and stored offset. A tag without a source file is unchanged.
-   *
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads the tag from its borrowed file and stored offset. A tag without a source file is unchanged.
+  ///
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected final void read() {
     if (file == null || !file.isOpen()) {
       return;
@@ -592,11 +546,9 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Decodes serialized tag content into the live frame collection.
-   *
-   * @param original bytes beginning after the tag header
-   */
+  /// Decodes serialized tag content into the live frame collection.
+  ///
+  /// @param original bytes beginning after the tag header
   protected final void parse(ByteVector original) {
     ByteVector data = new ByteVector(original);
     if (header.unsynchronisation() && header.majorVersion() <= 3) {
@@ -641,13 +593,11 @@ public class Tag extends TagBase {
     checkedFactory().rebuildAggregateFrames(this);
   }
 
-  /**
-   * Replaces the text value of an existing frame or creates the mapped frame when absent.
-   * An empty value removes frames for the identifier. Changes remain in memory.
-   *
-   * @param id    the text-frame identifier
-   * @param value replacement text
-   */
+  /// Replaces the text value of an existing frame or creates the mapped frame when absent.
+  /// An empty value removes frames for the identifier. Changes remain in memory.
+  ///
+  /// @param id    the text-frame identifier
+  /// @param value replacement text
   protected final void setTextFrame(ByteVector id, String value) {
     Objects.requireNonNull(value);
     if (value.isEmpty()) {
@@ -664,9 +614,7 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Appends frames suitable for version 3 output, converting supported version 4 representations.
-   */
+  /// Appends frames suitable for version 3 output, converting supported version 4 representations.
   protected final void downgradeFrames(List<Frame> selected) {
     TextIdentificationFrame tdor = null, tdrc = null, tipl = null, tmcl = null, tcon = null;
     for (Frame frame : frameList()) {

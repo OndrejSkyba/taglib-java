@@ -12,51 +12,41 @@ import java.util.function.LongConsumer;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * Base for tracker format implementations with fixed-width binary stream helpers.
- * Reads advance the shared cursor and invoke output callbacks only after a complete field
- * has been read. Writes change the underlying storage immediately.
- */
+/// Base for tracker format implementations with fixed-width binary stream helpers.
+/// Reads advance the shared cursor and invoke output callbacks only after a complete field
+/// has been read. Writes change the underlying storage immediately.
 public abstract class FileBase extends cz.skyba.taglib.FileBase {
-  /**
-   * Initializes a tracker format over owned path storage.
-   *
-   * @param path the input path
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Initializes a tracker format over owned path storage.
+  ///
+  /// @param path the input path
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected FileBase(Path path) {
     super(path);
   }
 
-  /**
-   * Initializes a tracker format over a borrowed stream.
-   *
-   * @param stream the borrowed stream
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Initializes a tracker format over a borrowed stream.
+  ///
+  /// @param stream the borrowed stream
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected FileBase(IOStream stream) {
     super(stream);
   }
 
-  /**
-   * Writes a fixed-width ISO-8859-1 field, truncating or padding encoded bytes.
-   *
-   * @param size  the field byte count
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes a fixed-width ISO-8859-1 field, truncating or padding encoded bytes.
+  ///
+  /// @param size  the field byte count
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeString(String value, long size) {
     writeString(value, size, (byte) 0);
   }
 
-  /**
-   * Writes a fixed-width ISO-8859-1 field, truncating or padding encoded bytes.
-   *
-   * @param size    the field byte count
-   * @param value   the value to encode
-   * @param padding the extension fill byte
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes a fixed-width ISO-8859-1 field, truncating or padding encoded bytes.
+  ///
+  /// @param size    the field byte count
+  /// @param value   the value to encode
+  /// @param padding the extension fill byte
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeString(String value, long size, byte padding) {
     long width = size & 0xffff_ffffL; // Native resize narrows unsigned long to unsigned int.
     if (width > Integer.MAX_VALUE) {
@@ -65,65 +55,53 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
     writeBlock(ByteVector.fromText(value, ISO_8859_1).resize((int) width, padding));
   }
 
-  /**
-   * Writes the low 8 bits of an integer in little-endian order.
-   *
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes the low 8 bits of an integer in little-endian order.
+  ///
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeByte(int value) {
     writeBlock(new ByteVector((byte) value));
   }
 
-  /**
-   * Writes the low 16 bits of an integer in little-endian order.
-   *
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes the low 16 bits of an integer in little-endian order.
+  ///
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeU16L(int value) {
     writeBlock(ByteVector.fromShort((short) value, false));
   }
 
-  /**
-   * Writes the low 16 bits of an integer in big-endian order.
-   *
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes the low 16 bits of an integer in big-endian order.
+  ///
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeU16B(int value) {
     writeBlock(ByteVector.fromShort((short) value, true));
   }
 
-  /**
-   * Writes the low 32 bits of an integer in little-endian order.
-   *
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes the low 32 bits of an integer in little-endian order.
+  ///
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeU32L(long value) {
     writeBlock(ByteVector.fromUnsignedInt(value, false));
   }
 
-  /**
-   * Writes the low 32 bits of an integer in big-endian order.
-   *
-   * @param value the value to encode
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Writes the low 32 bits of an integer in big-endian order.
+  ///
+  /// @param value the value to encode
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected void writeU32B(long value) {
     writeBlock(ByteVector.fromUnsignedInt(value, true));
   }
 
-  /**
-   * Reads a fixed-width ISO-8859-1 string, ending at NUL and replacing 0xff with space.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @param size   the field byte count
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads a fixed-width ISO-8859-1 string, ending at NUL and replacing 0xff with space.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @param size   the field byte count
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readString(Consumer<String> output, long size) {
     Objects.requireNonNull(output);
     if (size < 0) {
@@ -142,14 +120,12 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
     return true;
   }
 
-  /**
-   * Reads an unsigned 8-bit field in little-endian order.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an unsigned 8-bit field in little-endian order.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readByte(IntConsumer output) {
     Objects.requireNonNull(output);
     var bytes = readBlock(1);
@@ -160,50 +136,42 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
     return true;
   }
 
-  /**
-   * Reads an unsigned 16-bit field in little-endian order.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an unsigned 16-bit field in little-endian order.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readU16L(IntConsumer output) {
     return readU16(output, false);
   }
 
-  /**
-   * Reads an unsigned 16-bit field in big-endian order.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an unsigned 16-bit field in big-endian order.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readU16B(IntConsumer output) {
     return readU16(output, true);
   }
 
-  /**
-   * Reads an unsigned 32-bit field in little-endian order.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an unsigned 32-bit field in little-endian order.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readU32L(LongConsumer output) {
     return readU32(output, false);
   }
 
-  /**
-   * Reads an unsigned 32-bit field in big-endian order.
-   * The callback runs only after a complete read; failure can still advance the cursor.
-   *
-   * @param output the callback for the decoded value
-   * @return whether the complete field was read
-   * @throws java.io.UncheckedIOException if storage access fails
-   */
+  /// Reads an unsigned 32-bit field in big-endian order.
+  /// The callback runs only after a complete read; failure can still advance the cursor.
+  ///
+  /// @param output the callback for the decoded value
+  /// @return whether the complete field was read
+  /// @throws java.io.UncheckedIOException if storage access fails
   protected boolean readU32B(LongConsumer output) {
     return readU32(output, true);
   }

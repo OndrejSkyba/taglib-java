@@ -15,12 +15,10 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/**
- * A mutable collection of MP4 metadata items with optional bound storage.
- * Item getters expose live values; their atom-type edits remain in memory until saved. A bound tag's
- * {@link #save()} and {@link #strip()} write its metadata atoms immediately. A tag constructed
- * without bound storage can be inspected and edited but cannot be saved directly.
- */
+/// A mutable collection of MP4 metadata items with optional bound storage.
+/// Item getters expose live values; their atom-type edits remain in memory until saved. A bound tag's
+/// [#save()] and [#strip()] write its metadata atoms immediately. A tag constructed
+/// without bound storage can be inspected and edited but cannot be saved directly.
 public class Tag extends TagBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 
@@ -32,9 +30,7 @@ public class Tag extends TagBase {
   private final List<Chapter> snapshotChapters;
   private final boolean snapshotValue;
 
-  /**
-   * Creates an empty tag without bound storage.
-   */
+  /// Creates an empty tag without bound storage.
   public Tag() {
     file = null;
     owner = null;
@@ -44,48 +40,40 @@ public class Tag extends TagBase {
     snapshotValue = false;
   }
 
-  /**
-   * Reads MP4 items using a parsed atom tree and borrows the supplied storage.
-   * The input remains open. Null factories select the shared default factory.
-   *
-   * @param file  the MP4 file whose metadata budget and write hooks to use
-   * @param atoms the parsed atom tree for the same source
-   */
+  /// Reads MP4 items using a parsed atom tree and borrows the supplied storage.
+  /// The input remains open. Null factories select the shared default factory.
+  ///
+  /// @param file  the MP4 file whose metadata budget and write hooks to use
+  /// @param atoms the parsed atom tree for the same source
   public Tag(Mp4File file, Atoms atoms) {
     this(file, atoms, null);
   }
 
-  /**
-   * Reads MP4 items using a parsed atom tree and borrows the supplied storage.
-   * The input remains open. Null factories select the shared default factory.
-   *
-   * @param file    the MP4 file whose metadata budget and write hooks to use
-   * @param atoms   the parsed atom tree for the same source
-   * @param factory the item decoder factory, or null for the default
-   */
+  /// Reads MP4 items using a parsed atom tree and borrows the supplied storage.
+  /// The input remains open. Null factories select the shared default factory.
+  ///
+  /// @param file    the MP4 file whose metadata budget and write hooks to use
+  /// @param atoms   the parsed atom tree for the same source
+  /// @param factory the item decoder factory, or null for the default
   public Tag(Mp4File file, Atoms atoms, ItemFactory factory) {
     this(file.metadataStream(), atoms, factory, file);
   }
 
-  /**
-   * Reads MP4 items using a parsed atom tree and borrows the supplied storage.
-   * The input remains open. Null factories select the shared default factory.
-   *
-   * @param stream the open borrowed stream
-   * @param atoms  the parsed atom tree for the same source
-   */
+  /// Reads MP4 items using a parsed atom tree and borrows the supplied storage.
+  /// The input remains open. Null factories select the shared default factory.
+  ///
+  /// @param stream the open borrowed stream
+  /// @param atoms  the parsed atom tree for the same source
   public Tag(IOStream stream, Atoms atoms) {
     this(stream, atoms, null);
   }
 
-  /**
-   * Reads MP4 items using a parsed atom tree and borrows the supplied storage.
-   * The input remains open. Null factories select the shared default factory.
-   *
-   * @param stream  the open borrowed stream
-   * @param atoms   the parsed atom tree for the same source
-   * @param factory the item decoder factory, or null for the default
-   */
+  /// Reads MP4 items using a parsed atom tree and borrows the supplied storage.
+  /// The input remains open. Null factories select the shared default factory.
+  ///
+  /// @param stream  the open borrowed stream
+  /// @param atoms   the parsed atom tree for the same source
+  /// @param factory the item decoder factory, or null for the default
   public Tag(IOStream stream, Atoms atoms, ItemFactory factory) {
     this(stream, atoms, factory, null);
   }
@@ -118,23 +106,19 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Creates an unbound tag snapshot with copied chapters and no Stem metadata.
-   *
-   * @param chapters chapter snapshots to copy
-   * @throws NullPointerException if the chapter list or a chapter is null
-   */
+  /// Creates an unbound tag snapshot with copied chapters and no Stem metadata.
+  ///
+  /// @param chapters chapter snapshots to copy
+  /// @throws NullPointerException if the chapter list or a chapter is null
   public Tag(List<Chapter> chapters) {
     this(chapters, null);
   }
 
-  /**
-   * Creates an unbound tag snapshot with copied chapters and optional immutable Stem metadata.
-   *
-   * @param chapters chapter snapshots to copy
-   * @param stem     the manifest, or {@code null} for no Stem metadata
-   * @throws NullPointerException if the chapter list or a chapter is null
-   */
+  /// Creates an unbound tag snapshot with copied chapters and optional immutable Stem metadata.
+  ///
+  /// @param chapters chapter snapshots to copy
+  /// @param stem     the manifest, or `null` for no Stem metadata
+  /// @throws NullPointerException if the chapter list or a chapter is null
   public Tag(List<Chapter> chapters, Stem stem) {
     file = null;
     owner = null;
@@ -147,13 +131,11 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Compares snapshot-constructed tags by their Nero chapter list and Stem value.
-   * Other tag instances use identity comparison.
-   *
-   * @param other the value to compare
-   * @return whether the tags compare equal
-   */
+  /// Compares snapshot-constructed tags by their Nero chapter list and Stem value.
+  /// Other tag instances use identity comparison.
+  ///
+  /// @param other the value to compare
+  /// @return whether the tags compare equal
   @Override
   public boolean equals(Object other) {
     return this == other || snapshotValue && other instanceof Tag value && value.snapshotValue
@@ -176,14 +158,12 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Reads a snapshot of Nero chapters and Stem metadata from an MP4 path. This operation
-   * does not populate ordinary text items. Temporary storage handles are closed.
-   *
-   * @param path the input file
-   * @return the unbound chapter and Stem view
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Reads a snapshot of Nero chapters and Stem metadata from an MP4 path. This operation
+  /// does not populate ordinary text items. Temporary storage handles are closed.
+  ///
+  /// @param path the input file
+  /// @return the unbound chapter and Stem view
+  /// @throws UncheckedIOException if storage access fails
   public static Tag read(Path path) {
     try {
       return Mp4Structured.read(path);
@@ -192,33 +172,27 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Returns Nero chapter values from the bound file or this unbound chapter snapshot.
-   * A bound file can load the values lazily from storage.
-   *
-   * @return chapter values
-   * @throws UncheckedIOException if lazy storage access fails
-   */
+  /// Returns Nero chapter values from the bound file or this unbound chapter snapshot.
+  /// A bound file can load the values lazily from storage.
+  ///
+  /// @return chapter values
+  /// @throws UncheckedIOException if lazy storage access fails
   public final List<Chapter> neroChapters() {
     return owner != null ? owner.neroChapters() : snapshotChapters;
   }
 
-  /**
-   * Looks up immutable Stem manifest data in the live item map.
-   *
-   * @return the manifest, or an empty optional if absent
-   */
+  /// Looks up immutable Stem manifest data in the live item map.
+  ///
+  /// @return the manifest, or an empty optional if absent
   public final Optional<Stem> stem() {
     return contains("stem") ? Optional.of(item("stem").toStem()) : Optional.empty();
   }
 
-  /**
-   * Writes this view's Nero chapters and Stem metadata to an MP4 path in place. Ordinary text
-   * items are not written by this overload. A failure can leave partial changes.
-   *
-   * @param path the MP4 file to update
-   * @throws UncheckedIOException if storage access fails
-   */
+  /// Writes this view's Nero chapters and Stem metadata to an MP4 path in place. Ordinary text
+  /// items are not written by this overload. A failure can leave partial changes.
+  ///
+  /// @param path the MP4 file to update
+  /// @throws UncheckedIOException if storage access fails
   public final void save(Path path) {
     try {
       WriteGuard.run(path, () -> Mp4Structured.write(path, this));
@@ -227,51 +201,41 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Returns a sorted, structurally read-only live map. Its item values remain editable.
-   *
-   * @return the live metadata item map
-   */
+  /// Returns a sorted, structurally read-only live map. Its item values remain editable.
+  ///
+  /// @return the live metadata item map
   public final Map<String, Item> itemMap() {
     return Collections.unmodifiableMap(items);
   }
 
-  /**
-   * Returns the live item for a name. Looking up an absent name does not create it.
-   *
-   * @param key the item name
-   * @return the live item, or a detached void item when absent
-   */
+  /// Returns the live item for a name. Looking up an absent name does not create it.
+  ///
+  /// @param key the item name
+  /// @return the live item, or a detached void item when absent
   public final Item item(String key) {
     var value = items.get(Objects.requireNonNull(key));
     return value == null ? new Item() : value;
   }
 
-  /**
-   * Stores the supplied item by reference. Subsequent edits to its atom type affect this tag.
-   *
-   * @param key  the item name
-   * @param item the item reference to retain
-   */
+  /// Stores the supplied item by reference. Subsequent edits to its atom type affect this tag.
+  ///
+  /// @param key  the item name
+  /// @param item the item reference to retain
   public final void setItem(String key, Item item) {
     items.put(Objects.requireNonNull(key), Objects.requireNonNull(item));
   }
 
-  /**
-   * Removes a named item in memory.
-   *
-   * @param key the item name
-   */
+  /// Removes a named item in memory.
+  ///
+  /// @param key the item name
   public final void removeItem(String key) {
     items.remove(key);
   }
 
-  /**
-   * Tests whether a named item exists in the live map.
-   *
-   * @param key the item name
-   * @return whether the item exists
-   */
+  /// Tests whether a named item exists in the live map.
+  ///
+  /// @param key the item name
+  /// @return whether the item exists
   public final boolean contains(String key) {
     return items.containsKey(key);
   }
@@ -376,10 +340,8 @@ public class Tag extends TagBase {
     return items.isEmpty();
   }
 
-  /**
-   * Exports items through the factory property mappings, reporting unmapped atom names as
-   * unsupported.
-   */
+  /// Exports items through the factory property mappings, reporting unmapped atom names as
+  /// unsupported.
   @Override
   public PropertyMap properties() {
     var values = PropertyMap.builder();
@@ -426,10 +388,8 @@ public class Tag extends TagBase {
     return true;
   }
 
-  /**
-   * Reports PICTURE for a stored cover-art item and STEM for a stored Stem item, including empty
-   * values.
-   */
+  /// Reports PICTURE for a stored cover-art item and STEM for a stored Stem item, including empty
+  /// values.
   @Override
   public List<String> complexPropertyKeys() {
     var result = new ArrayList<String>();
@@ -508,14 +468,12 @@ public class Tag extends TagBase {
     return true;
   }
 
-  /**
-   * Writes pending item edits to bound storage immediately, updating atom sizes and offsets.
-   * A failure can leave partial storage changes.
-   *
-   * @throws IllegalStateException if storage is unbound or closed
-   * @throws TagLibException       if storage is read-only
-   * @throws UncheckedIOException  if storage access fails
-   */
+  /// Writes pending item edits to bound storage immediately, updating atom sizes and offsets.
+  /// A failure can leave partial storage changes.
+  ///
+  /// @throws IllegalStateException if storage is unbound or closed
+  /// @throws TagLibException       if storage is read-only
+  /// @throws UncheckedIOException  if storage access fails
   public final void save() {
     requireWritable();
     var editor = new ItemAtomEditor(file, atoms);
@@ -547,14 +505,12 @@ public class Tag extends TagBase {
     }
   }
 
-  /**
-   * Clears live items and removes their bound ilst and Stem atoms immediately.
-   * A failure can leave partial storage changes.
-   *
-   * @throws IllegalStateException if storage is unbound or closed
-   * @throws TagLibException       if storage is read-only
-   * @throws UncheckedIOException  if storage access fails
-   */
+  /// Clears live items and removes their bound ilst and Stem atoms immediately.
+  /// A failure can leave partial storage changes.
+  ///
+  /// @throws IllegalStateException if storage is unbound or closed
+  /// @throws TagLibException       if storage is read-only
+  /// @throws UncheckedIOException  if storage access fails
   public final void strip() {
     requireWritable();
     items.clear();
