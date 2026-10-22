@@ -48,11 +48,8 @@ public class ByteVectorStream extends IOStream {
       throw new IllegalArgumentException("Negative write position");
     }
     int end = Math.addExact(start, value.size());
-    // Keep native alias semantics valid when a caller writes the exposed data value.
+    // Capture before resizing; set() handles overlapping array copies.
     byte[] source = value.data();
-    if (source == data.data()) {
-      source = source.clone();
-    }
     if (end > data.size()) {
       truncate(end);
     }
