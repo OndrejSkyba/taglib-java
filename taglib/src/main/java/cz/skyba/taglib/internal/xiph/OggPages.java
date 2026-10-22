@@ -125,11 +125,11 @@ public final class OggPages {
     }
 
     public byte[] packet(int index, long maximum) {
-      return file.bounded(index, maximum).toByteArray();
+      return file.bounded(index, maximum).data();
     }
 
     public byte[] packet(int index) {
-      return file.packet(index).toByteArray();
+      return file.packet(index).data();
     }
 
     public long tell() {
@@ -408,9 +408,9 @@ public final class OggPages {
           break;
         }
         page.setPageSequenceNumber(page.pageSequenceNumber() + rendered.delta);
-        byte[] header = page.render().mid(18, 8).toByteArray();
+        var header = page.render().mid(18, 8);
         stream.seek(offset + 18);
-        stream.writeBlock(new ByteVector(header));
+        stream.writeBlock(header);
         if (page.header().lastPageOfStream()) {
           break;
         }
@@ -459,7 +459,7 @@ public final class OggPages {
           return;
         }
         page.setPageSequenceNumber(page.pageSequenceNumber() + delta);
-        byte[] rendered = page.render().toByteArray();
+        byte[] rendered = page.render().data();
         ByteBuffer header = ByteBuffer.wrap(rendered, 18, 8);
         long at = offset + 18;
         while (header.hasRemaining()) {
@@ -501,6 +501,6 @@ public final class OggPages {
     }
     var pages = OggPacketWrite.paginate(first, last, localIndex, new ByteVector(replacement));
     int delta = pages.getLast().pageSequenceNumber() - last.pageSequenceNumber();
-    return new Replacement(pages.stream().map(page -> page.render().toByteArray()).toList(), delta);
+    return new Replacement(pages.stream().map(page -> page.render().data()).toList(), delta);
   }
 }

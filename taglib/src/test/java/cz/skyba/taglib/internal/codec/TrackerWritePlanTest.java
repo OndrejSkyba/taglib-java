@@ -9,6 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TrackerWritePlanTest {
   @Test
+  void overlaysDoNotModifyTheSourceReadBuffer() {
+    var source = new ByteVector(new byte[]{1, 2, 3});
+    var plan = new TrackerWritePlan((at, count) -> source, source.size(), 0, Integer.MAX_VALUE);
+    plan.write(new ByteVector((byte) 9));
+    plan.seek(0);
+    var result = plan.read(3);
+    assertArrayEquals(new byte[]{9, 2, 3}, result.data());
+    result.set(1, (byte) 8);
+    assertArrayEquals(new byte[]{1, 2, 3}, source.data());
+  }
+
+  @Test
   void readsBeyondEndDoNotWrapToEarlierWrites() {
     var stream = new ByteVectorStream(new byte[]{1, 2, 3, 4});
     var plan = new TrackerWritePlan((at, count) -> {

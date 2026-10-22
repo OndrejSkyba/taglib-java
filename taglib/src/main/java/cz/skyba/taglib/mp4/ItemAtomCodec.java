@@ -88,7 +88,7 @@ final class ItemAtomCodec {
 
   static List<ByteVector> parseData(ByteVector data, int flags, boolean freeForm) {
     return parseData2(data, flags, freeForm).stream()
-      .map(d -> new ByteVector(d.data)).collect(Collectors.toCollection(ArrayList::new));
+      .map(d -> d.data).collect(Collectors.toCollection(ArrayList::new));
   }
 
   private static ParsedItem scalar(Atom atom, ByteVector data, ItemHandlerType type) {

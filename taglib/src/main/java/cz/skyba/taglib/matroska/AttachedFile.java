@@ -56,7 +56,7 @@ public final class AttachedFile {
   /// @param uid         the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param description attachment description text
   public AttachedFile(ByteVector data, String name, String mime, long uid, String description) {
-    this(data.toByteArray(), name, mime, uid, description);
+    this(data.data(), name, mime, uid, description);
   }
 
   /// Creates a AttachedFile value, copying mutable byte and collection inputs.

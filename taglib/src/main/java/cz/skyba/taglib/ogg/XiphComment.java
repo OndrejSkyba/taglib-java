@@ -439,12 +439,12 @@ public class XiphComment extends TagBase {
         }
         var picture = new Picture();
         if (key.charAt(0) == 'M') {
-          if (!picture.parse(bytes.toByteArray())) {
+          if (!picture.parse(bytes.data())) {
             LOG.log(DEBUG, "Discarding an invalid FLAC picture field.");
             continue;
           }
         } else {
-          picture.setData(bytes.toByteArray());
+          picture.setData(bytes.data());
           picture.setMimeType("image/");
           picture.setType(Picture.Type.Other);
         }

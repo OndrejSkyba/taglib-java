@@ -227,7 +227,7 @@ public class MatroskaFile extends FileBase {
       for (var file : attachments.storedFiles()) {
         if (file.isDataDeferred()) {
           seek(file.deferredDataOffset());
-          file.setLoadedData(readBlock(file.deferredDataSize()).toByteArray());
+          file.setLoadedData(readBlock(file.deferredDataSize()).data());
         }
       }
     } finally {

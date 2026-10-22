@@ -3,7 +3,6 @@ package cz.skyba.taglib.id3.v2;
 
 import cz.skyba.taglib.toolkit.ByteVector;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /// Synchsafe integer encoding and ID3 unsynchronization decoding.
@@ -53,6 +52,6 @@ public final class SynchData {
         i++;
       }
     }
-    return new ByteVector(written == result.length ? result : Arrays.copyOf(result, written));
+    return new ByteVector(result, written);
   }
 }

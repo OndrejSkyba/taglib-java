@@ -43,9 +43,9 @@ public final class Header {
     Objects.requireNonNull(file);
     file.seek(offset);
     ByteVector first = file.readBlock(4);
-    byte[] bytes = first.toByteArray();
+    byte[] bytes = first.data();
     if (MpegHeaderData.needsADTSLength(bytes)) {
-      bytes = new ByteVector(first).append(file.readBlock(2)).toByteArray();
+      bytes = new ByteVector(first).append(file.readBlock(2)).data();
     }
     var parsed = MpegHeaderData.parse(bytes, 0);
     if (parsed.valid() && checkLength) {

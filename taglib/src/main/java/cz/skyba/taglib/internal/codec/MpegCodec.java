@@ -169,7 +169,7 @@ public final class MpegCodec implements Codec {
     }
     byte[] bytes = first;
     if (MpegHeaderData.needsADTSLength(first)) {
-      byte[] tail = file.stream().readBlock(2).toByteArray();
+      byte[] tail = file.stream().readBlock(2).data();
       bytes = Arrays.copyOf(first, 4 + tail.length);
       System.arraycopy(tail, 0, bytes, 4, tail.length);
     }
@@ -491,9 +491,9 @@ public final class MpegCodec implements Codec {
           }
           file.seek(offset);
           var first = file.readBlock(4);
-          var bytes = MpegHeaderData.needsADTSLength(first.toByteArray())
-            ? new ByteVector(first).append(file.readBlock(2)).toByteArray()
-            : first.toByteArray();
+          var bytes = MpegHeaderData.needsADTSLength(first.data())
+            ? new ByteVector(first).append(file.readBlock(2)).data()
+            : first.data();
           return new Located(offset, new Header(MpegHeaderData.parse(bytes, 0)));
         }
 

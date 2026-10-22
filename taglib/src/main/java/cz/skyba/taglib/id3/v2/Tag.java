@@ -548,9 +548,8 @@ public class Tag extends TagBase {
 
   /// Decodes serialized tag content into the live frame collection.
   ///
-  /// @param original bytes beginning after the tag header
-  protected final void parse(ByteVector original) {
-    ByteVector data = new ByteVector(original);
+  /// @param data bytes beginning after the tag header
+  protected final void parse(ByteVector data) {
     if (header.unsynchronisation() && header.majorVersion() <= 3) {
       data = SynchData.decode(data);
     }

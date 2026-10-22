@@ -488,7 +488,7 @@ public class DsdiffFile extends FileBase {
     var modern = id3v2Tag();
     if ((tags & ID3v2) != 0 && modern != null) {
       boolean empty = modern.isEmpty();
-      byte[] data = empty ? new byte[0] : modern.render(version).toByteArray();
+      byte[] data = empty ? new byte[0] : modern.render(version).data();
       if (!preflight(plan -> {
         if (plan.placement.inProperties()) {
           plan.setChild(plan.properties, plan.placement.id(), data);

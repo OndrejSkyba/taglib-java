@@ -254,7 +254,7 @@ public class FileStream extends IOStream {
     // so moving an audio payload does not require a read/write pair per kilobyte.
     long bufferLength = Math.max(COPY_BUFFER_SIZE, ((difference + BUFFER_SIZE - 1) / BUFFER_SIZE) * BUFFER_SIZE);
     long readPosition = Math.addExact(start, replace), writePosition = start;
-    ByteVector buffer = new ByteVector(data);
+    ByteVector buffer = data;
     while (true) {
       seek(readPosition);
       var next = readRaw(bufferLength);

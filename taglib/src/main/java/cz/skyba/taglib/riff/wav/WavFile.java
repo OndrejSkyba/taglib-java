@@ -307,7 +307,7 @@ public class WavFile extends RiffFile {
     } else if (data == 0) {
       LOG.log(DEBUG, "'data' chunk not found.");
     }
-    return Properties.fromChunks(fmt.toByteArray(), data, fact);
+    return Properties.fromChunks(fmt.data(), data, fact);
   }
 
   private void removeTagChunks(int mask) {

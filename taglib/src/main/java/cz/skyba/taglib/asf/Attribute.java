@@ -181,7 +181,7 @@ public final class Attribute {
   public static Attribute parsed(String name, int type, int stream, int language, byte[] data) {
     var value = new Attribute(name, type, stream, language, data);
     if (type == BytesType && name.equals("WM/Picture")) {
-      value.state.picture = new Picture(new ByteVector(data));
+      value.state.picture = new Picture(value.state.bytes);
       value.clearPictureBytes();
     }
     return value;

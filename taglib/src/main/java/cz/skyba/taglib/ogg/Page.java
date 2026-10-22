@@ -226,7 +226,7 @@ public class Page {
 
   private byte[] payload(IOStream input) {
     input.seek(offset + header.size());
-    return input.readBlock(header.dataSize()).toByteArray();
+    return input.readBlock(header.dataSize()).data();
   }
 
   /// Divides supplied packet bytes into new pages using the selected grouping policy.

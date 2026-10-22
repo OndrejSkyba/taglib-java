@@ -245,14 +245,14 @@ public class Tag extends TagBase {
     var data = new ByteVectorOutput();
     data.append(new byte[]{'I', 'N', 'F', 'O'});
     for (var entry : fields.entrySet()) {
-      byte[] text = stringHandler.render(entry.getValue()).toByteArray();
-      if (text.length == 0) {
+      var text = stringHandler.render(entry.getValue());
+      if (text.isEmpty()) {
         continue;
       }
-      int length = Math.addExact(text.length, 1);
+      int length = Math.addExact(text.size(), 1);
       int paddedEnd = Math.addExact(data.size(), Math.addExact(8, Math.addExact(length, length & 1)));
-      data.append(entry.getKey().toByteArray());
-      data.append(ByteVector.fromUnsignedInt(Integer.toUnsignedLong(length), false).toByteArray());
+      data.append(entry.getKey());
+      data.append(ByteVector.fromUnsignedInt(Integer.toUnsignedLong(length), false));
       data.append(text);
       do {
         data.append((byte) 0);

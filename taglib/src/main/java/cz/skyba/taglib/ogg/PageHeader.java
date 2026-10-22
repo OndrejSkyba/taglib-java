@@ -186,7 +186,7 @@ public final class PageHeader {
 
   private void read(IOStream stream, long offset) {
     stream.seek(offset);
-    byte[] data = stream.readBlock(27).toByteArray();
+    byte[] data = stream.readBlock(27).data();
     if (data.length != 27 || !Binary.ascii(data, 0, 4).equals("OggS")) {
       LOG.log(DEBUG, "Ogg page header is incomplete or has an invalid capture pattern.");
       return;
@@ -198,7 +198,7 @@ public final class PageHeader {
     serial = Binary.u32le(data, 14);
     sequence = (int) Binary.u32le(data, 18);
     int count = data[26] & 255;
-    byte[] laces = stream.readBlock(count).toByteArray();
+    byte[] laces = stream.readBlock(count).data();
     if (count < 1 || laces.length != count) {
       return;
     }

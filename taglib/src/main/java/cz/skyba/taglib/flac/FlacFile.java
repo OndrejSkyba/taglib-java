@@ -182,13 +182,13 @@ public class FlacFile extends FileBase {
       if (code == 4) {
         if (commentData.isEmpty()) {
           commentData = data;
-          blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
+          blocks.add(new UnknownMetadataBlock(code, data.data()));
         } else {
           LOG.log(DEBUG, "Discarding an additional Vorbis comment block.");
         }
       } else if (code == 6) {
         var picture = new Picture();
-        if (picture.parse(data.toByteArray())) {
+        if (picture.parse(data.data())) {
           blocks.add(picture);
         } else {
           LOG.log(DEBUG, "Discarding an invalid picture block.");
@@ -210,7 +210,7 @@ public class FlacFile extends FileBase {
                 + " block.");
           }
         } else {
-          blocks.add(new UnknownMetadataBlock(code, data.toByteArray()));
+          blocks.add(new UnknownMetadataBlock(code, data.data()));
         }
       }
       offset = Math.addExact(offset, size + 4);
@@ -512,14 +512,14 @@ public class FlacFile extends FileBase {
     commentData = xiphComment().render(false);
     blocks.removeIf(block -> block.code() == 2 && recognized(new ByteVector(block.render())) != null);
     if (!xml.isEmpty()) {
-      blocks.add(new UnknownMetadataBlock(2, application("iXML", ByteVector.fromText(xml, UTF_8)).toByteArray()));
+      blocks.add(new UnknownMetadataBlock(2, application("iXML", ByteVector.fromText(xml, UTF_8)).data()));
     }
     hasXml = !xml.isEmpty();
     if (!bext.isEmpty()) {
-      blocks.add(new UnknownMetadataBlock(2, application("bext", bext).toByteArray()));
+      blocks.add(new UnknownMetadataBlock(2, application("bext", bext).data()));
     }
     hasBext = !bext.isEmpty();
-    MetadataBlock comment = new UnknownMetadataBlock(4, commentData.toByteArray());
+    MetadataBlock comment = new UnknownMetadataBlock(4, commentData.data());
     for (int i = 0; i < blocks.size(); ) {
       if (blocks.get(i).code() == 4) {
         blocks.remove(i);

@@ -38,7 +38,7 @@ public final class Mp4Codec implements Codec {
     var roots = new ArrayList<Top>();
     var encrypted = new HashSet<Long>();
     for (var atom : atoms.atoms()) {
-      roots.add(new Top(new String(atom.name().toByteArray(), StandardCharsets.ISO_8859_1), atom.offset(), atom.length(), 8,
+      roots.add(new Top(new String(atom.name().data(), StandardCharsets.ISO_8859_1), atom.offset(), atom.length(), 8,
         propertyMediaLength(atom)));
     }
     var movie = atoms.find("moov");
@@ -68,7 +68,7 @@ public final class Mp4Codec implements Codec {
   }
 
   private static Atom propertyTree(cz.skyba.taglib.mp4.Atom source) {
-    Atom atom = new Atom(new String(source.name().toByteArray(), StandardCharsets.ISO_8859_1), new byte[0],
+    Atom atom = new Atom(new String(source.name().data(), StandardCharsets.ISO_8859_1), new byte[0],
       source.children().stream().map(Mp4Codec::propertyTree).toList());
     atom.propertyOffset = source.offset();
     atom.propertyLength = source.length();
@@ -1019,7 +1019,7 @@ public final class Mp4Codec implements Codec {
         fallback = bitrate == 0 && length > 0;
       }
     } else if (data.size() >= 50) {
-      codec = switch (new String(data.mid(20, 4).toByteArray(), StandardCharsets.ISO_8859_1)) {
+      codec = switch (new String(data.mid(20, 4).data(), StandardCharsets.ISO_8859_1)) {
         case "ac-3" -> 3;
         case "ec-3" -> 4;
         case "fLaC" -> 5;

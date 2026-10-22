@@ -24,7 +24,7 @@ public final class Properties {
   /// @param style the audio property read hint
   public Properties(ByteVector data, ReadStyle style) {
     Objects.requireNonNull(style);
-    details = DsdCodec.dsfProperties(data.toByteArray());
+    details = DsdCodec.dsfProperties(data.data());
   }
 
   /// Reads DSF audio properties from a file, closing its temporary handle.

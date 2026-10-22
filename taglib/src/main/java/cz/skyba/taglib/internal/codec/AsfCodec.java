@@ -656,7 +656,7 @@ public final class AsfCodec implements Codec {
     long t = 0;
     if (track != null) {
       if (track.type() == 3) {
-        t = new ByteVector(track.data()).toUnsignedInt(false);
+        t = track.toUnsignedInt();
       } else if (track.type() == 0) {
         t = Integer.toUnsignedLong(TextNumbers.parseInt(utf16(track.data())));
       }

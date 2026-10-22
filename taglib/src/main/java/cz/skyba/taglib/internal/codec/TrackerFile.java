@@ -219,7 +219,7 @@ public abstract class TrackerFile extends FileBase {
   private void readMod() throws ReadFailure {
     var p = ((ModState) details).value();
     seek(1080);
-    String id = new String(bytes(4).toByteArray(), StandardCharsets.ISO_8859_1);
+    String id = new String(bytes(4).data(), StandardCharsets.ISO_8859_1);
     int channels = 4, instruments = 31;
     if (PROTRACKER_IDS.contains(id)) {
       tag.setTrackerName("ProTracker");

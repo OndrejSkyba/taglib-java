@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -177,6 +178,14 @@ class AsfMutableTest {
     assertEquals(front ? Picture.Type.FrontCover : Picture.Type.BackCover, p.type());
     assertEquals(front ? "description" : "back cover", p.description());
     assertEquals(new ByteVector(front ? "data" : "PNG data"), p.picture());
+  }
+
+  @Test
+  void parsedPictureOwnsItsInputBytes() {
+    byte[] encoded = front().render().toByteArray();
+    var attribute = Attribute.parsed("WM/Picture", Attribute.BytesType, 0, 0, encoded);
+    Arrays.fill(encoded, (byte) 0);
+    assertPicture(attribute.toPicture(), true);
   }
 
   @Test

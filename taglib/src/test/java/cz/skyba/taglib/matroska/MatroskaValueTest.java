@@ -69,6 +69,17 @@ class MatroskaValueTest {
     assertEquals(-1, stored.uid());
     assertEquals("font.ttf", t.attachedFileList().getFirst().fileName());
     assertThrows(UnsupportedOperationException.class, () -> t.attachedFileList().clear());
+
+    byte[] loaded = {3, 4};
+    a.setLoadedData(loaded);
+    loaded[0] = 0;
+    assertArrayEquals(new byte[]{3, 4}, a.data());
+    assertArrayEquals(new byte[]{0, -1}, copy.data());
+
+    var vector = new ByteVector(new byte[]{5, 6});
+    var fromVector = new AttachedFile(vector, "cover.jpg", "image/jpeg", 7, "Cover");
+    vector.set(0, (byte) 0);
+    assertArrayEquals(new byte[]{5, 6}, fromVector.data());
   }
 
   @Test

@@ -356,7 +356,7 @@ public abstract class RiffFile extends FileBase {
     if (name.size() != 4) {
       return false;
     }
-    for (byte b : name.toByteArray()) {
+    for (byte b : name.data()) {
       if ((b & 255) < 32 || (b & 255) > 127) {
         return false;
       }

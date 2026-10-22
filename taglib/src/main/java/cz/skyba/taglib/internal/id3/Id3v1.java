@@ -426,7 +426,7 @@ public final class Id3v1 {
   }
 
   private static void put(byte[] out, int offset, int length, String text) {
-    byte[] value = renderText(text).toByteArray();
+    byte[] value = renderText(text).data();
     System.arraycopy(value, 0, out, offset, Math.min(length, value.length));
   }
 }

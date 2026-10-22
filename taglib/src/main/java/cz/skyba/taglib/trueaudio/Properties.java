@@ -33,7 +33,7 @@ public final class Properties {
   /// @param style        the audio property read hint
   public Properties(ByteVector data, long streamLength, ReadStyle style) {
     Objects.requireNonNull(style);
-    details = TrueAudioCodec.properties(data.toByteArray(), streamLength);
+    details = TrueAudioCodec.properties(data.data(), streamLength);
   }
 
   /// Reads TrueAudio audio properties from a file, closing its temporary handle.

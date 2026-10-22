@@ -65,7 +65,7 @@ public abstract class OggCommentFile extends OggFile {
       }
       comment = hasComment ? new XiphComment(commentData) : new XiphComment();
       if (options.readAudioProperties()) {
-        var p = new cz.skyba.taglib.flac.Properties(streamInfo.toByteArray(), flacStreamLength, options.readStyle());
+        var p = new cz.skyba.taglib.flac.Properties(streamInfo.data(), flacStreamLength, options.readStyle());
         details = p;
         common = p.common();
       }

@@ -111,8 +111,10 @@ class HeaderHelpersTest {
   @Test
   void synchDecodeDropsEveryFfZeroPairIncludingTerminalPair() {
     var data = new ByteVector(new byte[]{1, (byte) 255, 0, 0, (byte) 255, 0, (byte) 255});
-    assertArrayEquals(new byte[]{1, (byte) 255, 0, (byte) 255, (byte) 255}, SynchData.decode(data).data());
-    assertEquals(7, data.size());
+    var decoded = SynchData.decode(data);
+    assertArrayEquals(new byte[]{1, (byte) 255, 0, (byte) 255, (byte) 255}, decoded.data());
+    decoded.set(0, (byte) 9);
+    assertArrayEquals(new byte[]{1, (byte) 255, 0, 0, (byte) 255, 0, (byte) 255}, data.data());
     assertEquals(new ByteVector(), SynchData.decode(new ByteVector()));
     assertEquals(new ByteVector(new byte[]{(byte) 255}), SynchData.decode(new ByteVector(new byte[]{(byte) 255, 0})));
     var twoZeros = SynchData.decode(new ByteVector(new byte[]{(byte) 255, 0, 0}));

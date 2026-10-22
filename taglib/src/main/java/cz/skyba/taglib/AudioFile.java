@@ -578,7 +578,7 @@ public final class AudioFile implements AutoCloseable {
       "pictureType", new Variant(PictureTypes.nameForCode(picture.type())),
       "mimeType", new Variant(picture.mimeType()),
       "description", new Variant(picture.description()),
-      "data", new Variant(new ByteVector(picture.data())),
+      "data", Variant.fromByteArray(picture.data()),
       "width", new Variant(picture.width()),
       "height", new Variant(picture.height()),
       "colorDepth", new Variant(picture.colorDepth()),

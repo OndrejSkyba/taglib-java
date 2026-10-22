@@ -6,6 +6,7 @@ import cz.skyba.taglib.toolkit.ByteVectorStream;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +21,23 @@ class ParserOptimizationTest {
     var header = new Header();
     header.setTagSize(body.size());
     return header.render().append(body);
+  }
+
+  @Test
+  void parsingLeavesInputUnchangedAndFramesOwnTheirPayloads() {
+    var picture = new AttachedPictureFrame();
+    picture.setMimeType("image/jpeg");
+    picture.setPicture(new ByteVector(new byte[]{0, 1, (byte) 255, 0, 2}));
+    var body = textFrame("title").append(picture.render()).append(new ByteVector(20));
+    var original = new ByteVector(body);
+    var tag = new TagOwnerTest.Access();
+    tag.append(body);
+    assertEquals(original, body);
+
+    Arrays.fill(body.data(), (byte) 0);
+    assertEquals("title", tag.title());
+    var parsed = assertInstanceOf(AttachedPictureFrame.class, tag.frameList(new ByteVector("APIC")).getFirst());
+    assertEquals(picture.picture(), parsed.picture());
   }
 
   @Test

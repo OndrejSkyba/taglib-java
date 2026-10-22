@@ -33,7 +33,9 @@ class MetadataBlockTest {
     picture.setColorDepth(24);
     picture.setNumColors(256);
     picture.setData(new byte[]{7, 8, 9});
-    var parsed = new Picture(picture.render());
+    byte[] payload = picture.render();
+    var parsed = new Picture(payload);
+    Arrays.fill(payload, (byte) 0);
     assertEquals(picture.snapshot(), parsed.snapshot());
     assertEquals(6, picture.code());
     assertEquals(21, Picture.Type.values().length);

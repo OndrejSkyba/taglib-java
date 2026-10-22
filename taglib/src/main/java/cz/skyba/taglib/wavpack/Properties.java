@@ -72,7 +72,7 @@ public final class Properties {
         if (block.size() < blockSize - 24) {
           break;
         }
-        byte[] bytes = block.toByteArray();
+        byte[] bytes = block.data();
         if (sampleRate == 0) {
           sampleRate = ApeCodec.wavpackMetadata(bytes, 0x27);
         }

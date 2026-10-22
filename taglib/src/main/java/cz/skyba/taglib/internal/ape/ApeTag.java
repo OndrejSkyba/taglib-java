@@ -159,7 +159,7 @@ public final class ApeTag {
             "description",
             new Variant(picture.description()),
             "data",
-            new Variant(new ByteVector(picture.data()))));
+            Variant.fromByteArray(picture.data())));
       }
       tag.setComplexProperties("PICTURE", values);
     }

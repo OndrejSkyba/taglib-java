@@ -70,7 +70,7 @@ public final class OggCodec implements Codec {
     Objects.requireNonNull(style);
     return details(new PropertySource() {
       public byte[] packet(int index) {
-        return file.packet(index).toByteArray();
+        return file.packet(index).data();
       }
 
       public long length() {

@@ -92,7 +92,7 @@ final class TrackerWritePlan {
       return new ByteVector();
     }
     long at = position;
-    byte[] original = source.read(position, count).toByteArray();
+    byte[] original = source.read(position, count).data();
     long available = Math.clamp(originalSize - at, 0L, count);
     long virtualAvailable = Math.clamp(size - at, 0L, count);
     // A source short read remains short. A newly extended gap is zero-filled.

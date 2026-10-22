@@ -198,7 +198,7 @@ public class AiffFile extends RiffFile {
     } else if (streamLength == 0) {
       LOG.log(DEBUG, "'SSND' chunk not found.");
     }
-    return RiffCodec.aiffFromChunks(data.toByteArray(), streamLength);
+    return RiffCodec.aiffFromChunks(data.data(), streamLength);
   }
 
   @Override

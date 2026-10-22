@@ -1611,7 +1611,7 @@ public final class MatroskaCodec implements Codec {
       var body = new ByteArrayOutputStream();
       for (var entry : entries) {
         body.writeBytes(MatroskaWire.render(0x4dbb,
-          MatroskaWire.join(MatroskaWire.render(0x53ab, ByteVector.fromUnsignedInt(entry.id).toByteArray()),
+          MatroskaWire.join(MatroskaWire.render(0x53ab, ByteVector.fromUnsignedInt(entry.id).data()),
             MatroskaWire.render(0x53ac, MatroskaWire.uint(entry.position)))));
       }
       return new ByteVector(

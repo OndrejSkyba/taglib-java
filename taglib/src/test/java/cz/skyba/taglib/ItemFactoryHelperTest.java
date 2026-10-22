@@ -27,6 +27,13 @@ class ItemFactoryHelperTest {
       assertEquals(0, typed.locale);
       assertTrue(parseData2(bytes, 0).isEmpty());
       assertTrue(parseData2(bytes, 1, true).isEmpty());
+
+      var values = parseData(bytes);
+      values.getFirst().set(0, (byte) 'X');
+      assertEquals(expected, parseData(bytes).getFirst());
+      bytes.set(16, (byte) 'Y');
+      assertEquals(new ByteVector("XBC"), values.getFirst());
+      assertEquals(new ByteVector("YBC"), parseData(bytes).getFirst());
     }
 
     static void verifyGenreHelper() {

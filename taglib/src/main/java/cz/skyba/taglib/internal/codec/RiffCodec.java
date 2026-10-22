@@ -440,7 +440,7 @@ public final class RiffCodec implements Codec {
         }
       }
     }
-    byte[] type = format.length >= 23 ? data.mid(18, 4).toByteArray() : new byte[0];
+    byte[] type = format.length >= 23 ? data.mid(18, 4).data() : new byte[0];
     String name = format.length >= 23
       ? TextBytes.decodeTerminated(format, 23, Math.min(format[22] & 255, format.length - 23), ISO_8859_1) : "";
     // Lossless is the existing Java common-property extension, separate from isAiffC.
@@ -658,7 +658,7 @@ public final class RiffCodec implements Codec {
         }
         if (!infoTag.isEmpty()) {
           // Upstream writes a zero-length LIST when fields exist but render is empty.
-          appended.writeBytes(chunk("LIST", infoTag.render().toByteArray(), false));
+          appended.writeBytes(chunk("LIST", infoTag.render().data(), false));
         }
       }
       byte[] appendedBytes = appended.toByteArray();

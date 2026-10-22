@@ -1179,7 +1179,7 @@ public final class Id3v2 {
           at = Math.min(data.length, end + delimiterSize(encoding));
         }
         result.add(Map.of("data",
-          new Variant(new ByteVector(Arrays.copyOfRange(data, at, data.length))),
+          Variant.fromByteArray(Arrays.copyOfRange(data, at, data.length)),
           "mimeType", new Variant(mime), "fileName", new Variant(name),
           "description", new Variant(description)));
       }

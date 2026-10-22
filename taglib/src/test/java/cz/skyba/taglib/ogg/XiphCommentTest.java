@@ -138,6 +138,20 @@ class XiphCommentTest {
   }
 
   @Test
+  void legacyCoverArtRetainsBinaryDataAndDefaultPictureFields() {
+    byte[] image = {0, 1, (byte) 255, 0, 2};
+    var comment = new XiphComment();
+    comment.addField("COVERART", new ByteVector(image).toBase64().toString());
+    var parsed = new XiphComment(comment.render());
+    assertEquals(1, parsed.pictureList().size());
+    var picture = parsed.pictureList().getFirst();
+    assertArrayEquals(image, picture.data());
+    assertEquals("image/", picture.mimeType());
+    assertEquals(Picture.Type.Other, picture.type());
+    assertArrayEquals(image, new XiphComment(parsed.render()).pictureList().getFirst().data());
+  }
+
+  @Test
   void fieldMapIsLiveAndMissingLookupDoesNotInsertAnEntry() {
     var c = new XiphComment();
     var map = c.fieldListMap();
