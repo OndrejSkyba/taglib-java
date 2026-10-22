@@ -19,6 +19,7 @@ import cz.skyba.taglib.trueaudio.TrueAudioFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -221,8 +222,8 @@ public final class TagLib {
     return selected;
   }
 
-  /// Builds common text edits without opening the file. Use `set` to replace values
-  /// and `clear` to remove a property. Saving merges the edits into the file's current
+  /// Builds metadata edits without opening the audio file. Use `set` to replace
+  /// text values and `clear` to remove a property. Saving merges the edits into the file's current
   /// properties and uses the replacement and default save behavior of [#write(Path, PropertyMap)].
   /// Changes are applied only by `save()`; `build()` creates an immutable request
   /// for later saving.
@@ -236,38 +237,64 @@ public final class TagLib {
   /// ```
   ///
   /// @param path the audio file to edit when saving
-  /// @return a mutable builder for text edits
+  /// @return a mutable builder for metadata edits
   /// @throws NullPointerException if the path is null
   /// @see MetadataEdit
   public static MetadataEdit.Builder edit(Path path) {
     return new MetadataEdit.Builder(path);
   }
 
-  static void applyEdits(Path path, PropertyMap updates) {
-    if (updates.isEmpty()) {
+  static void applyEdits(Path path, PropertyMap updates, List<PictureEdit> pictureEdits) {
+    if (updates.isEmpty() && pictureEdits.isEmpty()) {
       return;
     }
     try {
       WriteGuard.run(path, () -> {
         try (var file = new AudioFile(path, ReadOptions.TAGS_ONLY)) {
-          var properties = file.properties().toBuilder();
-          updates.asMap().forEach((key, values) -> {
-            if (values.isEmpty()) {
-              properties.remove(key);
-            } else {
-              properties.put(key, values);
+          if (!updates.isEmpty()) {
+            var properties = file.properties().toBuilder();
+            updates.asMap().forEach((key, values) -> {
+              if (values.isEmpty()) {
+                properties.remove(key);
+              } else {
+                properties.put(key, values);
+              }
+            });
+            var result = file.replaceProperties(properties.build());
+            if (!result.rejected().isEmpty()) {
+              throw new MetadataEditException("Unsupported metadata values for properties: "
+                + result.rejected().asMap().keySet());
             }
-          });
-          var result = file.replaceProperties(properties.build());
-          if (!result.rejected().isEmpty()) {
-            throw new MetadataEditException("Unsupported metadata values for properties: "
-              + result.rejected().asMap().keySet());
+          }
+          if (!pictureEdits.isEmpty()) {
+            var existing = file.pictures();
+            var pictures = new ArrayList<>(existing);
+            pictureEdits.forEach(edit -> edit.apply(pictures));
+            requirePictureTypes(file, pictures);
+            if (!pictures.equals(existing) || !file.supportsPictureEditing()) {
+              file.replacePictures(pictures);
+            }
           }
           file.save();
         }
       });
     } catch (IOException failure) {
       throw new UncheckedIOException("Cannot update audio metadata: " + path, failure);
+    }
+  }
+
+  private static void requirePictureTypes(AudioFile file, List<Picture> pictures) {
+    Format format = AudioFile.builtinFormat(file.file());
+    for (var picture : pictures) {
+      boolean supported = switch (format) {
+        case MP4, MATROSKA -> picture.type() == PictureType.OTHER.code();
+        case APE, MPC, WAVPACK -> picture.type() == PictureType.FRONT_COVER.code()
+          || picture.type() == PictureType.BACK_COVER.code();
+        case null, default -> true;
+      };
+      if (!supported) {
+        throw new MetadataEditException("Picture role " + picture.type() + " is not supported by " + format);
+      }
     }
   }
 

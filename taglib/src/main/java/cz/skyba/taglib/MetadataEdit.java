@@ -2,19 +2,22 @@
 package cz.skyba.taglib;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/// An immutable request to edit common text properties in a file.
-/// Create one through [TagLib#edit(Path)]. Construction performs no file I/O;
+/// An immutable request to edit text properties and artwork in a file.
+/// Create one through [TagLib#edit(Path)]. Construction does not open the audio file;
+/// image paths supplied to the builder are read immediately.
 /// [#save()] applies the request to the file's current metadata. Requests hold no
 /// open resources and may be saved again. An empty request does not open the file.
 ///
-/// Saving reads the current text property map, applies the edits and replaces the complete
+/// Saving text edits reads the current text property map and replaces the complete
 /// map using the same replacement and default save behavior as
 /// [TagLib#write(Path, PropertyMap)]. Unchanged property values are resubmitted too.
 /// Tag versions, physical metadata layout and value normalization follow that API's
-/// format-specific behavior, including its preservation of artwork and opaque metadata.
+/// format-specific behavior. Artwork is preserved unless explicitly edited; opaque
+/// metadata is preserved according to the replacement API.
 ///
 /// The read, merge and save share one editing session and write lock. Rejected property
 /// values prevent saving. An I/O failure can leave partial changes because saving updates
@@ -22,29 +25,33 @@ import java.util.Objects;
 public final class MetadataEdit {
   private final Path path;
   private final PropertyMap updates;
+  private final List<PictureEdit> pictureEdits;
 
   private MetadataEdit(Builder builder) {
     path = builder.path;
     updates = builder.updates.build();
+    pictureEdits = List.copyOf(builder.pictureEdits);
   }
 
   /// Applies the request to the current properties and saves through the replacement API.
   /// Rejected property values prevent saving. Storage is updated in place.
   ///
-  /// @throws MetadataEditException if the replacement API rejects property values
+  /// @throws MetadataEditException if property values or picture roles cannot be stored
   /// @throws java.io.UncheckedIOException if storage access or property encoding fails
   /// @throws UnsupportedOperationException if the format does not support saving
   /// @throws TagLibException if opening or reading the file is rejected
   public void save() {
-    TagLib.applyEdits(path, updates);
+    TagLib.applyEdits(path, updates, pictureEdits);
   }
 
-  /// Builds text edits without opening the file. Keys use the same ASCII case-insensitive
-  /// matching as [PropertyMap]. The last operation on a key wins. Builders are mutable
+  /// Builds edits without opening the audio file. Keys use the same ASCII case-insensitive
+  /// matching as [PropertyMap]. The last operation on a key or picture role wins.
+  /// Picture operations are applied in call order. Builders are mutable
   /// and must be used by one thread at a time; built requests are independent snapshots.
   public static final class Builder {
     private final Path path;
     private final PropertyMap.Builder updates = PropertyMap.builder();
+    private final List<PictureEdit> pictureEdits = new ArrayList<>();
 
     Builder(Path path) {
       this.path = Objects.requireNonNull(path);
@@ -91,6 +98,62 @@ public final class MetadataEdit {
     public Builder clear(String key) {
       validateKey(key);
       updates.put(key, List.of());
+      return this;
+    }
+
+    /// Replaces all pictures with the supplied picture's role, preserving other roles.
+    /// Saving rejects roles that the format cannot retain; see [PictureType].
+    ///
+    /// @throws NullPointerException if the picture is null
+    public Builder setPicture(Picture picture) {
+      Objects.requireNonNull(picture);
+      pictureEdits.add(pictures -> {
+        pictures.removeIf(current -> current.type() == picture.type());
+        pictures.add(picture);
+      });
+      return this;
+    }
+
+    /// Reads the image immediately and stages it with an empty description.
+    /// Replaces pictures of this role while preserving other roles.
+    ///
+    /// @throws java.io.UncheckedIOException if the image cannot be read
+    /// @throws IllegalArgumentException if the image type is not recognized
+    /// @throws NullPointerException if the role or path is null
+    public Builder setPicture(PictureType type, Path image) {
+      return setPicture(Picture.from(type, image));
+    }
+
+    /// Removes all pictures with this role, preserving other roles.
+    ///
+    /// @throws NullPointerException if the role is null
+    public Builder removePictures(PictureType type) {
+      Objects.requireNonNull(type);
+      pictureEdits.add(pictures -> pictures.removeIf(picture -> picture.type() == type.code()));
+      return this;
+    }
+
+    /// Replaces all artwork. An empty argument list removes all pictures.
+    /// Later picture operations modify this replacement; earlier ones are discarded.
+    /// Saving rejects roles that the format cannot retain; see [PictureType].
+    ///
+    /// @throws NullPointerException if the array or any picture is null
+    public Builder replacePictures(Picture... pictures) {
+      return replacePictures(List.of(pictures));
+    }
+
+    /// Replaces all artwork with a copy of the list. An empty list removes all pictures.
+    /// Later picture operations modify this replacement; earlier ones are discarded.
+    /// Saving rejects roles that the format cannot retain; see [PictureType].
+    ///
+    /// @throws NullPointerException if the list or any picture is null
+    public Builder replacePictures(List<Picture> pictures) {
+      var copy = List.copyOf(pictures);
+      pictureEdits.clear();
+      pictureEdits.add(current -> {
+        current.clear();
+        current.addAll(copy);
+      });
       return this;
     }
 
