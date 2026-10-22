@@ -26,6 +26,36 @@ The library requires Java 25 at runtime.
 </dependency>
 ```
 
+### Examples
+
+Read tags and audio properties:
+
+```java
+var metadata = TagLib.read(Path.of("song.flac"));
+IO.println(metadata.tag().title());
+IO.println(metadata.properties().get("ARTIST"));
+IO.println(metadata.audioProperties().lengthInSeconds());
+```
+
+Update selected fields, preserving other properties:
+
+```java
+TagLib.edit(Path.of("song.flac"))
+    .set("TITLE", "New title")
+    .set("ARTIST", "Artist A", "Artist B")
+    .clear("COMMENT")
+    .save();
+```
+
+Set a front cover and remove back covers, preserving other artwork:
+
+```java
+TagLib.edit(Path.of("song.flac"))
+    .setPicture(PictureType.FRONT_COVER, Path.of("cover.jpg"))
+    .removePictures(PictureType.BACK_COVER)
+    .save();
+```
+
 ## Benchmark
 
 Benchmark usage, methodology and current results are in [BENCHMARK.md](BENCHMARK.md).
