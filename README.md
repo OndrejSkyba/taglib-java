@@ -33,7 +33,7 @@ Read tags and audio properties:
 ```java
 var metadata = TagLib.read(Path.of("song.flac"));
 IO.println(metadata.tag().title());
-IO.println(metadata.properties().get("ARTIST"));
+IO.println(metadata.properties().get(PropertyKey.ARTIST));
 IO.println(metadata.audioProperties().lengthInSeconds());
 ```
 
@@ -41,9 +41,9 @@ Update selected fields, preserving other properties:
 
 ```java
 TagLib.edit(Path.of("song.flac"))
-    .set("TITLE", "New title")
-    .set("ARTIST", "Artist A", "Artist B")
-    .clear("COMMENT")
+    .set(PropertyKey.TITLE, "New title")
+    .set(PropertyKey.ARTIST, "Artist A", "Artist B")
+    .remove(PropertyKey.COMMENT)
     .save();
 ```
 

@@ -56,21 +56,41 @@ public final class PropertyMap {
     return values;
   }
 
-  /// Returns the ordered values for a key using ASCII case-insensitive lookup.
+  /// Returns a property's values.
   ///
-  /// @param key the property key
-  /// @return an immutable value list, or an empty list if the key is absent
+  /// @param key the property key, matched using ASCII case-insensitive lookup
+  /// @return an immutable, ordered value list, or an empty list if absent
+  /// @throws NullPointerException if the key is null
   public List<String> get(String key) {
     return values.getOrDefault(normalize(key), List.of());
   }
 
-  /// Returns the first value for a key using ASCII case-insensitive lookup.
+  /// Returns a property's values.
   ///
   /// @param key the property key
-  /// @return the first value, or an empty string if the key is absent or has no values
+  /// @return an immutable, ordered value list, or an empty list if absent
+  /// @throws NullPointerException if the key is null
+  public List<String> get(PropertyKey key) {
+    return get(key.key());
+  }
+
+  /// Returns a property's first value.
+  ///
+  /// @param key the property key, matched using ASCII case-insensitive lookup
+  /// @return the first value, or an empty string if the property is absent or has no values
+  /// @throws NullPointerException if the key is null
   public String first(String key) {
     var list = get(key);
     return list.isEmpty() ? "" : list.getFirst();
+  }
+
+  /// Returns a property's first value.
+  ///
+  /// @param key the property key
+  /// @return the first value, or an empty string if the property is absent or has no values
+  /// @throws NullPointerException if the key is null
+  public String first(PropertyKey key) {
+    return first(key.key());
   }
 
   /// Tests whether the text map has no keys. Opaque metadata identifiers are not counted.
@@ -87,12 +107,22 @@ public final class PropertyMap {
     return values.size();
   }
 
-  /// Tests whether a key is present, including a key with an empty value list.
+  /// Tests whether a property is present.
   ///
   /// @param key the property key, matched using ASCII case-insensitive lookup
-  /// @return whether the key is present
+  /// @return whether the property is present, including one with an empty value list
+  /// @throws NullPointerException if the key is null
   public boolean containsKey(String key) {
     return values.containsKey(normalize(key));
+  }
+
+  /// Tests whether a property is present.
+  ///
+  /// @param key the property key
+  /// @return whether the property is present, including one with an empty value list
+  /// @throws NullPointerException if the key is null
+  public boolean containsKey(PropertyKey key) {
+    return containsKey(key.key());
   }
 
   /// Compares complete ordered value lists, ignoring unsupported-data identifiers.
@@ -100,11 +130,25 @@ public final class PropertyMap {
     return values.entrySet().containsAll(other.values.entrySet());
   }
 
-  /// Returns stored values, or an immutable copy of the fallback when the key is absent.
-  /// The fallback is inspected only when needed; an existing empty list is a stored value.
+  /// Returns a property's values with a fallback for an absent property.
+  ///
+  /// @param key the property key, matched using ASCII case-insensitive lookup
+  /// @param defaultValue fallback values, used only if absent; may be null if the property is present
+  /// @return the stored immutable value list, even if empty, or an immutable copy of the fallback
+  /// @throws NullPointerException if the key is null, or a required fallback is null or contains null
   public List<String> getOrDefault(String key, List<String> defaultValue) {
     var stored = values.get(normalize(key));
     return stored != null ? stored : List.copyOf(defaultValue);
+  }
+
+  /// Returns a property's values with a fallback for an absent property.
+  ///
+  /// @param key the property key
+  /// @param defaultValue fallback values, used only if absent; may be null if the property is present
+  /// @return the stored immutable value list, even if empty, or an immutable copy of the fallback
+  /// @throws NullPointerException if the key is null, or a required fallback is null or contains null
+  public List<String> getOrDefault(PropertyKey key, List<String> defaultValue) {
+    return getOrDefault(key.key(), defaultValue);
   }
 
   /// Returns identifiers for opaque metadata not represented by the text map.
@@ -161,30 +205,53 @@ public final class PropertyMap {
       unsupported.addAll(source.unsupported);
     }
 
-    /// Replaces all values for the normalized key.
+    /// Replaces a property's values with a single value.
     ///
-    /// @param key   the key or opaque metadata identifier
+    /// @param key the property key, normalized to ASCII uppercase
     /// @param value the text value
     /// @return this builder
+    /// @throws NullPointerException if the key or value is null
     public Builder put(String key, String value) {
       return put(key, List.of(value));
     }
 
-    /// Replaces all values for the normalized key. An empty list retains the key with no values.
+    /// Replaces a property's values with a single value.
     ///
-    /// @param key   the key or opaque metadata identifier
-    /// @param value text values to copy in order
+    /// @param key the property key
+    /// @param value the text value
     /// @return this builder
+    /// @throws NullPointerException if the key or value is null
+    public Builder put(PropertyKey key, String value) {
+      return put(key.key(), value);
+    }
+
+    /// Replaces a property's values.
+    ///
+    /// @param key the property key, normalized to ASCII uppercase
+    /// @param value text values to copy in order; an empty list retains the key with no values
+    /// @return this builder
+    /// @throws NullPointerException if the key, list, or any value is null
     public Builder put(String key, List<String> value) {
       values.put(normalize(key), new ArrayList<>(List.copyOf(value)));
       return this;
     }
 
-    /// Appends values to the normalized key, creating it if absent.
+    /// Replaces a property's values.
     ///
-    /// @param key   the key or opaque metadata identifier
+    /// @param key the property key
+    /// @param value text values to copy in order; an empty list retains the key with no values
+    /// @return this builder
+    /// @throws NullPointerException if the key, list, or any value is null
+    public Builder put(PropertyKey key, List<String> value) {
+      return put(key.key(), value);
+    }
+
+    /// Appends a value to a property, creating it if absent.
+    ///
+    /// @param key the property key, normalized to ASCII uppercase
     /// @param value the text value
     /// @return this builder
+    /// @throws NullPointerException if the key or value is null
     public Builder add(String key, String value) {
       values
         .computeIfAbsent(normalize(key), _ -> new ArrayList<>())
@@ -192,13 +259,33 @@ public final class PropertyMap {
       return this;
     }
 
-    /// Removes a normalized key and all its values.
+    /// Appends a value to a property, creating it if absent.
     ///
-    /// @param key the key or opaque metadata identifier
+    /// @param key the property key
+    /// @param value the text value
     /// @return this builder
+    /// @throws NullPointerException if the key or value is null
+    public Builder add(PropertyKey key, String value) {
+      return add(key.key(), value);
+    }
+
+    /// Removes a property and all its values.
+    ///
+    /// @param key the property key, normalized to ASCII uppercase
+    /// @return this builder
+    /// @throws NullPointerException if the key is null
     public Builder remove(String key) {
       values.remove(normalize(key));
       return this;
+    }
+
+    /// Removes a property and all its values.
+    ///
+    /// @param key the property key
+    /// @return this builder
+    /// @throws NullPointerException if the key is null
+    public Builder remove(PropertyKey key) {
+      return remove(key.key());
     }
 
     /// Replaces values for each key in the source map; other keys and opaque identifiers are unchanged.
@@ -210,15 +297,26 @@ public final class PropertyMap {
       return this;
     }
 
-    /// Appends values to the normalized key, creating it if absent.
+    /// Appends values to a property, creating it if absent.
     ///
-    /// @param key   the key or opaque metadata identifier
+    /// @param key the property key, normalized to ASCII uppercase
     /// @param value text values to copy in order
     /// @return this builder
+    /// @throws NullPointerException if the key, list, or any value is null
     public Builder add(String key, List<String> value) {
       var copy = List.copyOf(value);
       values.computeIfAbsent(normalize(key), _ -> new ArrayList<>()).addAll(copy);
       return this;
+    }
+
+    /// Appends values to a property, creating it if absent.
+    ///
+    /// @param key the property key
+    /// @param value text values to copy in order
+    /// @return this builder
+    /// @throws NullPointerException if the key, list, or any value is null
+    public Builder add(PropertyKey key, List<String> value) {
+      return add(key.key(), value);
     }
 
     /// Removes every text key present in the source map, regardless of its values.

@@ -58,29 +58,44 @@ public final class MetadataEdit {
     }
 
     /// Replaces a property's values. An empty string is submitted as a value, subject to
-    /// format constraints; use [#clear(String)] to remove the property.
+    /// format constraints; use [#remove(String)] to remove the property.
     ///
-    /// @param key the nonempty common property key, including custom keys
+    /// @param key the nonempty property key, including custom keys
     /// @param values one or more non-null text values, copied in order
     /// @return this builder
-    /// @throws IllegalArgumentException if the key is empty, no values are supplied, or text contains NUL
-    /// @throws NullPointerException if a key, value, or the value array is null
+    /// @throws IllegalArgumentException if the key is empty or contains NUL,
+    ///   no values are supplied, or a value contains NUL
+    /// @throws NullPointerException if the key, value array, or any value is null
     public Builder set(String key, String... values) {
       return set(key, List.of(values));
     }
 
-    /// Replaces a property's values with a copy of a nonempty list.
+    /// Replaces a property's values. An empty string is submitted as a value, subject to
+    /// format constraints; use [#remove(PropertyKey)] to remove the property.
     ///
-    /// @param key the nonempty common property key, including custom keys
+    /// @param key the property key
     /// @param values one or more non-null text values, copied in order
     /// @return this builder
-    /// @throws IllegalArgumentException if the key or list is empty, or text contains NUL
-    /// @throws NullPointerException if a key, value, or the list is null
+    /// @throws IllegalArgumentException if no values are supplied, or a value contains NUL
+    /// @throws NullPointerException if the key, value array, or any value is null
+    public Builder set(PropertyKey key, String... values) {
+      return set(key.key(), values);
+    }
+
+    /// Replaces a property's values. An empty string is submitted as a value, subject to
+    /// format constraints; use [#remove(String)] to remove the property.
+    ///
+    /// @param key the nonempty property key, including custom keys
+    /// @param values one or more non-null text values, copied in order
+    /// @return this builder
+    /// @throws IllegalArgumentException if the key is empty or contains NUL,
+    ///   the list is empty, or a value contains NUL
+    /// @throws NullPointerException if the key, list, or any value is null
     public Builder set(String key, List<String> values) {
       validateKey(key);
       var copy = List.copyOf(values);
       if (copy.isEmpty()) {
-        throw new IllegalArgumentException("set requires at least one value; use clear to remove a property");
+        throw new IllegalArgumentException("set requires at least one value; use remove(key) to delete a property");
       }
       if (copy.stream().anyMatch(value -> value.indexOf('\0') >= 0)) {
         throw new IllegalArgumentException("Metadata values must not contain NUL characters");
@@ -89,16 +104,37 @@ public final class MetadataEdit {
       return this;
     }
 
-    /// Removes a property from the text property map submitted to the replacement API.
+    /// Replaces a property's values. An empty string is submitted as a value, subject to
+    /// format constraints; use [#remove(PropertyKey)] to remove the property.
     ///
-    /// @param key the nonempty common property key
+    /// @param key the property key
+    /// @param values one or more non-null text values, copied in order
+    /// @return this builder
+    /// @throws IllegalArgumentException if the list is empty, or a value contains NUL
+    /// @throws NullPointerException if the key, list, or any value is null
+    public Builder set(PropertyKey key, List<String> values) {
+      return set(key.key(), values);
+    }
+
+    /// Removes a property when the edit is saved.
+    ///
+    /// @param key the nonempty property key, including custom keys
     /// @return this builder
     /// @throws IllegalArgumentException if the key is empty or contains NUL
     /// @throws NullPointerException if the key is null
-    public Builder clear(String key) {
+    public Builder remove(String key) {
       validateKey(key);
       updates.put(key, List.of());
       return this;
+    }
+
+    /// Removes a property when the edit is saved.
+    ///
+    /// @param key the property key
+    /// @return this builder
+    /// @throws NullPointerException if the key is null
+    public Builder remove(PropertyKey key) {
+      return remove(key.key());
     }
 
     /// Replaces all pictures with the supplied picture's role, preserving other roles.

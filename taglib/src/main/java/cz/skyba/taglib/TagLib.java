@@ -223,7 +223,7 @@ public final class TagLib {
   }
 
   /// Builds metadata edits without opening the audio file. Use `set` to replace
-  /// text values and `clear` to remove a property. Saving merges the edits into the file's current
+  /// text values and `remove` to remove a property. Saving merges the edits into the file's current
   /// properties and uses the replacement and default save behavior of [#write(Path, PropertyMap)].
   /// Changes are applied only by `save()`; `build()` creates an immutable request
   /// for later saving.
@@ -232,7 +232,7 @@ public final class TagLib {
   /// TagLib.edit(path)
   ///   .set("TITLE", "New title")
   ///   .set("ARTIST", "Artist A", "Artist B")
-  ///   .clear("COMMENT")
+  ///   .remove("COMMENT")
   ///   .save();
   /// ```
   ///
@@ -285,14 +285,11 @@ public final class TagLib {
 
   private static void requirePictureTypes(AudioFile file, List<Picture> pictures) {
     Format format = AudioFile.builtinFormat(file.file());
+    if (format == null || !file.supportsPictureEditing()) {
+      return;
+    }
     for (var picture : pictures) {
-      boolean supported = switch (format) {
-        case MP4, MATROSKA -> picture.type() == PictureType.OTHER.code();
-        case APE, MPC, WAVPACK -> picture.type() == PictureType.FRONT_COVER.code()
-          || picture.type() == PictureType.BACK_COVER.code();
-        case null, default -> true;
-      };
-      if (!supported) {
+      if (!format.supportsPictureType(picture.type())) {
         throw new MetadataEditException("Picture role " + picture.type() + " is not supported by " + format);
       }
     }

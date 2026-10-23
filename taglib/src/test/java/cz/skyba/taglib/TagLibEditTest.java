@@ -28,10 +28,10 @@ class TagLibEditTest {
   void constructionDoesNotAccessTheFileAndBuiltRequestsAreIndependent() throws Exception {
     Path path = directory.resolve("later.mp3");
     var values = new ArrayList<>(List.of("First", "Second"));
-    var builder = TagLib.edit(path).set("TITLE", "Snapshot").set("ARTIST", values).clear("COMMENT");
+    var builder = TagLib.edit(path).set("TITLE", "Snapshot").set("ARTIST", values).remove("COMMENT");
     var request = builder.build();
     values.set(0, "Changed input");
-    builder.set("TITLE", "Changed builder").clear("ARTIST");
+    builder.set("TITLE", "Changed builder").remove("ARTIST");
     assertFalse(Files.exists(path));
     Files.copy(AudioFixtures.fixture("lame_cbr.mp3"), path);
     TagLib.write(path, PropertyMap.builder().put("ALBUM", "Keep album").put("COMMENT", "Remove comment").build());
@@ -52,10 +52,29 @@ class TagLibEditTest {
   @Test
   void lastOperationWins() throws Exception {
     Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
-    TagLib.edit(path).set("TITLE", "First").clear("title").set("Title", "Last")
-      .set("ARTIST", "Remove").clear("artist").save();
+    TagLib.edit(path).set("TITLE", "First").remove("title").set("Title", "Last")
+      .set("ARTIST", "Remove").remove("artist").save();
     assertEquals("Last", TagLib.read(path).properties().first("TITLE"));
     assertFalse(TagLib.read(path).properties().containsKey("ARTIST"));
+  }
+
+  @Test
+  void enumEditsShareStringKeysAndPreserveCustomProperties() throws Exception {
+    Path path = AudioFixtures.copy(directory, "lame_cbr.mp3");
+    TagLib.edit(path)
+      .set("ALBUMARTIST", "Original")
+      .set(PropertyKey.ALBUM_ARTIST, List.of("First", "Second"))
+      .set(PropertyKey.TRACK_NUMBER, "3/12")
+      .set("COMMENT", "Remove")
+      .remove(PropertyKey.COMMENT)
+      .set("MY_CUSTOM_FIELD", "Custom value")
+      .save();
+
+    var properties = TagLib.read(path).properties();
+    assertEquals(List.of("First", "Second"), properties.get("ALBUMARTIST"));
+    assertEquals("3/12", properties.first(PropertyKey.TRACK_NUMBER));
+    assertFalse(properties.containsKey(PropertyKey.COMMENT));
+    assertEquals("Custom value", properties.first("MY_CUSTOM_FIELD"));
   }
 
   @Test
@@ -154,7 +173,7 @@ class TagLibEditTest {
       .put("TITLE", "Replacement").remove("COMMENT").build();
 
     assertTrue(TagLib.write(expected, replacement).rejected().isEmpty());
-    TagLib.edit(path).set("TITLE", "Replacement").clear("COMMENT").save();
+    TagLib.edit(path).set("TITLE", "Replacement").remove("COMMENT").save();
     assertArrayEquals(Files.readAllBytes(expected), Files.readAllBytes(path));
   }
 
@@ -170,7 +189,7 @@ class TagLibEditTest {
     Files.copy(path, expected);
     TagLib.write(expected, before.properties().toBuilder().put("TITLE", "Replacement").remove("COMMENT").build());
 
-    TagLib.edit(path).set("TITLE", "Replacement").clear("COMMENT").save();
+    TagLib.edit(path).set("TITLE", "Replacement").remove("COMMENT").save();
 
     var after = TagLib.read(path);
     assertArrayEquals(Files.readAllBytes(expected), Files.readAllBytes(path));
@@ -183,7 +202,7 @@ class TagLibEditTest {
     TagLib.write(path, PropertyMap.builder().put("COMMENT:OTHER", "Remove too").build());
     assertEquals("Remove too", TagLib.read(path).properties().first("COMMENT:OTHER"));
 
-    TagLib.edit(path).clear("COMMENT:OTHER").save();
+    TagLib.edit(path).remove("COMMENT:OTHER").save();
 
     assertTrue(TagLib.read(path).properties().isEmpty());
   }
@@ -195,7 +214,7 @@ class TagLibEditTest {
     byte[] before = Files.readAllBytes(path);
 
     var failure = assertThrows(MetadataEditException.class,
-      () -> TagLib.edit(path).clear("COMMENT").set("TITLE", "Do not save").set(key, "Unsupported").save());
+      () -> TagLib.edit(path).remove("COMMENT").set("TITLE", "Do not save").set(key, "Unsupported").save());
 
     assertTrue(failure.getMessage().contains(key));
     assertArrayEquals(before, Files.readAllBytes(path));
@@ -209,11 +228,15 @@ class TagLibEditTest {
     assertThrows(IllegalArgumentException.class, () -> builder.set("TITLE"));
     assertThrows(IllegalArgumentException.class, () -> builder.set("TITLE", List.of()));
     assertThrows(IllegalArgumentException.class, () -> builder.set("", "value"));
-    assertThrows(IllegalArgumentException.class, () -> builder.clear(""));
+    assertThrows(IllegalArgumentException.class, () -> builder.remove(""));
     assertThrows(IllegalArgumentException.class, () -> builder.set("TITLE", "Invalid\0value"));
-    assertThrows(IllegalArgumentException.class, () -> builder.clear("Invalid\0key"));
+    assertThrows(IllegalArgumentException.class, () -> builder.remove("Invalid\0key"));
     assertThrows(NullPointerException.class, () -> builder.set("TITLE", (String) null));
-    assertThrows(NullPointerException.class, () -> builder.set(null, "value"));
+    assertThrows(NullPointerException.class, () -> builder.set((String) null, "value"));
+    assertThrows(NullPointerException.class, () -> builder.set((PropertyKey) null, "value"));
+    assertThrows(IllegalArgumentException.class, () -> builder.set(PropertyKey.TITLE));
+    assertThrows(IllegalArgumentException.class, () -> builder.set(PropertyKey.TITLE, List.of()));
+    assertThrows(IllegalArgumentException.class, () -> builder.set(PropertyKey.TITLE, "Invalid\0value"));
 
     Path path = AudioFixtures.copy(directory, "has-tags.m4a");
     Path expected = directory.resolve("expected.m4a");
@@ -221,7 +244,7 @@ class TagLibEditTest {
     TagLib.write(expected, TagLib.read(expected, ReadOptions.TAGS_ONLY).properties().toBuilder().put("TITLE", "").build());
     TagLib.edit(path).set("TITLE", "").save();
     assertArrayEquals(Files.readAllBytes(expected), Files.readAllBytes(path));
-    TagLib.edit(path).clear("TITLE").save();
+    TagLib.edit(path).remove("TITLE").save();
     assertFalse(TagLib.read(path).properties().containsKey("TITLE"));
   }
 
@@ -239,7 +262,7 @@ class TagLibEditTest {
   void shortenRetainsTheReplacementApisReadOnlyBehavior() throws Exception {
     Path path = AudioFixtures.copy(directory, "2sec-silence.shn");
     byte[] before = Files.readAllBytes(path);
-    assertThrows(UnsupportedOperationException.class, () -> TagLib.edit(path).clear("TITLE").save());
+    assertThrows(UnsupportedOperationException.class, () -> TagLib.edit(path).remove("TITLE").save());
     assertArrayEquals(before, Files.readAllBytes(path));
   }
 }

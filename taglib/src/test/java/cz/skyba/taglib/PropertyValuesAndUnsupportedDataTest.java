@@ -13,6 +13,40 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PropertyValuesAndUnsupportedDataTest {
   @Test
+  void enumAndStringKeysShareValuesAndBuilderOperations() {
+    var builder = PropertyMap.builder()
+      .put(PropertyKey.ALBUM_ARTIST, "First")
+      .add("albumartist", "Second")
+      .add(PropertyKey.ALBUM_ARTIST, "Third")
+      .add(PropertyKey.ALBUM_ARTIST, List.of("Fourth", "Fifth"))
+      .put(PropertyKey.COMMENT, List.of())
+      .put("CUSTOM", "Custom value");
+    var snapshot = builder.build();
+
+    assertEquals("ALBUMARTIST", PropertyKey.ALBUM_ARTIST.key());
+    assertEquals(List.of("First", "Second", "Third", "Fourth", "Fifth"),
+      snapshot.get(PropertyKey.ALBUM_ARTIST));
+    assertEquals(snapshot.get("ALBUMARTIST"), snapshot.get(PropertyKey.ALBUM_ARTIST));
+    assertEquals("First", snapshot.first(PropertyKey.ALBUM_ARTIST));
+    assertTrue(snapshot.containsKey(PropertyKey.COMMENT));
+    assertEquals(List.of(), snapshot.getOrDefault(PropertyKey.COMMENT, List.of("fallback")));
+    assertSame(snapshot.get(PropertyKey.ALBUM_ARTIST), snapshot.getOrDefault(PropertyKey.ALBUM_ARTIST, null));
+    assertEquals(List.of("fallback"), snapshot.getOrDefault(PropertyKey.TITLE, List.of("fallback")));
+
+    var updated = builder.put(PropertyKey.ALBUM_ARTIST, List.of("Replacement"))
+      .remove(PropertyKey.COMMENT).build();
+    assertEquals(List.of("Replacement"), updated.get("albumartist"));
+    assertFalse(updated.containsKey("COMMENT"));
+    assertEquals("Custom value", updated.first("CUSTOM"));
+    assertEquals("First", snapshot.first(PropertyKey.ALBUM_ARTIST));
+
+    var removed = builder.remove(PropertyKey.ALBUM_ARTIST).build();
+    assertFalse(removed.containsKey(PropertyKey.ALBUM_ARTIST));
+    assertEquals(List.of(), removed.get(PropertyKey.ALBUM_ARTIST));
+    assertEquals("", removed.first(PropertyKey.ALBUM_ARTIST));
+  }
+
+  @Test
   void constructorUsesAsciiFoldingAndNativeSortedMergeOrder() {
     var source = new LinkedHashMap<String, List<String>>();
     source.put("title", List.of("lower"));
