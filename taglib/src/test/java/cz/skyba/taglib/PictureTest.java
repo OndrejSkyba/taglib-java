@@ -62,4 +62,15 @@ class PictureTest {
     picture.data()[1] = 9;
     assertEquals(new Picture(3, "image/png", "Cover", new byte[]{1, 2, 3}), picture);
   }
+
+  @Test
+  void namedRoleConstructorPreservesImageCharacteristicsAndCopiesData() {
+    byte[] data = {1, 2, 3};
+    var picture = new Picture(PictureType.FRONT_COVER, "image/png", "Cover", data, 640, 480, 8, 256);
+    data[0] = 9;
+    picture.data()[1] = 9;
+    assertEquals(new Picture(3, "image/png", "Cover", new byte[]{1, 2, 3}, 640, 480, 8, 256), picture);
+    assertThrows(NullPointerException.class,
+      () -> new Picture(null, "image/png", "Cover", data, 640, 480, 8, 256));
+  }
 }

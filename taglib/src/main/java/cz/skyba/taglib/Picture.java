@@ -48,6 +48,22 @@ public record Picture(
     data = Objects.requireNonNull(data).clone();
   }
 
+  /// Creates an artwork snapshot with a named role and copies the image bytes.
+  ///
+  /// @param type          the named artwork role
+  /// @param mimeType      the content MIME type
+  /// @param description   descriptive text
+  /// @param data          image bytes, copied on construction
+  /// @param width         image width in pixels, or zero if unknown
+  /// @param height        image height in pixels, or zero if unknown
+  /// @param colorDepth    bits per pixel, or zero if unknown
+  /// @param indexedColors indexed color count, or zero if unknown
+  /// @throws NullPointerException if the role, MIME type, description or image bytes are null
+  public Picture(PictureType type, String mimeType, String description, byte[] data,
+                 int width, int height, int colorDepth, int indexedColors) {
+    this(Objects.requireNonNull(type).code(), mimeType, description, data, width, height, colorDepth, indexedColors);
+  }
+
   /// Creates an artwork snapshot and copies the image bytes. Image characteristics are set to zero.
   ///
   /// @param type the picture role code
