@@ -78,6 +78,9 @@ public class Tag extends TagBase {
   }
 
   /// Tests whether the supplied key is valid for this tag format.
+  ///
+  /// @param key the item key to validate
+  /// @return whether the key is valid
   public static boolean checkKey(String key) {
     if (key.length() < 2 || key.length() > 255) {
       return false;
@@ -183,6 +186,9 @@ public class Tag extends TagBase {
 
   /// Replaces the key with a binary item; an empty byte vector removes the existing item without
   /// adding one.
+  ///
+  /// @param key the item key
+  /// @param value replacement binary bytes; an empty vector removes the item
   public final void setData(String key, ByteVector value) {
     removeItem(key);
     if (!value.isEmpty()) {
@@ -200,6 +206,10 @@ public class Tag extends TagBase {
 
   /// Replaces existing values when requested, then appends nonempty text; an empty replacement only
   /// removes the previous item.
+  ///
+  /// @param key the item key
+  /// @param value text to append
+  /// @param replace whether existing values are removed first
   public final void addValue(String key, String value, boolean replace) {
     if (replace) {
       removeItem(key);

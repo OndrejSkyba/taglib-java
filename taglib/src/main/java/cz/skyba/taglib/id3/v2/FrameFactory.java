@@ -51,6 +51,9 @@ public class FrameFactory {
   }
 
   /// Sets the default text encoding, using the charsets supported by [Frame].
+  ///
+  /// @param encoding the text encoding supported by [Frame]
+  /// @throws IllegalArgumentException if the encoding is not supported
   public final void setDefaultTextEncoding(Charset encoding) {
     defaultEncoding = Id3Text.requireEncoding(encoding);
     useDefaultEncoding = true;
@@ -253,6 +256,10 @@ public class FrameFactory {
   }
 
   /// Creates a representable ID3v2 frame for the supplied text property.
+  ///
+  /// @param key the common property key
+  /// @param values the ordered text values
+  /// @return the new frame
   public Frame createFrameForProperty(String key, List<String> values) {
     Objects.requireNonNull(key);
     values = List.copyOf(values);
@@ -302,6 +309,8 @@ public class FrameFactory {
   }
 
   /// Rebuilds aggregate date and credit frames for the tag version.
+  ///
+  /// @param tag the tag whose date and credit frames to update
   public void rebuildAggregateFrames(Tag tag) {
     if (tag.header().majorVersion() < 4) {
       var years = tag.frameList(new ByteVector("TDRC"));

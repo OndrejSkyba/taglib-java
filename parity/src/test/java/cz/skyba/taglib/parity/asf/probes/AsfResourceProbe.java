@@ -14,7 +14,7 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 
 /**
- * Finite ordinary ASF workload, run with a named JVM heap cap after all builds stop.
+ * Exercises repeated ASF metadata saves with configurable picture and attribute sizes.
  */
 public class AsfResourceProbe {
   private static void require(boolean value) {

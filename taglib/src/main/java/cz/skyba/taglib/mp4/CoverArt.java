@@ -42,7 +42,7 @@ public final class CoverArt {
     state = new State(Objects.requireNonNull(format), new ByteVector(data));
   }
 
-  /// Creates an immutable artwork value. Immutable payload storage can be shared.
+  /// Creates an immutable artwork value.
   ///
   /// @param other the value to copy
   public CoverArt(CoverArt other) {

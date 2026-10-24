@@ -83,11 +83,13 @@ public class Tag extends TagBase {
   }
 
   /// Live map whose lists and attribute values can be edited directly.
+  ///
+  /// @return the live attribute map
   public final Map<String, List<Attribute>> attributeListMap() {
     return attributes;
   }
 
-  /// Returns a detached list of named live views. Editing a value updates this tag.
+  /// {@return a detached list of named live views} Editing a value updates this tag.
   public final List<Attribute> attributes() {
     var out = new ArrayList<Attribute>();
     attributes.forEach((k, v) -> v.forEach(a -> out.add(a.namedView(k))));
@@ -109,18 +111,26 @@ public class Tag extends TagBase {
     attributes.remove(key);
   }
 
-  /// Returns live attribute values in a detached list. An absent name returns an empty list without adding it.
+  /// {@return live attribute values in a detached list} An absent name returns an empty list without adding it.
+  ///
+  /// @param name the exact attribute name
   public final List<Attribute> attribute(String name) {
     var values = attributes.get(Objects.requireNonNull(name));
     return values == null ? new ArrayList<>() : new ArrayList<>(values);
   }
 
   /// Stores the supplied attribute by reference. Subsequent edits to it update this tag.
+  ///
+  /// @param name the exact attribute name
+  /// @param value the live attribute value to store
   public final void setAttribute(String name, Attribute value) {
     attributes.put(name, List.of(value));
   }
 
   /// Copies the list structure while retaining its live attribute values.
+  ///
+  /// @param name the exact attribute name
+  /// @param values the attribute values; the list is copied and its elements remain live
   public final void setAttribute(String name, List<Attribute> values) {
     attributes.put(name, values);
   }
@@ -216,6 +226,8 @@ public class Tag extends TagBase {
   }
 
   /// Reads WM/TrackNumber as a DWORD or decimal text, falling back to WM/Track when absent.
+  ///
+  /// @return the track number
   public long track() {
     if (contains("WM/TrackNumber")) {
       var a = first("WM/TrackNumber");
@@ -264,7 +276,7 @@ public class Tag extends TagBase {
     attributes.keySet().removeIf(key -> upper(key).equals(normalized));
   }
 
-  /// Replaces text properties in memory and reports accepted and rejected values.
+  /// @throws java.io.UncheckedIOException if property values cannot be encoded
   public PropertyUpdateResult replaceProperties(PropertyMap values) {
     var rejected = PropertyMap.builder();
     for (String key : properties().asMap().keySet()) {
@@ -321,7 +333,6 @@ public class Tag extends TagBase {
     return contains("WM/Picture") ? List.of("PICTURE") : List.of();
   }
 
-  /// Returns the values in the requested complex-property category.
   public List<Map<String, Variant>> complexProperties(String key) {
     if (!upper(key).equals("PICTURE")) {
       return List.of();
@@ -339,7 +350,6 @@ public class Tag extends TagBase {
     return List.copyOf(result);
   }
 
-  /// Replaces the requested complex-property values and reports whether they are supported.
   public boolean setComplexProperties(String key, List<Map<String, Variant>> values) {
     if (!upper(key).equals("PICTURE")) {
       return false;

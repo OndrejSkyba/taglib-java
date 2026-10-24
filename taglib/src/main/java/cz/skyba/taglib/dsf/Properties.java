@@ -18,7 +18,7 @@ import java.util.Objects;
 public final class Properties {
   private final DsdCodec.DsfDetails details;
 
-  /// Reads DSF audio properties from the supplied parsed file or encoded property data.
+  /// Reads DSF audio properties from encoded property data.
   ///
   /// @param data  the encoded audio property bytes
   /// @param style the audio property read hint
@@ -28,7 +28,7 @@ public final class Properties {
   }
 
   /// Reads DSF audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  /// Values are independent of the source handle. Uses the average read-style hint.
   ///
   /// @param path the audio file to inspect
   /// @throws UncheckedIOException if storage access or property decoding fails
@@ -37,7 +37,7 @@ public final class Properties {
   }
 
   /// Reads DSF audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle.
+  /// Values are independent of the source handle.
   ///
   /// @param path  the audio file to inspect
   /// @param style the audio property read hint

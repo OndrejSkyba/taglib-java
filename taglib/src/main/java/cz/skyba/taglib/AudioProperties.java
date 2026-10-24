@@ -18,7 +18,7 @@ public record AudioProperties(
   boolean lossless) {
   public static final AudioProperties EMPTY = new AudioProperties(0, 0, 0, 0, 0, false);
 
-  /// Returns the duration in whole seconds, truncating fractional seconds.
+  /// {@return the duration in whole seconds, truncating fractional seconds}
   public long lengthInSeconds() {
     return lengthInMilliseconds / 1000;
   }

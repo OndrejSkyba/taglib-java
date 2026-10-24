@@ -5,8 +5,7 @@ import cz.skyba.taglib.FileBase;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
 
-/// Borrowed read view that dispatches through the owner's virtual methods and never closes it.
-/// FileBase supplies its writable subclass to format collaborators.
+/// A borrowed read-only stream view that never closes its owner.
 public class FileOwnerStream extends IOStream {
   protected final FileBase owner;
 

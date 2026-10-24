@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.LongConsumer;
 
-/// Sparse dry-run overlay: validates extents and observes preceding writes without editing audio.
+/// Staged tracker-file edits with validated extents and read access to pending changes.
 final class TrackerWritePlan {
   @FunctionalInterface
   interface SourceReader {

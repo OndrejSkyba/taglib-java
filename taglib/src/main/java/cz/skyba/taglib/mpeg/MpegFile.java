@@ -410,7 +410,7 @@ public class MpegFile extends FileBase {
   /// A storage failure can leave partial changes. All supported tag families are selected.
   ///
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws TagLibException              if storage is read-only or the tag regions cannot be removed
   /// @throws IllegalStateException        if the file is closed
   public final void strip() {
     strip(Set.of(TagType.values()), true);
@@ -421,7 +421,7 @@ public class MpegFile extends FileBase {
   ///
   /// @param types tag families to remove; an empty set selects none
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws TagLibException              if storage is read-only or the tag regions cannot be removed
   /// @throws IllegalStateException        if the file is closed
   public final void strip(Set<TagType> types) {
     strip(types, true);
@@ -436,7 +436,7 @@ public class MpegFile extends FileBase {
   /// @param types       tag families to remove; an empty set selects none
   /// @param discardTags whether this file discards its live objects for physically removed tags
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or cached extents cannot be removed
+  /// @throws TagLibException              if storage is read-only or the tag regions cannot be removed
   /// @throws IllegalStateException        if the file is closed
   public final void strip(Set<TagType> types, boolean discardTags) {
     stripMask(tagMask(types), discardTags);
@@ -486,7 +486,7 @@ public class MpegFile extends FileBase {
   /// fields between selected ID3 tags.
   ///
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws TagLibException              if storage is read-only or the file layout cannot be saved
   /// @throws IllegalStateException        if the file is closed
   @Override
   public void save() {
@@ -501,7 +501,7 @@ public class MpegFile extends FileBase {
   /// @param options tag selection, preservation policy and ID3v2 output settings
   /// @throws NullPointerException         if `options` is null
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws TagLibException              if storage is read-only or the file layout cannot be saved
   /// @throws IllegalStateException        if the file is closed
   public final void save(MpegSaveOptions options) {
     requireWritable();
@@ -580,7 +580,7 @@ public class MpegFile extends FileBase {
     }
   }
 
-  /// Layout-only simulations keep payload rendering and user I/O hooks in native phase order.
+  // Layout-only simulations keep payload rendering and user I/O hooks in native phase order.
   private final class Extents {
     long size = length(), modern = modernLocation, modernLength = modernSize, legacy = legacyLocation, ape = apeLocation, apeLength =
       apeSize;

@@ -56,7 +56,6 @@ public final class MpegCodec implements Codec {
   private record Located(long offset, Header header) {
   }
 
-  /// Shared mpegproperties.cpp result, including nullable validated VBR state.
   public record Details(AudioProperties common, MpegHeaderData header,
                         XingHeader xingHeader) {
     private static final Details EMPTY = new Details(AudioProperties.EMPTY,

@@ -181,7 +181,7 @@ public class Atom {
     return Collections.unmodifiableList(children);
   }
 
-  /// Adjusts the cached byte offset without writing storage.
+  /// Adjusts the byte offset without writing storage.
   ///
   /// @param delta the signed byte adjustment
   public final void addToOffset(long delta) {
@@ -242,6 +242,7 @@ public class Atom {
   /// @param path  the destination list to append to
   /// @param names child names in nesting order
   /// @return whether the complete path was found
+  /// @throws IllegalArgumentException if more than three child names are supplied
   public final boolean path(List<Atom> path, String... names) {
     if (names.length > 3) {
       throw new IllegalArgumentException("At most three child atom names");
@@ -275,6 +276,7 @@ public class Atom {
   /// @param name      the atom name to match
   /// @param recursive whether to search all descendant containers
   /// @return a detached list containing matched descriptor references
+  /// @throws IllegalStateException if a recursive search encounters a cyclic, shared or excessively large atom tree
   public final List<Atom> findall(String name, boolean recursive) {
     var found = new ArrayList<Atom>();
     ByteVector expected = new ByteVector(name);

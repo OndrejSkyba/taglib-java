@@ -7,7 +7,6 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.Objects;
 
-/// Bounded read window used only while constructing an ordinary owned file.
 public final class ConstructionReadStream extends IOStream {
   private static final int WINDOW_SIZE = 4096;
   private final IOStream source;

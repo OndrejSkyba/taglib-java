@@ -7,7 +7,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Chapter values and modification tracking shared by Nero and QuickTime chapter lists.
+/// A mutable chapter list with an explicit modification flag.
 public class ChapterHolder {
   protected List<Chapter> chapterList = new ArrayList<>();
   protected boolean modified;

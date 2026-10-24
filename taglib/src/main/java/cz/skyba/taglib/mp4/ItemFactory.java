@@ -9,9 +9,8 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/// Extensible MP4 item decoding, serialization and common-property mappings.
-/// Override parser and renderer hooks to support additional item names or encodings. Shared
-/// instances reuse lazily initialized mappings; custom factory instances keep their own mappings.
+/// An extensible mapping between MP4 atoms, typed items and common text properties.
+/// Override parser and renderer hooks to support additional item names or encodings.
 public class ItemFactory {
   /// The parsing and rendering strategy associated with an item name.
   protected enum ItemHandlerType {
@@ -32,13 +31,22 @@ public class ItemFactory {
     Text
   }
 
-  /// Parsed MP4 name and item.
+  /// A decoded MP4 metadata entry.
+  ///
+  /// @param name the MP4 item name
+  /// @param item the decoded item
   public record ParsedItem(String name, Item item) {
   }
 
   /// Property conversion result with copied atom-name bytes.
+  ///
+  /// @param name the MP4 item name
+  /// @param item the decoded item
   public record PropertyItem(ByteVector name, Item item) {
-    /// Creates a conversion result, copying mutable names or text-value containers.
+    /// Creates a conversion result with copied atom-name bytes.
+    ///
+    /// @param name the MP4 item name
+    /// @param item the decoded item
     public PropertyItem {
       name = new ByteVector(name);
     }
@@ -50,8 +58,14 @@ public class ItemFactory {
   }
 
   /// Property conversion result with copied text values.
+  ///
+  /// @param key the common property key
+  /// @param values the ordered text values to copy
   public record PropertyValue(String key, List<String> values) {
     /// Creates a conversion result, copying the text-value list and rejecting null elements.
+    ///
+    /// @param key the common property key
+    /// @param values the ordered text values to copy
     public PropertyValue {
       values = List.copyOf(values);
     }
@@ -220,8 +234,7 @@ public class ItemFactory {
       ? ByteVector.fromText(FREE + key, UTF_8) : new ByteVector();
   }
 
-  /// Builds a new mapping used to initialize this factory's lookup cache.
-  /// Subclasses can supply additional names or mappings.
+  /// Defines the parsing and rendering handlers for MP4 item names.
   ///
   /// @return atom-name mappings
   protected Map<ByteVector, ItemHandlerType> nameHandlerMap() {
@@ -257,8 +270,7 @@ public class ItemFactory {
     return result;
   }
 
-  /// Builds a new mapping used to initialize this factory's lookup cache.
-  /// Subclasses can supply additional names or mappings.
+  /// Defines the common-property keys for MP4 item names.
   ///
   /// @return atom-name mappings
   protected Map<ByteVector, String> namePropertyMap() {

@@ -12,7 +12,7 @@ import java.util.Objects;
 
 /// An immutable artwork snapshot with copied binary data.
 /// Unknown image dimensions, bit depth and indexed color count use zero. Picture type codes
-/// follow the ID3v2/FLAC artwork roles, including 0 for other, 3 for front cover and 4 for back cover.
+/// follow the ID3v2/FLAC artwork roles described by [PictureType].
 ///
 /// @param type          the picture role code
 /// @param mimeType      the content MIME type
@@ -33,6 +33,14 @@ public record Picture(
   int indexedColors) {
   /// Creates an artwork snapshot and copies the image bytes.
   ///
+  /// @param type the picture role code
+  /// @param mimeType the content MIME type
+  /// @param description descriptive text
+  /// @param data image bytes, copied on construction
+  /// @param width image width in pixels, or zero if unknown
+  /// @param height image height in pixels, or zero if unknown
+  /// @param colorDepth bits per pixel, or zero if unknown
+  /// @param indexedColors indexed color count, or zero if unknown
   /// @throws NullPointerException if MIME type, description or image bytes are null
   public Picture {
     Objects.requireNonNull(mimeType);
@@ -42,12 +50,22 @@ public record Picture(
 
   /// Creates an artwork snapshot and copies the image bytes. Image characteristics are set to zero.
   ///
+  /// @param type the picture role code
+  /// @param mimeType the content MIME type
+  /// @param description descriptive text
+  /// @param data image bytes, copied on construction
   /// @throws NullPointerException if MIME type, description or image bytes are null
   public Picture(int type, String mimeType, String description, byte[] data) {
     this(type, mimeType, description, data, 0, 0, 0, 0);
   }
 
   /// Creates an artwork snapshot with a named role and unknown image characteristics.
+  ///
+  /// @param type the named artwork role
+  /// @param mimeType the content MIME type
+  /// @param description descriptive text
+  /// @param data image bytes, copied on construction
+  /// @throws NullPointerException if the role, MIME type, description or image bytes are null
   public Picture(PictureType type, String mimeType, String description, byte[] data) {
     this(Objects.requireNonNull(type).code(), mimeType, description, data);
   }
@@ -56,6 +74,9 @@ public record Picture(
   /// The description is empty and image characteristics are left unknown.
   /// Recognizes JPEG, PNG, GIF, BMP, TIFF and WebP signatures without decoding the image.
   ///
+  /// @param type the artwork role
+  /// @param path the image file to read
+  /// @return the artwork snapshot
   /// @throws UncheckedIOException if the image cannot be read
   /// @throws IllegalArgumentException if the image type is not recognized
   /// @throws NullPointerException if the role or path is null

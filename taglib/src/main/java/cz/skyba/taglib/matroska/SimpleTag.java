@@ -30,6 +30,7 @@ public final class SimpleTag {
   public record Text(String value) implements Value {
     /// Creates a non-null text payload.
     ///
+    /// @param value the non-null text payload
     /// @throws NullPointerException if the value is null
     public Text {
       Objects.requireNonNull(value);
@@ -37,6 +38,8 @@ public final class SimpleTag {
   }
 
   /// Binary tag payload with defensive array copies and content-based equality.
+  ///
+  /// @param value the binary payload, copied on construction
   public record Binary(byte[] value) implements Value {
     public Binary {
       value = Objects.requireNonNull(value).clone();
@@ -65,10 +68,10 @@ public final class SimpleTag {
 
   private final State state;
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text or binary tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the immutable text or binary payload
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -91,23 +94,23 @@ public final class SimpleTag {
       defaultLanguage, track, edition, chapter, attachment);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name  the attachment filename or tag name
-  /// @param value the immutable text value or bytes to copy
+  /// @param name  the tag name
+  /// @param value the text value
   public SimpleTag(String name, String value) {
     this(name, new Text(value), 0, "", true, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name  the attachment filename or tag name
-  /// @param value the immutable text value or bytes to copy
+  /// @param name  the tag name
+  /// @param value the binary data to copy
   public SimpleTag(String name, ByteVector value) {
     this(name, new Binary(value.data()), 0, "", true, 0, 0, 0, 0);
   }
 
-  /// Creates a copied value with shared immutable state.
+  /// Creates a copy of the tag value.
   ///
   /// @param other the value to copy
   public SimpleTag(SimpleTag other) {
@@ -184,29 +187,29 @@ public final class SimpleTag {
     return state.hashCode();
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name   the attachment filename or tag name
-  /// @param value  the immutable text value or bytes to copy
+  /// @param name   the tag name
+  /// @param value  the text value
   /// @param target the target level
   public SimpleTag(String name, String value, TargetTypeValue target) {
     this(name, new Text(value), target.value(), "", true, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name     the attachment filename or tag name
-  /// @param value    the immutable text value or bytes to copy
+  /// @param name     the tag name
+  /// @param value    the text value
   /// @param target   the target level
   /// @param language the language identifier
   public SimpleTag(String name, String value, TargetTypeValue target, String language) {
     this(name, new Text(value), target.value(), language, true, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the text value
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -214,10 +217,10 @@ public final class SimpleTag {
     this(name, new Text(value), target.value(), language, defaultLanguage, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the text value
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -226,10 +229,10 @@ public final class SimpleTag {
     this(name, new Text(value), target.value(), language, defaultLanguage, track, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the text value
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -247,10 +250,10 @@ public final class SimpleTag {
     this(name, new Text(value), target.value(), language, defaultLanguage, track, edition, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the text value
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -270,10 +273,10 @@ public final class SimpleTag {
     this(name, new Text(value), target.value(), language, defaultLanguage, track, edition, chapter, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a text tag.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the text value
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -295,29 +298,29 @@ public final class SimpleTag {
     this(name, new Text(value), target.value(), language, defaultLanguage, track, edition, chapter, attachment);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name   the attachment filename or tag name
-  /// @param value  the immutable text value or bytes to copy
+  /// @param name   the tag name
+  /// @param value  the binary data to copy
   /// @param target the target level
   public SimpleTag(String name, ByteVector value, TargetTypeValue target) {
     this(name, new Binary(value.data()), target.value(), "", true, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name     the attachment filename or tag name
-  /// @param value    the immutable text value or bytes to copy
+  /// @param name     the tag name
+  /// @param value    the binary data to copy
   /// @param target   the target level
   /// @param language the language identifier
   public SimpleTag(String name, ByteVector value, TargetTypeValue target, String language) {
     this(name, new Binary(value.data()), target.value(), language, true, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the binary data to copy
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -325,10 +328,10 @@ public final class SimpleTag {
     this(name, new Binary(value.data()), target.value(), language, defaultLanguage, 0, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the binary data to copy
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -337,10 +340,10 @@ public final class SimpleTag {
     this(name, new Binary(value.data()), target.value(), language, defaultLanguage, track, 0, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the binary data to copy
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -358,10 +361,10 @@ public final class SimpleTag {
     this(name, new Binary(value.data()), target.value(), language, defaultLanguage, track, edition, 0, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the binary data to copy
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default
@@ -381,10 +384,10 @@ public final class SimpleTag {
     this(name, new Binary(value.data()), target.value(), language, defaultLanguage, track, edition, chapter, 0);
   }
 
-  /// Creates a SimpleTag value, copying mutable byte and collection inputs.
+  /// Creates a binary tag with copied data.
   ///
-  /// @param name            the attachment filename or tag name
-  /// @param value           the immutable text value or bytes to copy
+  /// @param name            the tag name
+  /// @param value           the binary data to copy
   /// @param target          the target level
   /// @param language        the language identifier
   /// @param defaultLanguage whether the language is the default

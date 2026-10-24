@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 
-/// Base for mutable audio metadata views and format-specific property mappings.
+/// A mutable audio metadata tag.
 /// File-bound edits are staged until the owning file is saved. Text properties use ordered
-/// value lists; the default common-field mapping consumes the first value and reports
-/// remaining values as rejected. Formats can provide richer mappings. Numeric year and
-/// track values use unsigned 32-bit values represented as Java `long`s.
+/// value lists. The default common-field mapping accepts the first value when representable
+/// and reports additional values as rejected. Numeric year and track values use unsigned
+/// 32-bit values represented as Java `long`s.
 public abstract class TagBase {
   public abstract String title();
 
@@ -123,6 +123,9 @@ public abstract class TagBase {
   /// are reported without preventing other values from being accepted. This does not save.
   /// Unsupported-data identifiers do not request removal of opaque metadata; use
   /// [#removeUnsupportedProperties(List)] for that operation.
+  ///
+  /// @param properties the complete replacement text property map
+  /// @return the accepted and rejected text values
   public PropertyUpdateResult replaceProperties(PropertyMap properties) {
     var values = new MutablePropertyMap(properties);
     values.removeEmpty();
@@ -153,8 +156,7 @@ public abstract class TagBase {
     return List.of();
   }
 
-  /// Reports whether this tag accepts picture replacement, even when it has no pictures.
-  /// Subclasses that accept pictures should override this method.
+  /// {@return whether this tag accepts picture replacement, even when it has no pictures}
   public boolean supportsPictureEditing() {
     return false;
   }
@@ -222,6 +224,9 @@ public abstract class TagBase {
   }
 
   /// Joins multiple values for a common-field getter using the tag display separator.
+  ///
+  /// @param values the text values to join
+  /// @return the text joined with the tag display separator
   protected static String joinTagValues(List<String> values) {
     return String.join(" / ", values);
   }

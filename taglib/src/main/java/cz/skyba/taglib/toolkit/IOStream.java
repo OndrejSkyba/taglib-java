@@ -3,8 +3,8 @@ package cz.skyba.taglib.toolkit;
 
 /// A seekable byte stream with a shared mutable cursor.
 /// Reads and writes operate at the cursor. Insertions, removals and truncation change storage
-/// immediately; these operations are independent of audio-file metadata staging. Implementations
-/// report storage failures through unchecked exceptions and define their own closed-stream behavior.
+/// immediately. Implementations report storage failures through unchecked exceptions and define
+/// their own closed-stream behavior.
 public abstract class IOStream implements AutoCloseable {
   /// The origin used to resolve a relative byte offset.
   public enum Position {

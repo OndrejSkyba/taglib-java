@@ -1198,17 +1198,12 @@ public final class ByteVector implements Comparable<ByteVector>, Iterable<Byte> 
   }
 
   /// Compares byte values lexicographically as unsigned integers.
-  ///
-  /// @param other the byte vector to compare
-  /// @return a negative, zero or positive comparison result
   @Override
   public int compareTo(ByteVector other) {
     return Arrays.compareUnsigned(data, other.data);
   }
 
   /// Decodes all bytes as ISO-8859-1, including embedded NUL bytes.
-  ///
-  /// @return the decoded text
   @Override
   public String toString() {
     return new String(data, StandardCharsets.ISO_8859_1);

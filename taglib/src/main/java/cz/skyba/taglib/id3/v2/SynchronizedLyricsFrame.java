@@ -45,6 +45,8 @@ public class SynchronizedLyricsFrame extends Frame {
   public record SynchedText(long time, String text) {
     /// Creates a timed entry, retaining the timestamp's low 32 bits.
     ///
+    /// @param time the unsigned 32-bit timestamp in the frame's timestamp format
+    /// @param text the synchronized text
     /// @throws NullPointerException if the text is null
     public SynchedText {
       time &= 0xffff_ffffL;

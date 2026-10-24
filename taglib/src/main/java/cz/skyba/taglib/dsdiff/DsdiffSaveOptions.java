@@ -23,6 +23,9 @@ public record DsdiffSaveOptions(Set<TagType> tags, StripTags unselectedTags, Tag
 
   /// Creates save options. Constructing options does not modify a file.
   ///
+  /// @param tags tag families to save; an empty set selects none
+  /// @param unselectedTags whether unselected tag families are removed or preserved
+  /// @param id3v2Version the ID3v2 output version
   /// @throws NullPointerException if the tag set, a tag element, a policy or the ID3v2 version is null
   public DsdiffSaveOptions {
     tags = Set.copyOf(tags);

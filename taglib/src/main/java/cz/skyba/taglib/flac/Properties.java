@@ -19,6 +19,7 @@ public final class Properties {
   /// Reads FLAC audio properties from supplied property values.
   ///
   /// @param streamLength the byte length used to calculate bitrate
+  /// @param data the STREAMINFO block payload
   public Properties(byte[] data, long streamLength) {
     this(data, streamLength, ReadStyle.AVERAGE);
   }
@@ -27,6 +28,7 @@ public final class Properties {
   ///
   /// @param streamLength the byte length used to calculate bitrate
   /// @param style        the audio property read hint
+  /// @param data the STREAMINFO block payload
   public Properties(byte[] data, long streamLength, ReadStyle style) {
     Objects.requireNonNull(data);
     Objects.requireNonNull(style);

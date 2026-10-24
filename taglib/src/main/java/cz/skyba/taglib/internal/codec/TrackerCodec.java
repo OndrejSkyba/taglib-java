@@ -14,7 +14,7 @@ import java.util.*;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/// MOD/S3M/IT/XM module metadata. Like upstream, tracker duration is unspecified (zero).
+/// MOD/S3M/IT/XM module metadata. Tracker duration is unspecified (zero).
 public final class TrackerCodec implements Codec {
   private static final Set<Format> FORMATS = Set.of(Format.MOD, Format.S3M, Format.IT, Format.XM);
   private static final Set<String> PROPERTIES = Set.of("TITLE", "COMMENT", "TRACKERNAME");

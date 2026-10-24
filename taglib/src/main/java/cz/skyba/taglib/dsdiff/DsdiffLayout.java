@@ -10,7 +10,6 @@ import java.util.function.LongSupplier;
 import static cz.skyba.taglib.dsdiff.DsdiffFile.DIIN;
 import static cz.skyba.taglib.dsdiff.DsdiffFile.ID3v2;
 
-/// Physical layout transitions shared by live writes and detached preflight simulations.
 final class DsdiffLayout {
   static final class InvalidPlan extends RuntimeException {
     InvalidPlan() {

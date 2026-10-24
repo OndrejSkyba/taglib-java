@@ -9,7 +9,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Literal pinned assertions; pointer iterator syntax uses indexed Java mutation.
+ * Checks ByteVector search, splitting, joining, and numeric conversion behavior.
  */
 class ByteVectorSearchAndConversionTest {
   static ByteVector b(String hex) {

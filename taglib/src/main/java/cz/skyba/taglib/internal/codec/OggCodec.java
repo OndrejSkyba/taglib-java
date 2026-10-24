@@ -24,7 +24,6 @@ public final class OggCodec implements Codec {
   private boolean picturesRemoved;
   private OggPages.Headers nativeHeaders;
 
-  /// Native Vorbis/Opus/Speex identification values alongside their common projection.
   public record Details(AudioProperties common, int version, int bitrateMaximum,
                         int bitrateNominal, int bitrateMinimum, int inputSampleRate, int outputGain,
                         int speexMode, boolean speexVbr) {

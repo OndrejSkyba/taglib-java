@@ -16,6 +16,8 @@ public final class PropertyMap {
 
   /// Copies and ASCII-normalizes source keys in sorted order, merging values whose keys normalize
   /// identically.
+  ///
+  /// @param source property keys and ordered value lists to copy
   public PropertyMap(Map<String, ? extends List<String>> source) {
     var copy = new TreeMap<String, List<String>>();
     var rejected = new ArrayList<String>();
@@ -126,6 +128,9 @@ public final class PropertyMap {
   }
 
   /// Compares complete ordered value lists, ignoring unsupported-data identifiers.
+  ///
+  /// @param other the properties to compare
+  /// @return whether every text property in the source has the same ordered values in this map
   public boolean containsAll(PropertyMap other) {
     return values.entrySet().containsAll(other.values.entrySet());
   }

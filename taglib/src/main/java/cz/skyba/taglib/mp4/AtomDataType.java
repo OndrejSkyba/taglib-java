@@ -8,6 +8,7 @@ package cz.skyba.taglib.mp4;
 public record AtomDataType(int value) {
   /// Creates a data type code.
   ///
+  /// @param value the data type code, from 0 to 255
   /// @throws IllegalArgumentException if the value is outside 0 to 255
   public AtomDataType {
     if (value < 0 || value > 255) {

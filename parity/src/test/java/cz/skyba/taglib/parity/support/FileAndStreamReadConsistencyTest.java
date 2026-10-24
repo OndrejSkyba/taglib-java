@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Ensures every parser reads borrowed streams using the same code path as filesystem reads.
+ * Ensures file and borrowed-stream reads produce equivalent results without closing borrowed streams.
  */
 final class FileAndStreamReadConsistencyTest {
   @Test

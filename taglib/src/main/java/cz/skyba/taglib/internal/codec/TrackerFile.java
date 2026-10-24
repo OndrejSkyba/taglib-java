@@ -21,7 +21,7 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/// Shared tracker parsing and saving for live file implementations. Read failures can leave parsed prefix fields available.
+/// An editable tracker file. Read failures can leave parsed prefix fields available.
 public abstract class TrackerFile extends FileBase {
   private static final Set<String> PROTRACKER_IDS = Set.of("M.K.", "M!K!", "M&K!", "N.T.");
 

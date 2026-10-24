@@ -16,8 +16,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 
-/// A mutable SimpleTag collection. Incoming values and exported collection values are copied.
-/// MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
+/// A mutable collection of Matroska [SimpleTag] values.
+/// Values are copied on insertion and retrieval. When bound to a [MatroskaFile], edits are staged
+/// until that file is saved. [#save(Path)] writes directly to the supplied path.
 public class Tag extends TagBase {
   private static final Variant EMPTY_VARIANT = new Variant();
 

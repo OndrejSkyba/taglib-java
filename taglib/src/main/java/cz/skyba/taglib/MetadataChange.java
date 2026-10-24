@@ -4,10 +4,10 @@ package cz.skyba.taglib;
 import java.util.List;
 
 /// A requested edit to a physical metadata entry.
-/// IDs refer to one document session. Values are copied when non-null. Validation is performed
-/// by [MetadataDocument#apply(List)].
+/// Entry IDs belong to one document session. Non-null value lists are copied and must contain
+/// no null elements. Edit validity is checked by [MetadataDocument#apply(List)].
 public sealed interface MetadataChange {
-  /// Adds a text field.
+  /// A request to add a text field.
   ///
   /// @param key the text field key
   /// @param values the text values
@@ -20,7 +20,7 @@ public sealed interface MetadataChange {
     }
   }
 
-  /// Replaces an existing text field's key and values.
+  /// A request to replace an existing text field's key and values.
   ///
   /// @param id the target entry ID
   /// @param key the replacement text field key
@@ -33,7 +33,7 @@ public sealed interface MetadataChange {
     }
   }
 
-  /// Removes an existing entry.
+  /// A request to remove an existing entry.
   ///
   /// @param id the target entry ID
   record Remove(String id) implements MetadataChange {

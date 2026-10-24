@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-/// Constructor-owned state that cannot be reconstructed by rereading the rewritten bytes.
 public final class NativeSaveState {
   private static final ScopedValue<Boolean> EMPTY_MATROSKA_TAG = ScopedValue.newInstance();
   private static final ScopedValue<PropertyMap> MPEG_APE_PROPERTIES = ScopedValue.newInstance();

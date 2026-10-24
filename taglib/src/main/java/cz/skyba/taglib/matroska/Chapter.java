@@ -52,7 +52,7 @@ public final class Chapter {
 
   private final State state;
 
-  /// Creates a Chapter value, copying mutable byte and collection inputs.
+  /// Creates a chapter with copied display values.
   ///
   /// @param uid      the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param start    the unsigned starting timestamp in nanoseconds
@@ -63,7 +63,7 @@ public final class Chapter {
     state = new State(start, end, displays.stream().map(Display::new).toList(), uid, hidden);
   }
 
-  /// Creates a Chapter value, copying mutable byte and collection inputs.
+  /// Creates a chapter with copied display values.
   ///
   /// @param uid      the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param start    the unsigned starting timestamp in nanoseconds
@@ -73,7 +73,7 @@ public final class Chapter {
     this(start, end, displays, uid, false);
   }
 
-  /// Creates a Chapter value, copying mutable byte and collection inputs.
+  /// Creates a chapter with copied display values.
   ///
   /// @param start    the unsigned starting timestamp in nanoseconds
   /// @param end      the unsigned ending timestamp in nanoseconds, or zero if unspecified
@@ -82,7 +82,7 @@ public final class Chapter {
     this(start, end, displays, 0, false);
   }
 
-  /// Creates a copied value with shared immutable state.
+  /// Creates a copy of the chapter value.
   ///
   /// @param other the value to copy
   public Chapter(Chapter other) {

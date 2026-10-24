@@ -158,7 +158,9 @@ public class Page {
     return header.size() + header.dataSize();
   }
 
-  /// Returns packet-containment flags for the requested packet index.
+  /// {@return packet-containment flags for the requested packet index, or [#DoesNotContainPacket] if absent}
+  ///
+  /// @param index the packet index within the logical stream
   public final int containsPacket(int index) {
     int count = packetCount(), last = firstPacketIndex + count - 1;
     if (index < firstPacketIndex || index > last) {
@@ -203,8 +205,7 @@ public class Page {
     return List.copyOf(result);
   }
 
-  /// Serializes the page header and packet payload, then computes the Ogg CRC over the complete
-  /// page.
+  /// {@return the complete serialized page, including its CRC}
   public final ByteVector render() {
     var output = new ByteVectorOutput();
     output.append(header.render());

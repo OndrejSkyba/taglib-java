@@ -3,7 +3,7 @@ package cz.skyba.taglib.parity.id3v2.probes;
 import cz.skyba.taglib.id3.v2.RelativeVolumeFrame;
 
 /**
- * Explicit rejection is a boundary, not a native success equivalence claim.
+ * Checks that unsupported relative-volume values are rejected without changing frame state.
  */
 public class Id3VolumeBoundaryProbe {
   public static void main(String[] args) {

@@ -4,14 +4,14 @@ package cz.skyba.taglib.matroska;
 import java.util.List;
 import java.util.Objects;
 
-/// An immutable edition containing copied chapter values, ordering flags and a UID bit pattern.
+/// An immutable Matroska chapter edition. UIDs retain all 64 bits.
 public final class ChapterEdition {
   private record State(List<Chapter> chapters, boolean isDefault, boolean ordered, long uid) {
   }
 
   private final State state;
 
-  /// Creates a ChapterEdition value, copying mutable byte and collection inputs.
+  /// Creates a chapter edition with copied chapters.
   ///
   /// @param uid       the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param chapters  chapter values to copy
@@ -21,7 +21,7 @@ public final class ChapterEdition {
     state = new State(chapters.stream().map(Chapter::new).toList(), isDefault, ordered, uid);
   }
 
-  /// Creates a ChapterEdition value, copying mutable byte and collection inputs.
+  /// Creates a chapter edition with copied chapters.
   ///
   /// @param chapters  chapter values to copy
   /// @param isDefault whether this is the default edition
@@ -30,7 +30,7 @@ public final class ChapterEdition {
     this(chapters, isDefault, ordered, 0);
   }
 
-  /// Creates a ChapterEdition value, copying mutable byte and collection inputs.
+  /// Creates a chapter edition with copied chapters.
   ///
   /// @param chapters  chapter values to copy
   /// @param isDefault whether this is the default edition
@@ -38,7 +38,7 @@ public final class ChapterEdition {
     this(chapters, isDefault, false, 0);
   }
 
-  /// Creates a copied value with shared immutable state.
+  /// Creates a copy of the chapter edition value.
   ///
   /// @param other the value to copy
   public ChapterEdition(ChapterEdition other) {

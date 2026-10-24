@@ -17,6 +17,9 @@ public final class Item {
   public enum Type {VOID, BOOL, INT, INT_PAIR, BYTE, UNSIGNED_INT, LONG, STRING_LIST, BYTE_VECTOR_LIST, COVER_ART_LIST, STEM}
 
   /// Two integer fields stored in a paired MP4 metadata value.
+  ///
+  /// @param first the first numeric field
+  /// @param second the second numeric field
   public record IntPair(int first, int second) {
   }
 
@@ -68,7 +71,7 @@ public final class Item {
     this(new VoidPayload());
   }
 
-  /// Copies atom data-type metadata independently; immutable stored payload state can be shared.
+  /// Copies the item with independently editable atom data-type metadata.
   ///
   /// @param other the item to copy
   public Item(Item other) {

@@ -3,7 +3,7 @@ package cz.skyba.taglib;
 
 import java.io.Serial;
 
-/// Metadata could not be decoded well enough to expose or modify its physical entries.
+/// Audio metadata could not be read or decoded.
 /// Storage failures use [java.io.UncheckedIOException] with the original I/O cause.
 public class MetadataReadException extends TagLibException {
   @Serial

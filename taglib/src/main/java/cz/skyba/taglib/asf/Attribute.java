@@ -191,7 +191,9 @@ public final class Attribute {
     return name;
   }
 
-  /// Returns an independent attribute copy with the supplied name.
+  /// {@return an independent attribute copy with the supplied name}
+  ///
+  /// @param value the new attribute name
   public Attribute named(String value) {
     var copy = new Attribute(this);
     copy.name = Objects.requireNonNull(value);
@@ -314,7 +316,7 @@ public final class Attribute {
     return TextBytes.decodeTerminated(data.data(), 0, size, UTF_16LE);
   }
 
-  /// Returns whether the stored numeric value is nonzero, without checking the active attribute type.
+  /// {@return whether the stored numeric value is nonzero, without checking the active attribute type}
   public boolean toBoolean() {
     return state.number != 0;
   }
@@ -333,7 +335,7 @@ public final class Attribute {
     return state.number & 0xffff_ffffL;
   }
 
-  /// Returns the numeric value as an unsigned 64-bit bit pattern.
+  /// {@return the numeric value as an unsigned 64-bit bit pattern}
   /// Use [Long#toUnsignedString(long)] to display it.
   public long toUnsignedLong() {
     return state.number;
@@ -399,6 +401,10 @@ public final class Attribute {
   }
 
   /// Creates a named Unicode text attribute.
+  ///
+  /// @param name the attribute name
+  /// @param value the Unicode text
+  /// @return the new attribute
   public static Attribute text(String name, String value) {
     return new Attribute(value).named(name);
   }
@@ -424,8 +430,13 @@ public final class Attribute {
     return new Attribute(value).named(name);
   }
 
-  /// Creates a named unsigned numeric attribute of the selected width, rejecting values outside that
-  /// width.
+  /// Creates a named unsigned numeric attribute of the selected width.
+  ///
+  /// @param name the attribute name
+  /// @param type [#WordType], [#DWordType] or [#QWordType]
+  /// @param value the unsigned integer to store
+  /// @return the new attribute
+  /// @throws IllegalArgumentException if the type is not an unsigned integer type or the value is outside its range
   public static Attribute unsigned(String name, int type, BigInteger value) {
     int width = switch (type) {
       case WordType -> 2;
@@ -463,7 +474,9 @@ public final class Attribute {
     return new Attribute(name, type(), stream, language, data());
   }
 
-  /// Returns Unicode text, rejecting attributes whose active type is not Unicode.
+  /// {@return the Unicode text}
+  ///
+  /// @throws IllegalStateException if the attribute is not Unicode text
   public String text() {
     if (type() != UnicodeType) {
       throw new IllegalStateException("Not a Unicode ASF attribute");
@@ -478,7 +491,9 @@ public final class Attribute {
     };
   }
 
-  /// Returns the numeric bit pattern as a nonnegative integer, rejecting nonnumeric attribute types.
+  /// {@return the numeric bit pattern as a nonnegative integer}
+  ///
+  /// @throws IllegalStateException if the attribute is not numeric
   public BigInteger unsigned() {
     if (!isNumeric(type())) {
       throw new IllegalStateException("Not a numeric ASF attribute");

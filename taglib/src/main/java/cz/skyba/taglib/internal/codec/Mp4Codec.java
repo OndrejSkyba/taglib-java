@@ -19,7 +19,7 @@ import static cz.skyba.taglib.internal.Binary.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/// ISO BMFF/iTunes metadata. Media payloads are streamed, never loaded into the metadata tree.
+/// ISO BMFF/iTunes metadata; media payloads need not fit in memory.
 public final class Mp4Codec implements Codec {
   private NativeLayout nativeLayout;
 

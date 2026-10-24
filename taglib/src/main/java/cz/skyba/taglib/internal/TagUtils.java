@@ -66,7 +66,6 @@ public final class TagUtils {
     return readHeaderWithOffset(stream, length, skipID3v2).data();
   }
 
-  /// Retains the native output offset without rereading a header or invoking a decoder twice.
   public record HeaderRead(ByteVector data, long offset) {
   }
 

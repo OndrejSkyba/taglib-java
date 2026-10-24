@@ -133,9 +133,6 @@ public class Tag extends TagBase {
 
   /// Compares snapshot-constructed tags by their Nero chapter list and Stem value.
   /// Other tag instances use identity comparison.
-  ///
-  /// @param other the value to compare
-  /// @return whether the tags compare equal
   @Override
   public boolean equals(Object other) {
     return this == other || snapshotValue && other instanceof Tag value && value.snapshotValue

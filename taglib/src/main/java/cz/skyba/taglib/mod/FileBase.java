@@ -12,7 +12,7 @@ import java.util.function.LongConsumer;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/// Base for tracker format implementations with fixed-width binary stream helpers.
+/// A tracker audio file with fixed-width binary field access.
 /// Reads advance the shared cursor and invoke output callbacks only after a complete field
 /// has been read. Writes change the underlying storage immediately.
 public abstract class FileBase extends cz.skyba.taglib.FileBase {
@@ -47,6 +47,7 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
   /// @param value   the value to encode
   /// @param padding the extension fill byte
   /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalArgumentException if the unsigned field width exceeds [Integer#MAX_VALUE]
   protected void writeString(String value, long size, byte padding) {
     long width = size & 0xffff_ffffL; // Native resize narrows unsigned long to unsigned int.
     if (width > Integer.MAX_VALUE) {
@@ -102,6 +103,7 @@ public abstract class FileBase extends cz.skyba.taglib.FileBase {
   /// @param size   the field byte count
   /// @return whether the complete field was read
   /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalArgumentException if the field width is negative
   protected boolean readString(Consumer<String> output, long size) {
     Objects.requireNonNull(output);
     if (size < 0) {

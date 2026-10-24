@@ -464,8 +464,10 @@ public class FlacFile extends FileBase {
     removeTags(Set.of(TagType.values()));
   }
 
-  /// Stages removal of selected tag types from cached metadata; storage changes only
+  /// Stages removal of selected tag types from memory; storage changes only
   /// on [#save()].
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public final void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     if (types.contains(TagType.ID3V1)) {

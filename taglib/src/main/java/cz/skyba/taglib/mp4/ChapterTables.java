@@ -5,7 +5,7 @@ import cz.skyba.taglib.internal.FileOwnerStream;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.IOStream;
 
-/// QuickTime sample-table decoding with native cursor and unsigned arithmetic rules.
+// QuickTime sample-table decoding with native cursor and unsigned arithmetic rules.
 final class ChapterTables {
   private ChapterTables() {
   }

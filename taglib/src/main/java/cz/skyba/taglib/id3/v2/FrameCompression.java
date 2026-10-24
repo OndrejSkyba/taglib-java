@@ -9,7 +9,7 @@ import java.util.zip.Inflater;
 
 import static java.lang.System.Logger.Level.DEBUG;
 
-/// Bounded native-compatible zlib frame decoding.
+/// Size-limited zlib decoding for compressed ID3v2 frames.
 final class FrameCompression {
   private static final System.Logger LOG = System.getLogger(FrameCompression.class.getName());
 

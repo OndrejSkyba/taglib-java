@@ -210,7 +210,7 @@ public class AiffFile extends RiffFile {
   ///
   /// @param version the ID3v2 output version
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws TagLibException              if storage is read-only or the file layout cannot be saved
   /// @throws IllegalStateException        if the file is closed
   public final void save(Tag.Version version) {
     requireWritable();

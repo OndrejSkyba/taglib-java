@@ -58,7 +58,7 @@ public final class Float80 extends Number {
     return significand.signum() == 0;
   }
 
-  /// Nonnegative, odd for nonzero values; the sign is supplied by isNegative().
+  /// {@return the nonnegative significand, odd for nonzero values; the sign is supplied by [#isNegative()]}
   public BigInteger significand() {
     return significand;
   }
@@ -82,8 +82,6 @@ public final class Float80 extends Number {
 
   /// Converts to a signed 32-bit integer by truncating fractional digits and retaining low bits
   /// when the result exceeds the integer range.
-  ///
-  /// @return the narrowed integer
   @Override
   public int intValue() {
     return toBigDecimal().intValue();
@@ -91,8 +89,6 @@ public final class Float80 extends Number {
 
   /// Converts to a signed 64-bit integer by truncating fractional digits and retaining low bits
   /// when the result exceeds the integer range.
-  ///
-  /// @return the narrowed integer
   @Override
   public long longValue() {
     return toBigDecimal().longValue();
@@ -100,8 +96,6 @@ public final class Float80 extends Number {
 
   /// Converts to a Java float, preserving signed zero. Precision can be rounded and a value
   /// outside the finite float range can become infinity.
-  ///
-  /// @return the floating-point approximation
   @Override
   public float floatValue() {
     return isZero() && negative ? -0.0f : toBigDecimal().floatValue();
@@ -109,8 +103,6 @@ public final class Float80 extends Number {
 
   /// Converts to a Java double, preserving signed zero. Precision can be rounded and a value
   /// outside the finite double range can become infinity.
-  ///
-  /// @return the floating-point approximation
   @Override
   public double doubleValue() {
     return isZero() && negative ? -0.0 : toBigDecimal().doubleValue();

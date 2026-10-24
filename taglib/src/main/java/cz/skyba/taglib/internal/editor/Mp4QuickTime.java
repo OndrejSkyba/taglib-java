@@ -16,7 +16,7 @@ import java.util.*;
 import static cz.skyba.taglib.internal.Binary.*;
 import static cz.skyba.taglib.internal.editor.Mp4Items.atom;
 
-/// The release's QuickTime sample-table semantics, with bounded, staged file mutation.
+/// QuickTime chapter metadata with bounded, staged file mutation.
 public final class Mp4QuickTime {
   private Mp4QuickTime() {
   }

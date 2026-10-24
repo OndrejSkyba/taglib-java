@@ -423,7 +423,6 @@ public final class Variant {
     return other instanceof Variant v && payload.equals(v.payload);
   }
 
-  /// Hashes the exact type and stored value consistently with [#equals(Object)].
   @Override
   public int hashCode() {
     return 31 * type().hashCode() + payload.hashCode();

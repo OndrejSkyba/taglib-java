@@ -195,6 +195,8 @@ public class TrueAudioFile extends FileBase {
   }
 
   /// Stages removal of selected tag types; storage changes only on [#save()].
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public final void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     if (types.contains(TagType.ID3V1)) {

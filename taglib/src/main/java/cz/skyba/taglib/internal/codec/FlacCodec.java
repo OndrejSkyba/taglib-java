@@ -63,7 +63,6 @@ public final class FlacCodec implements Codec {
     return new NativeTags(xiph, id3v2, id3v1, hasXiphComment);
   }
 
-  /// Internal parsed carrier for the upstream-shaped FLAC File API.
   public record Details(
     Properties properties,
     boolean hasXiphComment,

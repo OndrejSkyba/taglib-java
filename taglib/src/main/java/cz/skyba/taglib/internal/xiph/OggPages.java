@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/// Ogg packet assembly and native contiguous-span packet replacement/pagination.
 public final class OggPages {
   private OggPages() {
   }
@@ -97,7 +96,7 @@ public final class OggPages {
     return decodedPage(offset, bytes, bytes.length - 27, header.dataSize());
   }
 
-  /// Uses the same native packet index as the public Ogg base, without extra format validation.
+  /// An Ogg packet reader without codec-specific format validation.
   public static final class Reader implements AutoCloseable {
     private final BinaryFile source;
     private final IOStream input;

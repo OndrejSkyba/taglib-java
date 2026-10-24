@@ -7,7 +7,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.io.IOException;
 
-/// Native tag detection reads, including failed probes and their observable cursors.
+/// Tag detection with cursor changes on both successful and failed probes.
 public final class NativeTagIO {
   private static final int MAX_DUPLICATE_ID3V2_TAGS = 100_000;
 

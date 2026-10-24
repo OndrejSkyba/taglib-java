@@ -36,6 +36,8 @@ public class RelativeVolumeFrame extends Frame {
 
     /// Creates a peak value, copying amplitude bytes and retaining the bit count's low eight bits.
     ///
+    /// @param bitsRepresentingPeak the peak bit count, retaining its low eight bits
+    /// @param peakVolume the peak amplitude bytes to copy
     /// @throws NullPointerException if the amplitude bytes are null
     public PeakVolume {
       bitsRepresentingPeak &= 255;

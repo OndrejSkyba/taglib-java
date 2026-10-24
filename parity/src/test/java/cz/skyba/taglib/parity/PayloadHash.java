@@ -192,9 +192,6 @@ public final class PayloadHash {
     long uid, UidNode node, String name, String mime, String payloadSha, String identity) {
   }
 
-  /**
-   * Deliberately parses only masters whose sizes/positions can be affected by picture UIDs.
-   */
   private static final class UidNode {
     final long id;
     final int start, body, end, idWidth, sizeWidth;

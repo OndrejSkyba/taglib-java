@@ -14,7 +14,7 @@ public final class Properties {
   private final long sampleFrames;
   private final int format;
 
-  /// Reads WAV audio properties from the supplied parsed file or encoded property data.
+  /// Reads WAV audio properties from the supplied parsed file.
   /// Reading can move the source cursor. Values are independent of the source handle.
   ///
   /// @param file  the live file to inspect without taking ownership

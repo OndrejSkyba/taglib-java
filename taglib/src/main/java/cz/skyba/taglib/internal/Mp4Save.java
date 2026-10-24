@@ -8,7 +8,6 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.List;
 
-/// Shared source-ordered MP4 parent-size and chunk-offset updates.
 public final class Mp4Save {
   private Mp4Save() {
   }

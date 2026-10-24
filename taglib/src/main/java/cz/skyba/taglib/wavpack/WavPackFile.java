@@ -95,6 +95,8 @@ public class WavPackFile extends ApeTaggedFile {
   }
 
   /// Stages removal of selected tag types; an empty set selects none. Call [#save()] to persist it.
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     stripTags(types.contains(TagType.ID3V1), types.contains(TagType.APE));

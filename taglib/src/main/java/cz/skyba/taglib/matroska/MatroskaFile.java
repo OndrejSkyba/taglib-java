@@ -132,7 +132,7 @@ public class MatroskaFile extends FileBase {
     return tag;
   }
 
-  /// Returns the live tag view, creating it in memory if absent. Creation does not write storage.
+  /// {@return the live tag view, creating it in memory if absent} Creation does not write storage.
   public final Tag getOrCreateTag() {
     if (tag == null) {
       if (state != null) {
@@ -293,7 +293,6 @@ public class MatroskaFile extends FileBase {
     return true;
   }
 
-  /// Returns the names of complex-property categories currently present.
   @Override
   public List<String> complexPropertyKeys() {
     var result = new ArrayList<>(super.complexPropertyKeys());
@@ -528,6 +527,9 @@ public class MatroskaFile extends FileBase {
   }
 
   /// Probes the stream for this format and restores its original position.
+  ///
+  /// @param stream the open, seekable stream to inspect
+  /// @return whether the stream is recognized as Matroska
   public static boolean isSupported(IOStream stream) {
     if (stream == null || !stream.isOpen()) {
       return false;

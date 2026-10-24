@@ -17,6 +17,13 @@ import java.util.Objects;
 /// Values describe the decoded stream and do not own a file handle. Unknown numeric values use zero.
 public final class Properties {
   /// Input values for constructing Shorten audio properties.
+  ///
+  /// @param version the Shorten format version
+  /// @param fileType the Shorten file type code
+  /// @param channels the audio channel count
+  /// @param sampleRate samples per second
+  /// @param bitsPerSample the decoded sample bit depth
+  /// @param sampleFrames the decoded sample-frame count
   public record Values(int version, int fileType, int channels, int sampleRate,
                        int bitsPerSample, long sampleFrames) {
   }
@@ -42,7 +49,7 @@ public final class Properties {
   }
 
   /// Reads Shorten audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  /// Values are independent of the source handle. Uses the average read-style hint.
   ///
   /// @param path the audio file to inspect
   /// @throws UncheckedIOException if storage access or property decoding fails
@@ -51,7 +58,7 @@ public final class Properties {
   }
 
   /// Reads Shorten audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle.
+  /// Values are independent of the source handle.
   ///
   /// @param path  the audio file to inspect
   /// @param style the audio property read hint

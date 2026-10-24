@@ -97,6 +97,8 @@ public class UserTextIdentificationFrame extends TextIdentificationFrame {
   }
 
   /// Replaces the text values while preserving the description as the first logical field.
+  ///
+  /// @param values the replacement text values, excluding the description
   public final void setValues(List<String> values) {
     var copy = List.copyOf(values);
     if (description().isEmpty()) {

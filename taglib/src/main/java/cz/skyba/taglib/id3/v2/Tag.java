@@ -93,7 +93,7 @@ public class Tag extends TagBase {
     return extendedHeader;
   }
 
-  /// Returns a read-only live map. Looking up an absent ID returns `null` without adding it.
+  /// {@return a read-only live map} Looking up an absent ID returns `null` without adding it.
   public final Map<ByteVector, List<Frame>> frameListMap() {
     return frames.map();
   }
@@ -106,8 +106,10 @@ public class Tag extends TagBase {
     return frames.list();
   }
 
-  /// Returns the read-only live list for an existing ID, or an empty list when absent.
+  /// {@return the read-only live list for an existing ID, or an empty list when absent}
   /// An absent lookup does not create a bucket; query again after adding frames for a new ID.
+  ///
+  /// @param id the frame identifier
   public final List<Frame> frameList(ByteVector id) {
     return frames.bucket(id);
   }
@@ -292,7 +294,6 @@ public class Tag extends TagBase {
     return properties.snapshot();
   }
 
-  /// Removes metadata identified by the supplied unsupported-data keys.
   @Override
   public void removeUnsupportedProperties(List<String> properties) {
     for (String property : properties) {
@@ -511,6 +512,7 @@ public class Tag extends TagBase {
   /// Reads the tag from its borrowed file and stored offset. A tag without a source file is unchanged.
   ///
   /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalStateException if malformed consecutive tags prevent the read from making progress
   protected final void read() {
     if (file == null || !file.isOpen()) {
       return;
@@ -614,6 +616,8 @@ public class Tag extends TagBase {
   }
 
   /// Appends frames suitable for version 3 output, converting supported version 4 representations.
+  ///
+  /// @param selected the mutable output list to append version 3 frames to
   protected final void downgradeFrames(List<Frame> selected) {
     TextIdentificationFrame tdor = null, tdrc = null, tipl = null, tmcl = null, tcon = null;
     for (Frame frame : frameList()) {

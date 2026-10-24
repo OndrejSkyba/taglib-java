@@ -12,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/// Base for format-specific audio metadata sessions and storage access.
+/// An editable audio file backed by seekable storage.
 /// Metadata edits are staged until [#save()]; operations that write immediately are
 /// identified in their own contracts. Path constructors own their streams; stream
 /// constructors borrow them. Read and cursor operations share the underlying stream cursor.
-/// Protected write hooks allow format implementations to maintain their cached state.
 public abstract class FileBase implements AutoCloseable {
   /// Controls whether tag families outside a selected save mask are removed or preserved.
   public enum StripTags {STRIP_NONE, STRIP_OTHERS}
@@ -97,6 +96,9 @@ public abstract class FileBase implements AutoCloseable {
   /// are reported without preventing other values from being accepted. This does not save.
   /// Unsupported-data identifiers do not request removal of opaque metadata; use
   /// [#removeUnsupportedProperties(List)] for that operation.
+  ///
+  /// @param values the complete replacement text property map
+  /// @return the accepted and rejected text values
   public PropertyUpdateResult replaceProperties(PropertyMap values) {
     return tag().replaceProperties(values);
   }
@@ -119,7 +121,7 @@ public abstract class FileBase implements AutoCloseable {
     return tag().complexPropertyKeys();
   }
 
-  /// Reports artwork editing support independently of existing artwork or storage writability.
+  /// {@return whether artwork editing is supported, independently of existing artwork or storage writability}
   public boolean supportsPictureEditing() {
     return tag().supportsPictureEditing();
   }
@@ -255,6 +257,8 @@ public abstract class FileBase implements AutoCloseable {
 
   /// Borrows a stream view for format collaborators. Operations dispatch through this file's
   /// virtual hooks; closing the view does not close this owner or its backing stream.
+  ///
+  /// @return a borrowed stream view whose close operation leaves this file open
   protected final IOStream ownerStream() {
     if (ownerStream == null) {
       ownerStream = new WritableOwnerStream(this);

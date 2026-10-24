@@ -112,6 +112,8 @@ public class EventTimingCodesFrame extends Frame {
   public record SynchedEvent(long time, EventType type) {
     /// Creates a timed entry, retaining the timestamp's low 32 bits.
     ///
+    /// @param time the unsigned 32-bit timestamp in the frame's timestamp format
+    /// @param type the event type
     /// @throws NullPointerException if the event type is null
     public SynchedEvent {
       time &= 0xffff_ffffL;

@@ -15,6 +15,8 @@ import java.util.List;
 /// @param chapters the chapter values, copied into an immutable list
 public record QuickTimeChapters(List<Chapter> chapters) {
   /// Creates a chapter snapshot and copies the chapter list.
+  ///
+  /// @param chapters the chapters to copy
   public QuickTimeChapters {
     chapters = List.copyOf(chapters);
   }

@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
-/// Positional reads avoid shared seek state and never allocate based on unchecked file fields.
+/// A read-only view of file or borrowed-stream bytes.
 public final class BinaryFile implements AutoCloseable {
   private final FileChannel channel;
   private final Path path;

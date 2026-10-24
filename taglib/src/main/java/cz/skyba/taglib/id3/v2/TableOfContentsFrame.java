@@ -99,6 +99,8 @@ public class TableOfContentsFrame extends Frame {
   }
 
   /// Copies the identifier and removes one trailing NUL byte when present.
+  ///
+  /// @param id the element identifier to copy
   public final void setElementID(ByteVector id) {
     elementID = new ByteVector(id);
   }
@@ -152,7 +154,9 @@ public class TableOfContentsFrame extends Frame {
     return embedded.list();
   }
 
-  /// Returns a read-only live list for an existing ID, or an empty list without creating a bucket.
+  /// {@return a read-only live list for an existing ID, or an empty list without creating a bucket}
+  ///
+  /// @param id the embedded frame identifier
   public final List<Frame> embeddedFrameList(ByteVector id) {
     return embedded.bucket(id);
   }

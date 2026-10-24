@@ -332,6 +332,8 @@ public class WavFile extends RiffFile {
   }
 
   /// Removes the selected tag types from storage immediately, without calling save().
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public final void strip(Set<TagType> types) {
     stripMask(tagMask(types));
   }
@@ -365,7 +367,7 @@ public class WavFile extends RiffFile {
   /// @param options tag selection, preservation policy and ID3v2 output settings
   /// @throws NullPointerException         if `options` is null
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws TagLibException              if storage is read-only or the file layout cannot be saved
   /// @throws IllegalStateException        if the file is closed
   public final void save(WavSaveOptions options) {
     requireWritable();

@@ -12,6 +12,9 @@ public final class SynchData {
 
   /// Decodes up to four synchsafe bytes; a high bit selects ordinary big-endian decoding with
   /// right-side zero padding.
+  ///
+  /// @param data up to four encoded bytes
+  /// @return the decoded unsigned integer
   public static long toUnsignedInt(ByteVector data) {
     Objects.requireNonNull(data);
     int length = Math.min(data.size(), 4);
@@ -32,6 +35,9 @@ public final class SynchData {
   }
 
   /// Encodes the low 28 bits as four synchsafe bytes.
+  ///
+  /// @param value the value whose low 28 bits to encode
+  /// @return four synchsafe bytes
   public static ByteVector fromUnsignedInt(long value) {
     byte[] data = new byte[4];
     for (int i = 0; i < 4; i++) {
@@ -41,6 +47,9 @@ public final class SynchData {
   }
 
   /// Removes ID3 unsynchronisation padding: a zero byte immediately following 0xff.
+  ///
+  /// @param data the unsynchronised bytes
+  /// @return the bytes with unsynchronisation padding removed
   public static ByteVector decode(ByteVector data) {
     Objects.requireNonNull(data);
     byte[] result = new byte[data.size()];

@@ -91,8 +91,6 @@ public class Tag extends TagBase {
   }
 
   /// Exports title and artist, including fields whose single value is empty.
-  ///
-  /// @return the DIIN text fields
   @Override
   public PropertyMap properties() {
     return PropertyMap.builder().put("TITLE", title).put("ARTIST", artist).build();

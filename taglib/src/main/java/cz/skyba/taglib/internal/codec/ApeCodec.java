@@ -274,7 +274,6 @@ public final class ApeCodec implements Codec {
     return new AudioProperties(duration, bitrate, rate, channels, bits, lossless);
   }
 
-  /// Codec-internal detailed property snapshot shared with the public format views.
   public record Details(
     AudioProperties common,
     int version,

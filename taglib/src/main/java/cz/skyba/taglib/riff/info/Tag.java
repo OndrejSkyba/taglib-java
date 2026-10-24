@@ -80,6 +80,9 @@ public class Tag extends TagBase {
 
   /// Sets a valid four-byte INFO field; invalid identifiers are ignored and empty text removes the
   /// field.
+  ///
+  /// @param id the four-byte INFO field identifier
+  /// @param value replacement text; an empty string removes the field
   public final void setFieldText(ByteVector id, String value) {
     Objects.requireNonNull(id);
     Objects.requireNonNull(value);
@@ -198,8 +201,6 @@ public class Tag extends TagBase {
   }
 
   /// Exports mapped INFO fields and records an empty opaque-data identifier for each unknown field ID.
-  ///
-  /// @return the projected properties
   @Override
   public PropertyMap properties() {
     var result = PropertyMap.builder();

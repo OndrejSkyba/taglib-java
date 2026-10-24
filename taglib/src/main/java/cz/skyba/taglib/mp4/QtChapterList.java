@@ -222,6 +222,7 @@ public class QtChapterList extends ChapterHolder {
   /// @param file the source or storage target
   /// @return whether chapter metadata was found and readable
   /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws IllegalArgumentException if a chapter timestamp exceeds the supported range
   public final boolean read(IOStream file) {
     Atoms atoms = new Atoms(file);
     modified = false;

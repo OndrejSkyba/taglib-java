@@ -33,7 +33,7 @@ public enum PictureType {
     this.code = code;
   }
 
-  /// Returns the numeric role used by [Picture#type()].
+  /// {@return the numeric role used by [Picture#type()]}
   public int code() {
     return code;
   }

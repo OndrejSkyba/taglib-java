@@ -169,6 +169,7 @@ public class Tag extends TagBase {
   /// Decodes ID3v1 fields into this tag.
   ///
   /// @param data encoded tag bytes
+  /// @throws IllegalArgumentException if fewer than 128 bytes are supplied
   protected final void parse(ByteVector data) {
     if (data.size() < 128) {
       throw new IllegalArgumentException("ID3v1 footer requires 128 bytes");

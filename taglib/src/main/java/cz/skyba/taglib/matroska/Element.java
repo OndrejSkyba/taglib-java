@@ -8,9 +8,9 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.*;
 
-/// A mutable EBML element descriptor with cached rendered bytes and ordered size listeners.
-/// Element IDs retain their low 32 bits. Rendering changes in-memory layout state; writing
-/// persists the stored rendered bytes at the cached offset.
+/// A mutable EBML element with explicit rendering, storage writes and size-change notifications.
+/// Element IDs retain their low 32 bits. Listeners are notified in registration order.
+/// Call [#render()] before [#write(IOStream)] to include pending changes in the written data.
 public abstract class Element {
   private long id, offset, size, appendOffset, voidOffset, voidSize;
   private ByteVector data = new ByteVector();
@@ -43,7 +43,7 @@ public abstract class Element {
     offset = value;
   }
 
-  /// Adjusts the cached byte offset without writing storage.
+  /// Adjusts the stored byte offset without writing storage.
   ///
   /// @param delta the signed byte adjustment
   /// @throws ArithmeticException if the offset overflows
@@ -59,21 +59,21 @@ public abstract class Element {
     id = value & 0xffff_ffffL;
   }
 
-  /// Copies serialized element bytes into the cached output buffer.
+  /// Copies serialized element bytes into the stored serialized data.
   ///
   /// @param value the encoded bytes
   public final void setData(ByteVector value) {
     data = new ByteVector(value);
   }
 
-  /// Returns an independent copy of the cached serialized element bytes.
+  /// Returns an independent copy of the stored serialized element bytes.
   ///
   /// @return copied encoded bytes
   public final ByteVector data() {
     return new ByteVector(data);
   }
 
-  /// Returns the cached serialized byte count without copying the buffer.
+  /// Returns the stored serialized byte count.
   ///
   /// @return the byte count
   public final int dataSize() {
@@ -241,8 +241,8 @@ public abstract class Element {
     return Math.max(available, end);
   }
 
-  /// Writes cached rendered bytes immediately at the stored offset, filling any abandoned span
-  /// with an EBML Void element. The cached size is updated and the target remains open.
+  /// Writes stored rendered bytes immediately at the stored offset, filling any abandoned span
+  /// with an EBML Void element. The stored size is updated and the target remains open.
   /// This operation does not render pending changes; call [#render()] first.
   ///
   /// @param file the borrowed storage target
@@ -251,8 +251,8 @@ public abstract class Element {
     write(file.metadataStream());
   }
 
-  /// Writes cached rendered bytes immediately at the stored offset, filling any abandoned span
-  /// with an EBML Void element. The cached size is updated and the target remains open.
+  /// Writes stored rendered bytes immediately at the stored offset, filling any abandoned span
+  /// with an EBML Void element. The stored size is updated and the target remains open.
   /// This operation does not render pending changes; call [#render()] first.
   ///
   /// @param file the borrowed storage target

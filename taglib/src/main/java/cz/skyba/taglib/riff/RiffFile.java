@@ -15,9 +15,8 @@ import java.util.Objects;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-/// A RIFF-family file base with cached chunk descriptors and configurable byte order.
-/// Protected chunk edits write storage immediately and update cached offsets and sizes.
-/// Format subclasses supply metadata and audio-property parsing.
+/// A RIFF-family file with configurable byte order.
+/// Protected chunk edits write storage immediately and update the file layout.
 public abstract class RiffFile extends FileBase {
   private static final System.Logger LOG = System.getLogger(RiffFile.class.getName());
 
@@ -115,36 +114,36 @@ public abstract class RiffFile extends FileBase {
     return chunks.get(index);
   }
 
-  /// Returns a cached chunk payload byte offset.
+  /// Returns a chunk payload byte offset.
   ///
-  /// @param index the cached chunk index
-  /// @return the cached chunk field
+  /// @param index the chunk index
+  /// @return the chunk field
   protected final long chunkOffset(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.offset;
   }
 
-  /// Returns a cached 32-bit payload size.
+  /// Returns a 32-bit payload size.
   ///
-  /// @param index the cached chunk index
-  /// @return the cached chunk field
+  /// @param index the chunk index
+  /// @return the chunk field
   protected final long chunkDataSize(int index) {
     return Math.min(chunkDataSize64(index), 0xffff_ffffL);
   }
 
-  /// Returns the cached full payload byte length.
+  /// Returns the full payload byte length.
   ///
-  /// @param index the cached chunk index
-  /// @return the cached chunk field
+  /// @param index the chunk index
+  /// @return the chunk field
   protected final long chunkDataSize64(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.size;
   }
 
-  /// Returns the cached chunk padding byte count.
+  /// Returns the chunk padding byte count.
   ///
-  /// @param index the cached chunk index
-  /// @return the cached chunk field
+  /// @param index the chunk index
+  /// @return the chunk field
   protected final int chunkPadding(int index) {
     var c = chunk(index);
     return c == null ? 0 : c.padding;
@@ -152,8 +151,8 @@ public abstract class RiffFile extends FileBase {
 
   /// Returns copied chunk-identifier bytes.
   ///
-  /// @param index the cached chunk index
-  /// @return the cached chunk field
+  /// @param index the chunk index
+  /// @return the chunk field
   protected final ByteVector chunkName(int index) {
     var c = chunk(index);
     return c == null ? new ByteVector() : new ByteVector(c.name);
@@ -161,9 +160,10 @@ public abstract class RiffFile extends FileBase {
 
   /// Reads chunk payload bytes through the shared cursor.
   ///
-  /// @param index the cached chunk index
+  /// @param index the chunk index
   /// @return payload bytes
   /// @throws java.io.UncheckedIOException if storage access fails
+  /// @throws cz.skyba.taglib.MetadataReadException if the chunk exceeds the configured metadata limit
   protected final ByteVector chunkData(int index) {
     var c = chunk(index);
     if (c == null) {
@@ -178,9 +178,9 @@ public abstract class RiffFile extends FileBase {
     return readBlock(count);
   }
 
-  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  /// Writes a replacement chunk payload immediately, updating the file layout and container size.
   ///
-  /// @param index the cached chunk index
+  /// @param index the chunk index
   /// @param data  replacement payload bytes
   /// @throws java.io.UncheckedIOException if storage access fails
   protected final void setChunkData(int index, ByteVector data) {
@@ -201,7 +201,7 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  /// Writes a replacement chunk payload immediately, updating the file layout and container size.
   ///
   /// @param name the four-byte chunk identifier
   /// @param data replacement payload bytes
@@ -210,7 +210,7 @@ public abstract class RiffFile extends FileBase {
     setChunkData(name, data, false);
   }
 
-  /// Writes a replacement chunk payload immediately, updating cached layout and container size.
+  /// Writes a replacement chunk payload immediately, updating the file layout and container size.
   ///
   /// @param name         the four-byte chunk identifier
   /// @param data         replacement payload bytes
@@ -257,9 +257,9 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /// Removes a chunk from storage immediately and updates the cached layout.
+  /// Removes a chunk from storage immediately and updates the file layout.
   ///
-  /// @param index the cached chunk index
+  /// @param index the chunk index
   /// @throws java.io.UncheckedIOException if storage access fails
   protected final void removeChunk(int index) {
     var c = chunk(index);
@@ -275,7 +275,7 @@ public abstract class RiffFile extends FileBase {
     updateGlobalSize();
   }
 
-  /// Removes a chunk from storage immediately and updates the cached layout.
+  /// Removes a chunk from storage immediately and updates the file layout.
   ///
   /// @param name the four-byte chunk identifier
   /// @throws java.io.UncheckedIOException if storage access fails
@@ -288,9 +288,9 @@ public abstract class RiffFile extends FileBase {
     }
   }
 
-  /// Checks whether the cached chunk descriptors still fit the available storage.
+  /// Checks whether the chunk descriptors still fit the available storage.
   ///
-  /// @return whether the cached layout is writable
+  /// @return whether the file layout is writable
   protected final boolean cachedLayoutWritable() {
     if (chunks.isEmpty() || !(source instanceof ByteVectorStream)) {
       return true;

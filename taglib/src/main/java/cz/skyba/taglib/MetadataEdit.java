@@ -12,16 +12,13 @@ import java.util.Objects;
 /// [#save()] applies the request to the file's current metadata. Requests hold no
 /// open resources and may be saved again. An empty request does not open the file.
 ///
-/// Saving text edits reads the current text property map and replaces the complete
-/// map using the same replacement and default save behavior as
-/// [TagLib#write(Path, PropertyMap)]. Unchanged property values are resubmitted too.
-/// Tag versions, physical metadata layout and value normalization follow that API's
-/// format-specific behavior. Artwork is preserved unless explicitly edited; opaque
-/// metadata is preserved according to the replacement API.
+/// Text edits retain unspecified properties subject to the replacement semantics and default
+/// save behavior of [TagLib#write(Path, PropertyMap)]. Even unchanged values can be normalized,
+/// and tag versions or physical metadata layout may change. Artwork is preserved unless
+/// explicitly edited; opaque metadata follows that API's preservation rules.
 ///
-/// The read, merge and save share one editing session and write lock. Rejected property
-/// values prevent saving. An I/O failure can leave partial changes because saving updates
-/// storage in place.
+/// Rejected property values prevent saving. Writes through this API to the same resolved path
+/// are serialized. Saving updates storage in place, so an I/O failure can leave partial changes.
 public final class MetadataEdit {
   private final Path path;
   private final PropertyMap updates;
@@ -140,6 +137,8 @@ public final class MetadataEdit {
     /// Replaces all pictures with the supplied picture's role, preserving other roles.
     /// Saving rejects roles that the format cannot retain; see [PictureType].
     ///
+    /// @param picture the replacement picture
+    /// @return this builder
     /// @throws NullPointerException if the picture is null
     public Builder setPicture(Picture picture) {
       Objects.requireNonNull(picture);
@@ -153,6 +152,9 @@ public final class MetadataEdit {
     /// Reads the image immediately and stages it with an empty description.
     /// Replaces pictures of this role while preserving other roles.
     ///
+    /// @param type the artwork role
+    /// @param image the image file to read
+    /// @return this builder
     /// @throws java.io.UncheckedIOException if the image cannot be read
     /// @throws IllegalArgumentException if the image type is not recognized
     /// @throws NullPointerException if the role or path is null
@@ -162,6 +164,8 @@ public final class MetadataEdit {
 
     /// Removes all pictures with this role, preserving other roles.
     ///
+    /// @param type the artwork role to remove
+    /// @return this builder
     /// @throws NullPointerException if the role is null
     public Builder removePictures(PictureType type) {
       Objects.requireNonNull(type);
@@ -173,6 +177,8 @@ public final class MetadataEdit {
     /// Later picture operations modify this replacement; earlier ones are discarded.
     /// Saving rejects roles that the format cannot retain; see [PictureType].
     ///
+    /// @param pictures replacement artwork; empty input removes all pictures
+    /// @return this builder
     /// @throws NullPointerException if the array or any picture is null
     public Builder replacePictures(Picture... pictures) {
       return replacePictures(List.of(pictures));
@@ -182,6 +188,8 @@ public final class MetadataEdit {
     /// Later picture operations modify this replacement; earlier ones are discarded.
     /// Saving rejects roles that the format cannot retain; see [PictureType].
     ///
+    /// @param pictures replacement artwork; empty input removes all pictures
+    /// @return this builder
     /// @throws NullPointerException if the list or any picture is null
     public Builder replacePictures(List<Picture> pictures) {
       var copy = List.copyOf(pictures);

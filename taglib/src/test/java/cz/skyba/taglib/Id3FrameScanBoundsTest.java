@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Independent native Header and Tag::read controls for defined malformed/foreign metadata.
+ * Checks that bounded ID3 frame scans agree for files and borrowed streams.
  */
 final class Id3FrameScanBoundsTest {
   @TempDir

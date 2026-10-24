@@ -21,7 +21,6 @@ public final class Id3v1 {
   private static volatile StringHandler stringHandler = DEFAULT_HANDLER;
   private static final ScopedValue<ReadState> READ_STATE = ScopedValue.newInstance();
 
-  /// One native constructor decodes its legacy child once, then shares the decoded views.
   public static final class ReadState {
     private byte[] source;
     private Decoded decoded;

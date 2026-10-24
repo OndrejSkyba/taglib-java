@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * The strict Harness uses the same source-gated filesize rule as the whole-byte matrix.
+ * Verifies byte preservation and bitrate normalization when Matroska attachment UID widths change.
  */
 @org.junit.jupiter.api.Tag("parity")
 @org.junit.jupiter.api.Tag("matroska")

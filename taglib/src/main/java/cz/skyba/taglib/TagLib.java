@@ -222,19 +222,7 @@ public final class TagLib {
     return selected;
   }
 
-  /// Builds metadata edits without opening the audio file. Use `set` to replace
-  /// text values and `remove` to remove a property. Saving merges the edits into the file's current
-  /// properties and uses the replacement and default save behavior of [#write(Path, PropertyMap)].
-  /// Changes are applied only by `save()`; `build()` creates an immutable request
-  /// for later saving.
-  ///
-  /// ```java
-  /// TagLib.edit(path)
-  ///   .set("TITLE", "New title")
-  ///   .set("ARTIST", "Artist A", "Artist B")
-  ///   .remove("COMMENT")
-  ///   .save();
-  /// ```
+  /// Builds metadata edits without opening the audio file.
   ///
   /// @param path the audio file to edit when saving
   /// @return a mutable builder for metadata edits

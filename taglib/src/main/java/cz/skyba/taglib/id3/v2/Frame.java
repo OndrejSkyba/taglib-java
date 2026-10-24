@@ -43,7 +43,7 @@ public abstract class Frame {
 
   private Header header;
 
-  /// Initializes a frame by reading a version-4 header from serialized bytes. The subclass parses its fields.
+  /// Initializes an ID3v2.4 frame header without parsing the frame's fields.
   ///
   /// @param data serialized frame bytes
   protected Frame(ByteVector data) {
@@ -76,7 +76,7 @@ public abstract class Frame {
     return header;
   }
 
-  /// Reparses serialized frame bytes using an ID3v2.4 header and the concrete field decoder.
+  /// Parses serialized ID3v2.4 frame data.
   /// The existing header object is updated rather than replaced when available.
   ///
   /// @param data bytes including the frame header
@@ -131,6 +131,9 @@ public abstract class Frame {
   }
 
   /// Maps a standard property key to a frame identifier, or an empty vector when unmapped.
+  ///
+  /// @param key the standard property key
+  /// @return the frame identifier, or an empty vector if unmapped
   public static ByteVector keyToFrameID(String key) {
     String upper = Ascii.upper(key);
     return new ByteVector(FRAME_IDS.getOrDefault(upper, ""));
@@ -140,7 +143,7 @@ public abstract class Frame {
     header = value;
   }
 
-  /// Reparses a version-4 frame header and delegates the payload to [#parseFields(ByteVector)].
+  /// Parses serialized ID3v2.4 frame data.
   ///
   /// @param data serialized frame bytes
   protected final void parse(ByteVector data) {
@@ -273,7 +276,7 @@ public abstract class Frame {
     return ISO_8859_1;
   }
 
-  /// Returns the standard properties represented by this frame.
+  /// {@return the standard properties represented by this frame}
   protected PropertyMap asProperties() {
     String id = Id3Text.fixedLatin1(frameID());
     return PropertyMap.builder().addUnsupportedData(this instanceof UnknownFrame ? "UNKNOWN/" + id : id).build();

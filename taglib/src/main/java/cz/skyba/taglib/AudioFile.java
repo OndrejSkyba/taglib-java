@@ -546,6 +546,9 @@ public final class AudioFile implements AutoCloseable {
   /// are reported without preventing other values from being accepted. This does not save.
   /// Unsupported-data identifiers do not request removal of opaque metadata; use
   /// [#removeUnsupportedProperties(List)] for that operation.
+  ///
+  /// @param properties the complete replacement text property map
+  /// @return the accepted and rejected text values
   public PropertyUpdateResult replaceProperties(PropertyMap properties) {
     return file().replaceProperties(properties);
   }
@@ -585,13 +588,13 @@ public final class AudioFile implements AutoCloseable {
       "numColors", new Variant(picture.indexedColors()))).toList();
   }
 
-  /// Returns immutable artwork snapshots. An empty list means no artwork is present.
+  /// {@return immutable artwork snapshots} An empty list means no artwork is present.
   public List<Picture> pictures() {
     var values = file().complexProperties("PICTURE");
     return values.isEmpty() ? List.of() : snapshotPictures(values);
   }
 
-  /// Reports artwork editing support independently of existing artwork or storage writability.
+  /// {@return whether artwork editing is supported, independently of existing artwork or storage writability}
   public boolean supportsPictureEditing() {
     return file().supportsPictureEditing();
   }
@@ -599,6 +602,7 @@ public final class AudioFile implements AutoCloseable {
   /// Stages replacement artwork; an empty list removes it. Call [#save()] to persist it.
   /// Format-specific limits and normalization are the same as for complex properties.
   ///
+  /// @param pictures replacement artwork; an empty list removes it
   /// @throws UnsupportedOperationException if the file does not accept artwork editing
   /// @throws NullPointerException          if the list or any picture is null
   /// @throws IllegalStateException         if this owner is closed
@@ -610,7 +614,7 @@ public final class AudioFile implements AutoCloseable {
     }
   }
 
-  /// Returns the complex-property categories currently present, not editing capabilities.
+  /// {@return the complex-property categories currently present, not editing capabilities}
   public List<String> complexPropertyKeys() {
     return file().complexPropertyKeys();
   }

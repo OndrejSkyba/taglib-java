@@ -279,7 +279,6 @@ public final class AsfCodec implements Codec {
     return new Header(n, objects);
   }
 
-  /// The native reader follows object counts and actual reads, not the declared header extent.
   private static final class NativeReader {
     final BinaryFile file;
     final ReadOptions options;

@@ -13,7 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-/// Validates a complete edit plan before upstream-style in-place I/O.
+/// File edits validated as a complete plan before storage is modified.
 public final class Rewrite {
   private Rewrite() {
   }
@@ -87,7 +87,6 @@ public final class Rewrite {
     }
   }
 
-  /// Prefix sums over original offsets, updated in the native physical save order.
   private static final class OffsetDeltas {
     private final long[] offsets, sums;
 

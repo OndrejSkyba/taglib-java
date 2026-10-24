@@ -6,7 +6,7 @@ import cz.skyba.taglib.toolkit.ByteVector;
 import java.util.Arrays;
 import java.util.Objects;
 
-/// An attachment value with copied data and a full 64-bit UID bit pattern.
+/// A Matroska file attachment with copied data and an unsigned 64-bit UID.
 public final class AttachedFile {
   private record State(byte[] data, String name, String mime, long uid, String description, long offset, long size,
                        boolean deferred) {
@@ -17,10 +17,10 @@ public final class AttachedFile {
 
   private State state;
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data        attachment bytes to copy
-  /// @param name        the attachment filename or tag name
+  /// @param name        the attachment filename
   /// @param mime        the MIME type
   /// @param uid         the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param description attachment description text
@@ -29,29 +29,29 @@ public final class AttachedFile {
       Objects.requireNonNull(description), 0, 0, false);
   }
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data attachment bytes to copy
-  /// @param name the attachment filename or tag name
+  /// @param name the attachment filename
   /// @param mime the MIME type
   /// @param uid  the unsigned 64-bit UID bit pattern, or zero if unspecified
   public AttachedFile(byte[] data, String name, String mime, long uid) {
     this(data, name, mime, uid, "");
   }
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data attachment bytes to copy
-  /// @param name the attachment filename or tag name
+  /// @param name the attachment filename
   /// @param mime the MIME type
   public AttachedFile(byte[] data, String name, String mime) {
     this(data, name, mime, 0, "");
   }
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data        attachment bytes to copy
-  /// @param name        the attachment filename or tag name
+  /// @param name        the attachment filename
   /// @param mime        the MIME type
   /// @param uid         the unsigned 64-bit UID bit pattern, or zero if unspecified
   /// @param description attachment description text
@@ -59,26 +59,26 @@ public final class AttachedFile {
     this(data.data(), name, mime, uid, description);
   }
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data attachment bytes to copy
-  /// @param name the attachment filename or tag name
+  /// @param name the attachment filename
   /// @param mime the MIME type
   /// @param uid  the unsigned 64-bit UID bit pattern, or zero if unspecified
   public AttachedFile(ByteVector data, String name, String mime, long uid) {
     this(data, name, mime, uid, "");
   }
 
-  /// Creates a AttachedFile value, copying mutable byte and collection inputs.
+  /// Creates an attachment with copied data.
   ///
   /// @param data attachment bytes to copy
-  /// @param name the attachment filename or tag name
+  /// @param name the attachment filename
   /// @param mime the MIME type
   public AttachedFile(ByteVector data, String name, String mime) {
     this(data, name, mime, 0, "");
   }
 
-  /// Creates a copied value with shared immutable state.
+  /// Creates a copy of the attachment value.
   ///
   /// @param other the value to copy
   public AttachedFile(AttachedFile other) {

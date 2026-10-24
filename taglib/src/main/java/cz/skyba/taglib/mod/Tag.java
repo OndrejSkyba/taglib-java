@@ -89,8 +89,6 @@ public class Tag extends TagBase {
   }
 
   /// Exports title and comment, including an empty single value, and nonempty tracker-name text.
-  ///
-  /// @return the common tracker properties
   @Override
   public PropertyMap properties() {
     var values = PropertyMap.builder().put("TITLE", title).put("COMMENT", comment);

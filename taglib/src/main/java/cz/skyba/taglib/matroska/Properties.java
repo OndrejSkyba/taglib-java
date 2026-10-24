@@ -13,8 +13,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /// Parsed Matroska audio and container properties.
-/// Stream-backed bitrate is computed and cached from the borrowed stream length on first
-/// access. Keep that stream open until the first bitrate or common-property query. Path-based
+/// Keep a borrowed source stream open until the first call to [#bitrate()] or [#common()]. Path-based
 /// values retain no file handle. Duration is milliseconds and bitrate is kilobits per second.
 public final class Properties {
   private final MatroskaCodec.Details details;
@@ -98,8 +97,7 @@ public final class Properties {
     return lengthInMilliseconds() / 1000;
   }
 
-  /// Computes and caches bitrate on first access using the borrowed stream length; detached values
-  /// use the decoded bitrate.
+  /// {@return the bitrate in kilobits per second}
   public int bitrate() {
     if (cachedBitrate == -1) {
       long length = lengthInMilliseconds(), bytes = borrowed.length();
@@ -138,7 +136,7 @@ public final class Properties {
     return details.title();
   }
 
-  /// Creates the immutable common audio-property projection, computing and caching bitrate when needed.
+  /// Creates an immutable snapshot of the common audio properties.
   ///
   /// @return common properties
   /// @throws UncheckedIOException if querying borrowed storage fails

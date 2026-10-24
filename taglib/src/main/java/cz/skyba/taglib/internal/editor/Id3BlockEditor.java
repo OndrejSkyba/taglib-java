@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/// Physical ID3 entries and their original-byte retention policy.
 final class Id3BlockEditor {
   private static final Set<String> STRUCTURED_FRAME_IDS = Set.of(
     "UFID", "POPM", "PCNT", "SYLT", "RVA2", "ETCO", "CHAP", "CTOC",

@@ -3,7 +3,7 @@ package cz.skyba.taglib;
 
 import java.util.Objects;
 
-/// Audio property selection, read style and a metadata allocation limit.
+/// Options controlling how audio metadata is read.
 /// DSF, Shorten and tracker formats parse audio properties regardless of
 /// `readAudioProperties`. The allocation limit bounds format metadata reads; it does
 /// not limit audio payload length or guarantee a total heap limit.
@@ -19,6 +19,9 @@ public record ReadOptions(boolean readAudioProperties, ReadStyle readStyle, int 
 
   /// Creates read options with an explicit metadata allocation limit.
   ///
+  /// @param readAudioProperties whether audio properties should be read where optional
+  /// @param readStyle the format-specific speed and accuracy hint
+  /// @param maxMetadataBytes the metadata allocation limit in bytes, at least 1,024
   /// @throws NullPointerException     if `readStyle` is null
   /// @throws IllegalArgumentException if `maxMetadataBytes` is less than 1,024
   public ReadOptions {

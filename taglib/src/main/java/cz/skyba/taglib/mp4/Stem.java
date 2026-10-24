@@ -28,7 +28,7 @@ public final class Stem {
     this.data = data.toByteArray();
   }
 
-  /// Creates an immutable manifest value. Immutable payload storage can be shared.
+  /// Creates an immutable manifest value.
   ///
   /// @param other the value to copy
   public Stem(Stem other) {

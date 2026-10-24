@@ -114,6 +114,8 @@ public class MpcFile extends ApeTaggedFile {
 
   /// Stages removal of selected tag types, including a leading ID3v2 tag; storage changes only
   /// on [#save()].
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public void removeTags(Set<TagType> types) {
     types = Set.copyOf(types);
     stripTags(types.contains(TagType.ID3V1), types.contains(TagType.APE));

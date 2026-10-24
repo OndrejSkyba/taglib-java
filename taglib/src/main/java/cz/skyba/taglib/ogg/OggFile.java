@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/// A base for Ogg logical-stream packet inspection and staged packet replacement.
+/// An Ogg file with staged logical-stream packet edits.
 /// Path construction owns storage; stream construction borrows it. Packet indexing is lazy
 /// and is invalidated by external writes. Saving repaginates modified groups and can reset
 /// granule positions and end-of-stream flags on replaced pages. Replacing a packet spanning
@@ -35,7 +35,6 @@ public abstract class OggFile extends FileBase {
   private final IOStream pageStream = ownerStream();
 
   /// Initializes an Ogg format implementation with owned path storage.
-  /// The subclass supplies codec tags and audio properties.
   ///
   /// @param path the input file
   protected OggFile(Path path) {
@@ -43,7 +42,6 @@ public abstract class OggFile extends FileBase {
   }
 
   /// Initializes an Ogg format implementation over a borrowed stream.
-  /// The subclass supplies codec tags and audio properties.
   ///
   /// @param stream the open, seekable input stream
   protected OggFile(IOStream stream) {
@@ -55,7 +53,7 @@ public abstract class OggFile extends FileBase {
   }
 
   /// Returns an independent copy of a packet from the selected logical stream.
-  /// Reading can move the shared cursor and populate the page index.
+  /// Reading can move the shared cursor.
   ///
   /// @param index the nonnegative packet index
   /// @return packet bytes, or an empty vector for an absent packet
@@ -66,7 +64,7 @@ public abstract class OggFile extends FileBase {
   }
 
   /// Returns an independent copy of a packet from the selected logical stream.
-  /// Reading can move the shared cursor and populate the page index.
+  /// Reading can move the shared cursor.
   ///
   /// @param index   the nonnegative packet index
   /// @param maxSize the maximum packet bytes to materialize
@@ -131,7 +129,7 @@ public abstract class OggFile extends FileBase {
     }
   }
 
-  /// First physical page header, independently of selected logical stream, or null.
+  /// {@return the first physical page header, independently of the selected logical stream, or null if unavailable}
   public final PageHeader firstPageHeader() {
     if (firstHeader == null) {
       long offset = find(CAPTURE);
@@ -143,7 +141,7 @@ public abstract class OggFile extends FileBase {
     return firstHeader.isValid() ? firstHeader : null;
   }
 
-  /// Last physical capture's header, or null if that capture does not hold a valid header.
+  /// {@return the last physical capture's header, or null if invalid or absent}
   public final PageHeader lastPageHeader() {
     if (lastHeader == null) {
       long offset = rfind(CAPTURE);
@@ -167,6 +165,9 @@ public abstract class OggFile extends FileBase {
 
   /// Selects the first BOS page whose first packet starts with magic. Call before requesting
   /// packets. Failure retains the normal fallback to the first logical stream.
+  ///
+  /// @param magic the identifying prefix of the first packet
+  /// @return whether a matching logical stream was selected
   protected final boolean selectStream(ByteVector magic) {
     Objects.requireNonNull(magic);
     long offset = find(CAPTURE);
@@ -261,7 +262,7 @@ public abstract class OggFile extends FileBase {
     return first;
   }
 
-  /// Internal subclass view of an already indexed complete packet's physical pages.
+  // Physical pages of an already indexed complete packet.
   protected final List<Page> cachedPacketPages(int index) {
     if (pages.isEmpty() || nextPacketIndex(pages.getLast()) <= index) {
       return List.of();

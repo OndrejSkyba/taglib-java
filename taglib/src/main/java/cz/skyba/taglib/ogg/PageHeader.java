@@ -159,8 +159,7 @@ public final class PageHeader {
     return dataSize;
   }
 
-  /// Encodes packet lacing and header flags; the returned header leaves the CRC field zero for the
-  /// page renderer.
+  /// {@return the serialized page header with a zero CRC field}
   public ByteVector render() {
     var laces = new ByteArrayOutputStream();
     for (int i = 0; i < packetSizes.size(); i++) {

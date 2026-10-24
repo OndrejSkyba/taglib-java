@@ -22,6 +22,8 @@ import java.util.Locale;
 public abstract class MetadataDocument {
   /// Opens a physical metadata editing session for the file.
   ///
+  /// @param path the audio file to edit
+  /// @return the open metadata editing session
   /// @throws UncheckedIOException  if storage access fails
   /// @throws MetadataReadException if metadata cannot be decoded
   public static MetadataDocument open(Path path) {
@@ -38,7 +40,7 @@ public abstract class MetadataDocument {
     }
   }
 
-  /// Whether the source contained an ID3v2 tag when this session opened, including an empty tag.
+  /// {@return whether the source contained an ID3v2 tag when this session opened, including an empty tag}
   /// Staged edits do not change this snapshot value. Containers without ID3v2 return false.
   public boolean hasId3v2Tag() {
     return false;

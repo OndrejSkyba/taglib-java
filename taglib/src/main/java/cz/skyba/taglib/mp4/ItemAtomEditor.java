@@ -7,7 +7,6 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.List;
 
-/// In-place item atom replacement, retained padding, and parent/offset updates.
 final class ItemAtomEditor {
   private final IOStream file;
   private final Atoms atoms;

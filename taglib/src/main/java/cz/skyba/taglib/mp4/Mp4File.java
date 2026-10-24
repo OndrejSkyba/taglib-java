@@ -243,6 +243,8 @@ public class Mp4File extends FileBase {
   }
 
   /// Removes selected MP4 metadata from storage immediately, without calling save().
+  ///
+  /// @param types tag types to remove; an empty set selects none
   public final void strip(Set<TagType> types) {
     types = Set.copyOf(types);
     requireWritable();
@@ -265,8 +267,7 @@ public class Mp4File extends FileBase {
     return super.readBlock(count);
   }
 
-  /// Replaces a byte span, rejecting growth across an externally shortened cached memory span before
-  /// writing.
+  /// @throws IllegalArgumentException if a growing replacement refers to bytes outside a shortened memory stream
   @Override
   protected void insert(ByteVector data, long start, long replace) {
     // Native ByteVectorStream growth with an externally shortened cached span is undefined.

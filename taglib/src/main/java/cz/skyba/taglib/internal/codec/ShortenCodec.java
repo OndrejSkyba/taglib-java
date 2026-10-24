@@ -13,7 +13,7 @@ import java.util.List;
 
 import static cz.skyba.taglib.internal.Binary.*;
 
-/// Shorten versions 1–3; reads the initial Rice-coded verbatim WAV/AIFF header.
+/// Audio metadata for Shorten versions 1–3 with an initial verbatim WAV/AIFF header.
 public final class ShortenCodec implements Codec {
   public record Details(AudioProperties common, int version, int fileType, long sampleFrames) {
   }

@@ -183,7 +183,7 @@ public class XiphComment extends TagBase {
     return count & 0xffff_ffffL;
   }
 
-  /// Returns a read-only live map. Looking up an absent key returns `null` without adding it.
+  /// {@return a read-only live map} Looking up an absent key returns `null` without adding it.
   public final Map<String, List<String>> fieldListMap() {
     return Collections.unmodifiableMap(view);
   }
@@ -334,6 +334,8 @@ public class XiphComment extends TagBase {
   }
 
   /// Removes the first matching picture by identity.
+  ///
+  /// @param value the picture instance to remove
   public final void removePicture(Picture value) {
     for (int i = 0; i < pictures.size(); i++) {
       if (pictures.get(i) == value) {

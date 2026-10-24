@@ -16,6 +16,14 @@ import cz.skyba.taglib.internal.TextNumbers;
 public record Tag(
   String title, String artist, String album, String comment, String genre, long year, long track) {
   /// Creates a common-field snapshot, retaining the low 32 bits of the year and track values.
+  ///
+  /// @param title title text
+  /// @param artist artist text
+  /// @param album album text
+  /// @param comment comment text
+  /// @param genre genre text
+  /// @param year unsigned 32-bit year value, with zero representing an unspecified year
+  /// @param track unsigned 32-bit track value, with zero representing an unspecified track
   public Tag {
     year &= 0xffff_ffffL;
     track &= 0xffff_ffffL;

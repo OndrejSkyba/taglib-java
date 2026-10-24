@@ -113,6 +113,8 @@ public final class Item {
   }
 
   /// Switches the item to binary, copies the bytes, and clears its text values.
+  ///
+  /// @param value binary bytes to copy
   public void setBinaryData(ByteVector value) {
     type = ItemType.Binary;
     this.value = new ByteVector(value);
@@ -124,6 +126,8 @@ public final class Item {
   }
 
   /// Switches the item to text, replaces its text values, and clears the binary payload.
+  ///
+  /// @param values replacement text values
   public void setValues(List<String> values) {
     type = ItemType.Text;
     text = new ArrayList<>(List.copyOf(values));
@@ -138,6 +142,8 @@ public final class Item {
   }
 
   /// Switches the item to text, appends the supplied values, and clears the binary payload.
+  ///
+  /// @param values text values to append
   public void appendValues(List<String> values) {
     type = ItemType.Text;
     text.addAll(List.copyOf(values));
@@ -146,6 +152,8 @@ public final class Item {
 
   /// Tests the active payload; one empty text value counts as empty, while a reserved item never
   /// does.
+  ///
+  /// @return whether the active payload is empty
   public boolean isEmpty() {
     return switch (type) {
       case Text -> text.isEmpty() || text.size() == 1 && text.getFirst().isEmpty();
@@ -159,7 +167,7 @@ public final class Item {
     return type == ItemType.Text && !isEmpty() ? text.getFirst() : "";
   }
 
-  /// Calculates the serialized item size from its encoded key, value bytes, and fixed header.
+  /// {@return the serialized item size in bytes}
   public int size() {
     int result = 9 + key.length();
     switch (type) {
@@ -178,7 +186,10 @@ public final class Item {
     return result;
   }
 
-  /// Parses an item without clearing inactive storage, matching reuse semantics.
+  /// Parses serialized APE item data.
+  /// Text parsing preserves the previous binary data; binary parsing preserves the previous text values.
+  ///
+  /// @param data the serialized APE item
   public void parse(ByteVector data) {
     parse(data, 0);
   }
@@ -205,7 +216,9 @@ public final class Item {
     }
   }
 
-  /// Rendering a text item also updates binaryData(), as in Item::render().
+  /// Serializes this item. For text items, [#binaryData()] is updated with the encoded text.
+  ///
+  /// @return the serialized APE item
   public ByteVector render() {
     if (isEmpty()) {
       return new ByteVector();

@@ -109,7 +109,7 @@ public class TextIdentificationFrame extends Frame {
     encoding = Id3Text.requireEncoding(value);
   }
 
-  /// Returns the read-only role map. Looking up an absent key does not add it.
+  /// {@return the read-only role map} Looking up an absent key does not add it.
   public static Map<String, String> involvedPeopleMap() {
     return PEOPLE;
   }

@@ -10,7 +10,7 @@ import cz.skyba.taglib.toolkit.IOStream;
 
 import java.util.Objects;
 
-/// Internal implementation shared only where the pinned codec sources agree.
+/// An editable audio file with APE and ID3v1 tags.
 public abstract class ApeTaggedFile extends FileBase {
   private final IOStream source;
   private final boolean owned;

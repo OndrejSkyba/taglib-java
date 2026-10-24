@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/// EBML metadata parsing and native default Compact updates.
+/// Matroska metadata with compact updates by default.
 public final class MatroskaCodec implements Codec {
   private Segment nativeSegment;
   private ReadOptions nativeOptions;
@@ -110,7 +110,6 @@ public final class MatroskaCodec implements Codec {
     return List.copyOf(keys);
   }
 
-  /// An admitted element retains its successfully parsed children for an ordinary file read.
   private static final class Element {
     final long id, offset, length;
     final int header, sizeWidth;
@@ -1070,7 +1069,7 @@ public final class MatroskaCodec implements Codec {
   }
 
 
-  /// Internal deferred attachment index; no payload bytes are read while constructing it.
+  /// An attachment descriptor whose construction does not read payload bytes.
   public record AttachmentData(String fileName, String mediaType, String description, long uid,
                                DeferredBinaryElement data) {
   }
@@ -1218,7 +1217,6 @@ public final class MatroskaCodec implements Codec {
     return new MatroskaOutput().element(ATTACHMENTS, output).toByteArray();
   }
 
-  /// Retained native element graph used by the actual Matroska MatroskaFile owner.
   public static final class LiveState {
     private final NativeMetadata metadata;
     private final Details details;

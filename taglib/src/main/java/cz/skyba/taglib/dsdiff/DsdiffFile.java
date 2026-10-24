@@ -472,7 +472,7 @@ public class DsdiffFile extends FileBase {
   /// @param options tag selection, preservation policy and ID3v2 output settings
   /// @throws NullPointerException         if `options` is null
   /// @throws java.io.UncheckedIOException if storage access fails
-  /// @throws TagLibException              if storage is read-only or the cached layout cannot be saved
+  /// @throws TagLibException              if storage is read-only or the file layout cannot be saved
   /// @throws IllegalStateException        if the file is closed
   public final void save(DsdiffSaveOptions options) {
     requireWritable();
@@ -537,8 +537,11 @@ public class DsdiffFile extends FileBase {
     strip(Set.of(TagType.values()));
   }
 
-  /// Validates the complete removal plan, then immediately strips the selected tag chunks and resets
-  /// their live tags.
+  /// Removes selected tag chunks from storage immediately and resets their live tags.
+  /// Unsupported removal plans are rejected before any changes are written.
+  ///
+  /// @param types tag types to remove; an empty set selects none
+  /// @throws IllegalStateException if the requested removal cannot be represented in the file format
   public final void strip(Set<TagType> types) {
     int tags = tagMask(types);
     if (!preflight(plan -> plan.stripImpl(tags))) {

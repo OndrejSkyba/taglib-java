@@ -17,7 +17,7 @@ import static java.lang.System.Logger.Level.DEBUG;
 /// Path opening attempts read/write access and falls back to read-only access unless read-only
 /// access was requested explicitly. Storage failures preserve their [IOException]
 /// cause in [UncheckedIOException]. The logical cursor is independent of the channel's
-/// position. Closing never saves audio metadata.
+/// position.
 public class FileStream extends IOStream {
   private static final System.Logger LOG = System.getLogger(FileStream.class.getName());
 
@@ -29,9 +29,6 @@ public class FileStream extends IOStream {
   private long position;
   private boolean eof;
 
-  /// Returns the native-compatible block size. Internal file shifts may use larger batches.
-  ///
-  /// @return the buffer size in bytes
   protected static int bufferSize() {
     return BUFFER_SIZE;
   }

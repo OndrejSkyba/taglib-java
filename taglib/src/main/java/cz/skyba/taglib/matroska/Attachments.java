@@ -10,8 +10,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/// A mutable attachment collection. Incoming values and exported collection values are copied.
-/// MatroskaFile-bound edits are staged until the owning file is saved. Path save operations write directly.
+/// A mutable collection of Matroska file attachments.
+/// Values are copied on insertion and retrieval. When bound to a [MatroskaFile], edits are staged
+/// until that file is saved. [#save(Path)] writes directly to the supplied path.
 public class Attachments {
   private final CopyingValues<AttachedFile> values = new CopyingValues<>(AttachedFile::new);
   private final ArrayList<AttachedFile> files = values.stored();

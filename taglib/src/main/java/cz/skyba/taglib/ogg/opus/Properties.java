@@ -20,7 +20,7 @@ public final class Properties {
   private final OggCodec.Details details;
 
   /// Reads Ogg Opus audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
+  /// Values are independent of the source handle. Uses the average read-style hint.
   ///
   /// @param path the audio file to inspect
   /// @throws UncheckedIOException if storage access or property decoding fails
@@ -29,7 +29,7 @@ public final class Properties {
   }
 
   /// Reads Ogg Opus audio properties from a file, closing its temporary handle.
-  /// Reading can move the source cursor. Values are independent of the source handle.
+  /// Values are independent of the source handle.
   ///
   /// @param path  the audio file to inspect
   /// @param style the audio property read hint
@@ -65,7 +65,7 @@ public final class Properties {
     }
   }
 
-  /// Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
+  /// Reads Ogg Opus audio properties from the supplied parsed file.
   /// Reading can move the source cursor. Values are independent of the source handle. Uses the average read-style hint.
   ///
   /// @param file the live file to inspect without taking ownership
@@ -74,7 +74,7 @@ public final class Properties {
     this(file, ReadStyle.AVERAGE);
   }
 
-  /// Reads Ogg Opus audio properties from the supplied parsed file or encoded property data.
+  /// Reads Ogg Opus audio properties from the supplied parsed file.
   /// Reading can move the source cursor. Values are independent of the source handle.
   ///
   /// @param file  the live file to inspect without taking ownership

@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-/// Shared snapshot identity and edit validation. Concrete documents own physical serialization.
 public abstract class AbstractDocument extends MetadataDocument {
   protected final Path path;
   protected final List<MutableEntry> entries = new ArrayList<>();
@@ -364,7 +363,6 @@ public abstract class AbstractDocument extends MetadataDocument {
     }
   }
 
-  /// Retains arbitrary constraints and their deferred conversion for subclasses.
   private record ImportedConstraints(Map<String, Object> values) implements EntryConstraints {
     public int valueCount() {
       return ((Number) values.getOrDefault("valueCount", 1)).intValue();
