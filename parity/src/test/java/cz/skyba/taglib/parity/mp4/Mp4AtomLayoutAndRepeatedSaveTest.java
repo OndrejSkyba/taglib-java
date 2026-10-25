@@ -3,6 +3,7 @@ package cz.skyba.taglib.parity.mp4;
 import com.fasterxml.jackson.databind.JsonNode;
 import cz.skyba.taglib.parity.support.FileRefAdapter;
 import cz.skyba.taglib.PropertyMap;
+import cz.skyba.taglib.MetadataDocument;
 import cz.skyba.taglib.ReadOptions;
 import cz.skyba.taglib.TagLib;
 import cz.skyba.taglib.parity.Snapshots;
@@ -27,6 +28,35 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 final class Mp4AtomLayoutAndRepeatedSaveTest {
   @TempDir
   Path directory;
+
+  @Test
+  void malformedMetadataPaddingKeepsUpstreamReadBehavior() throws Exception {
+    Path tool = oracle();
+    byte[] oversizedFree = atom("free", new byte[16]);
+    be(oversizedFree, 0, oversizedFree.length + 22);
+    var paddingCases = List.of(new byte[4], new byte[6], oversizedFree);
+    for (int i = 0; i < paddingCases.size(); i++) {
+      byte[] item = atom("©nam", atom("data", join(
+        new byte[]{0, 0, 0, 1, 0, 0, 0, 0}, "Readable title".getBytes(StandardCharsets.UTF_8))));
+      byte[] source = join(
+        atom("ftyp", new byte[]{'M', '4', 'A', ' ', 0, 0, 0, 0, 'i', 's', 'o', 'm'}),
+        atom("mdat", new byte[8]),
+        atom("moov", atom("udta", atom("meta", join(
+          new byte[4], atom("hdlr", new byte[25]), atom("ilst", item), paddingCases.get(i))))),
+        atom("free", new byte[64]));
+      Path path = save("metadata-padding-" + i + ".m4a", source);
+
+      JsonNode expected = command(tool, "snapshot", path, "TAGS_ONLY");
+      assertTrue(expected.path("valid").asBoolean());
+      var file = TagLib.read(path, ReadOptions.TAGS_ONLY);
+      var actual = Snapshots.of(file);
+      actual.set("unsupportedData", Snapshots.JSON.valueToTree(file.properties().unsupportedData()));
+      assertEquals(List.of(), Snapshots.differences(expected, actual));
+      assertEquals(List.of("Readable title"),
+        MetadataDocument.open(path).entries().getFirst().values());
+      assertArrayEquals(source, Files.readAllBytes(path));
+    }
+  }
 
   @Test
   void nativeIgnoredIndexAtomsAndShortChunkTablesDoNotRejectCommonSave() throws Exception {

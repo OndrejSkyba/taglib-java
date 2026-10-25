@@ -119,7 +119,8 @@ final class Mp4Tree {
         throw new MetadataEditException("MP4 metadata exceeds the 64 MB editing limit.");
       }
       source = file.read(top.offset, (int) top.size);
-      movie = new AtomParser(source).parse(0, source.length, 0);
+      var parser = new AtomParser(source, file.size() - top.offset);
+      movie = parser.parse(0, source.length, 0, false);
       if (!movie.name.equals("moov")) {
         throw damaged();
       }
@@ -130,7 +131,9 @@ final class Mp4Tree {
       if (tops.stream().filter(a -> a.name.equals("moov")).count() != 1) {
         unsafe = true;
       }
-      restriction = unsafe ? "Tags in this MP4 layout can be viewed but cannot be edited." : "";
+      restriction = parser.damagedMetadataPadding
+        ? "MP4 metadata padding is damaged. Tags can be viewed but cannot be edited."
+        : unsafe ? "Tags in this MP4 layout can be viewed but cannot be edited." : "";
     }
   }
 
@@ -167,13 +170,16 @@ final class Mp4Tree {
 
   private static final class AtomParser {
     private final byte[] data;
+    private final long fileEnd;
     private int count;
+    private boolean damagedMetadataPadding;
 
-    private AtomParser(byte[] data) {
+    private AtomParser(byte[] data, long fileEnd) {
       this.data = data;
+      this.fileEnd = fileEnd;
     }
 
-    private Node parse(int at, int end, int depth) {
+    private Node parse(int at, int end, int depth, boolean metadataChild) {
       if (depth > 64 || ++count > 100_000) {
         throw new MetadataEditException("The MP4 atom nesting/count limit is exceeded.");
       }
@@ -191,6 +197,12 @@ final class Mp4Tree {
         header = 16;
       }
       if (size == 0) {
+        size = end - at;
+      }
+      if (size > end - at && size <= fileEnd - at && metadataChild
+        && name.equals("free") && zeroes(at + header, end)) {
+        // Retain readable metadata without trusting this malformed extent for edits.
+        damagedMetadataPadding = true;
         size = end - at;
       }
       if (size < header || size > end - at) {
@@ -215,12 +227,25 @@ final class Mp4Tree {
           throw damaged();
         }
         while (from < stop) {
-          var child = parse(from, stop, depth + 1);
+          if (name.equals("meta") && stop - from < 8 && zeroes(from, stop)) {
+            damagedMetadataPadding = true;
+            break;
+          }
+          var child = parse(from, stop, depth + 1, name.equals("meta"));
           children.add(child);
           from = child.end();
         }
       }
       return new Node(name, at, (int) size, header, List.copyOf(children));
+    }
+
+    private boolean zeroes(int from, int end) {
+      for (int at = from; at < end; at++) {
+        if (data[at] != 0) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 

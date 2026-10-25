@@ -24,6 +24,47 @@ class Mp4DocumentTest {
   }
 
   @Test
+  void damagedMetadataPaddingRemainsReadableButCannotBeEdited() throws Exception {
+    byte[] oversizedFree = box("free", new byte[16]);
+    put32be(oversizedFree, 0, oversizedFree.length + 22);
+    for (byte[] padding : List.of(new byte[4], new byte[6], oversizedFree)) {
+      Path path = file(box("meta", new byte[4], handler("mdir"),
+        box("ilst", box("©nam", value(1, 0, bytes("Readable title")))), padding));
+      byte[] original = Files.readAllBytes(path);
+
+      var document = MetadataDocument.open(path);
+
+      assertFalse(document.metadataReadFailed());
+      assertEquals(List.of("Readable title"), document.entries().getFirst().values());
+      assertTrue(document.readOnlyReason().contains("padding"));
+      assertTrue(document.entries().stream().noneMatch(MetadataEntry::editable));
+      assertThrows(MetadataEditException.class,
+        () -> document.apply(List.of(new MetadataChange.Add("TITLE", List.of("Changed"), false))));
+      assertThrows(MetadataEditException.class, () -> document.replacePictures(List.of()));
+      assertThrows(MetadataEditException.class, document::save);
+      assertArrayEquals(original, Files.readAllBytes(path));
+    }
+  }
+
+  @Test
+  void metadataRecoveryDoesNotAcceptNonPaddingDamage() throws Exception {
+    byte[] nonzeroFree = box("free", new byte[]{0, 0, 1});
+    put32be(nonzeroFree, 0, nonzeroFree.length + 22);
+    byte[] oversizedList = box("ilst", box("©nam", value(1, 0, bytes("Title"))));
+    put32be(oversizedList, 0, oversizedList.length + 22);
+    byte[] beyondFile = box("free", new byte[16]);
+    put32be(beyondFile, 0, 1_000_000);
+    for (byte[] tail : List.of(new byte[]{0, 0, 0, 1}, nonzeroFree, oversizedList, beyondFile)) {
+      Path path = file(box("meta", new byte[4], handler("mdir"), tail));
+      byte[] original = Files.readAllBytes(path);
+      assertThrows(MetadataReadException.class, () -> MetadataDocument.open(path));
+      assertArrayEquals(original, Files.readAllBytes(path));
+    }
+    Path damagedMovie = raw(box("moov", trackWithTable(new byte[8]), new byte[4]));
+    assertThrows(MetadataReadException.class, () -> MetadataDocument.open(damagedMovie));
+  }
+
+  @Test
   void adjacentPaddingAbsorbsTypedAndConventionalEditsWithoutMovingMedia() throws Exception {
     for (boolean keyed : List.of(false, true)) {
       byte[] keys =
