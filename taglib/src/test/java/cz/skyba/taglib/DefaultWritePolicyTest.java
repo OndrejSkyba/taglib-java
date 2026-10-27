@@ -3,6 +3,8 @@ package cz.skyba.taglib;
 import cz.skyba.taglib.toolkit.FileStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -100,24 +102,24 @@ class DefaultWritePolicyTest {
     assertTrue(removed.pictures().isEmpty());
   }
 
-  @Test
-  void streamWritesReplacePreserveAndRemovePictures() throws Exception {
-    Path path = wave("stream-pictures");
+  @ParameterizedTest
+  @ValueSource(strings = {"empty.wav", "noise.aif", "sinewave.flac", "lame_cbr.mp3"})
+  void streamWritesReplacePreserveAndRemovePictures(String fixture) throws Exception {
+    Path path = AudioFixtures.copy(directory, fixture);
     var picture = new Picture(3, "image/png", "cover", new byte[]{1, 2, 3});
     var properties = PropertyMap.builder().put("TITLE", "With artwork").build();
     try (var stream = new FileStream(path)) {
+      stream.seek(stream.length());
       TagLib.write(stream, properties, List.of(picture));
       assertEquals(List.of(picture), TagLib.read(stream, ReadOptions.TAGS_ONLY).pictures());
 
       properties = properties.toBuilder().put("TITLE", "Preserved artwork").build();
-      stream.seek(0);
       TagLib.write(stream, properties);
       var preserved = TagLib.read(stream, ReadOptions.TAGS_ONLY);
       assertEquals(properties.asMap(), preserved.properties().asMap());
       assertEquals(List.of(picture), preserved.pictures());
 
       properties = properties.toBuilder().put("TITLE", "Removed artwork").build();
-      stream.seek(0);
       TagLib.write(stream, properties, List.of());
       var removed = TagLib.read(stream, ReadOptions.TAGS_ONLY);
       assertEquals(properties.asMap(), removed.properties().asMap());

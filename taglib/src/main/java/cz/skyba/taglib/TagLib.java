@@ -322,10 +322,10 @@ public final class TagLib {
     return writePath(path, properties, copy);
   }
 
-  /// Writes the complete text property map through a borrowed stream, preserving
+  /// Writes the complete text property map from the beginning of a borrowed stream, preserving
   /// existing pictures, format-specific opaque metadata and audio. Omitted text keys
   /// are removed; supported values are saved even when other values are rejected.
-  /// The stream remains open. A failed write can leave partial changes.
+  /// The stream remains open; its cursor is not restored. A failed write can leave partial changes.
   ///
   /// @param stream     the caller-owned audio stream to update in place
   /// @param properties the complete replacement text property map
@@ -333,17 +333,18 @@ public final class TagLib {
   /// accepted values are not a read-back snapshot
   /// @throws UncheckedIOException if storage access fails
   /// @throws TagLibException      if opening or saving is rejected
+  /// @throws IllegalStateException if the supplied stream is closed
   public static WriteResult write(IOStream stream, PropertyMap properties) {
     Objects.requireNonNull(stream);
     Objects.requireNonNull(properties);
     return writeStream(stream, properties, null);
   }
 
-  /// Writes the complete text property map and embedded pictures through a borrowed
+  /// Writes the complete text property map and embedded pictures from the beginning of a borrowed
   /// stream, preserving format-specific opaque metadata and audio. Omitted text keys
   /// are removed; supported values are saved even when other values are rejected.
   /// Use [#write(IOStream, PropertyMap)] to preserve existing pictures.
-  /// The stream remains open. A failed write can leave partial changes.
+  /// The stream remains open; its cursor is not restored. A failed write can leave partial changes.
   ///
   /// @param stream     the caller-owned audio stream to update in place
   /// @param properties the complete replacement text property map
@@ -354,6 +355,7 @@ public final class TagLib {
   /// @throws TagLibException               if opening or saving is rejected
   /// @throws UnsupportedOperationException if the format does not support writing pictures
   /// @throws NullPointerException          if an argument or a picture list element is null
+  /// @throws IllegalStateException         if the supplied stream is closed
   public static WriteResult write(
     IOStream stream, PropertyMap properties, List<Picture> pictures) {
     Objects.requireNonNull(stream);
@@ -364,6 +366,7 @@ public final class TagLib {
 
   private static WriteResult writeStream(
     IOStream stream, PropertyMap properties, List<Picture> pictures) {
+    stream.seek(0);
     try (var ref = new AudioFile(stream, ReadOptions.TAGS_ONLY)) {
       return apply(ref, properties, pictures);
     }
