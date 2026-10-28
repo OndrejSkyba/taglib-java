@@ -295,7 +295,7 @@ def source_cases(suite, tools, work, args):
     profile = dict(PRIMARY if suite == "fixtures" else LARGE)
     if suite == "fixtures":
         # Guard coverage when a new format is added to the Java API.
-        formats = (ROOT / "taglib/src/main/java/cz/skyba/taglib/Format.java").read_text().split("{", 1)[1].split("}", 1)[0]
+        formats = (ROOT / "taglib/src/main/java/cz/skyba/taglib/Format.java").read_text().split("{", 1)[1].split(";", 1)[0]
         if set(re.findall(r"\b[A-Z][A-Z_0-9]*\b", formats)) != set(FIXTURES):
             raise RuntimeError("Benchmark fixture coverage does not match Format.java")
         inputs = [(fmt, fmt, tools["upstream"] / "tests/data" / name) for fmt, name in FIXTURES.items()]
