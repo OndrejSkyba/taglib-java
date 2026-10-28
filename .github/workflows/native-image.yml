@@ -4,7 +4,7 @@ jobs:
   native-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: graalvm/setup-graalvm@v1
         with:
           distribution: graalvm-community
@@ -12,7 +12,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: maven
       - run: ./integration/native-image/run
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-image-parity
