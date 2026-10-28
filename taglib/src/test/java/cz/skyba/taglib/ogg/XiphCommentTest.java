@@ -5,6 +5,8 @@ import cz.skyba.taglib.flac.Picture;
 import cz.skyba.taglib.toolkit.ByteVector;
 import cz.skyba.taglib.toolkit.Variant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Map;
@@ -149,6 +151,45 @@ class XiphCommentTest {
     assertEquals("image/", picture.mimeType());
     assertEquals(Picture.Type.Other, picture.type());
     assertArrayEquals(image, new XiphComment(parsed.render()).pictureList().getFirst().data());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"\n", "\r\n", " \t"})
+  void wrappedPictureDataSurvivesParsingAndRendering(String whitespace) {
+    var picture = new Picture();
+    picture.setType(Picture.Type.FrontCover);
+    picture.setMimeType("image/jpeg");
+    picture.setDescription("Cover é音");
+    picture.setData(new byte[200]);
+    for (String key : List.of("METADATA_BLOCK_PICTURE", "COVERART")) {
+      var bytes = key.equals("COVERART") ? new ByteVector(picture.data()) : new ByteVector(picture.render());
+      String encoded = bytes.toBase64().toString();
+      var wrapped = new StringBuilder(whitespace);
+      for (int i = 0; i < encoded.length(); i += 76) {
+        wrapped.append(encoded, i, Math.min(i + 76, encoded.length())).append(whitespace);
+      }
+      var source = new XiphComment();
+      source.addField(key, wrapped.toString());
+      var parsed = new XiphComment(source.render(false));
+      assertEquals(1, parsed.pictureList().size(), key);
+      var expected = parsed.pictureList().getFirst().snapshot();
+      assertArrayEquals(picture.data(), expected.data());
+      if (key.equals("METADATA_BLOCK_PICTURE")) {
+        assertEquals(picture.snapshot(), expected);
+      }
+      assertEquals(List.of(expected),
+        cz.skyba.taglib.internal.xiph.XiphComment.parse(source.render(false).data()).pictures());
+      parsed.setTitle("Edited");
+      assertEquals(expected, new XiphComment(parsed.render(false)).pictureList().getFirst().snapshot());
+    }
+  }
+
+  @Test
+  void pictureDataStillRejectsNonWhitespaceOutsideTheBase64Alphabet() {
+    var source = new XiphComment();
+    source.addField("COVERART", "AP*8=\n");
+    assertTrue(new XiphComment(source.render(false)).pictureList().isEmpty());
+    assertTrue(cz.skyba.taglib.internal.xiph.XiphComment.parse(source.render(false).data()).pictures().isEmpty());
   }
 
   @Test

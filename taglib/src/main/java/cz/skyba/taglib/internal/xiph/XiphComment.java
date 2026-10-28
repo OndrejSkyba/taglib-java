@@ -23,6 +23,30 @@ public record XiphComment(String vendor, PropertyMap properties, List<Picture> p
     return new XiphComment("", PropertyMap.builder().build(), List.of());
   }
 
+  public static byte[] withoutPictureWhitespace(byte[] data) {
+    int size = 0;
+    for (byte value : data) {
+      if (!pictureWhitespace(value)) {
+        size++;
+      }
+    }
+    if (size == data.length) {
+      return data;
+    }
+    byte[] compact = new byte[size];
+    int position = 0;
+    for (byte value : data) {
+      if (!pictureWhitespace(value)) {
+        compact[position++] = value;
+      }
+    }
+    return compact;
+  }
+
+  private static boolean pictureWhitespace(byte value) {
+    return value == ' ' || value == '\t' || value == '\r' || value == '\n';
+  }
+
   public static boolean validKey(String key) {
     return !key.isEmpty() && key.chars().allMatch(c -> c >= 0x20 && c <= 0x7d && c != '=');
   }
@@ -79,7 +103,7 @@ public record XiphComment(String vendor, PropertyMap properties, List<Picture> p
       }
       if (key.equals("METADATA_BLOCK_PICTURE") || key.equals("COVERART")) {
         try {
-          byte[] data = Base64.getDecoder().decode(value);
+          byte[] data = Base64.getDecoder().decode(withoutPictureWhitespace(value.getBytes(UTF_8)));
           if (data.length == 0) {
             continue;
           }

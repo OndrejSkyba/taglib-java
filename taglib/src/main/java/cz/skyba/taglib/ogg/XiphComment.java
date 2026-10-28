@@ -11,6 +11,7 @@ import cz.skyba.taglib.toolkit.Variant;
 
 import java.util.*;
 
+import static cz.skyba.taglib.internal.xiph.XiphComment.*;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -254,7 +255,7 @@ public class XiphComment extends TagBase {
   /// @param key the key to validate
   /// @return whether it can be represented as a comment key
   public static boolean checkKey(String key) {
-    return cz.skyba.taglib.internal.xiph.XiphComment.validKey(key);
+    return validKey(key);
   }
 
   public final String vendorID() {
@@ -434,7 +435,9 @@ public class XiphComment extends TagBase {
         continue;
       }
       if (key.equals("METADATA_BLOCK_PICTURE") || key.equals("COVERART")) {
-        var bytes = ByteVector.fromBase64(entry.mid(sep + 1));
+        var encoded = entry.mid(sep + 1);
+        var compact = withoutPictureWhitespace(encoded.data());
+        var bytes = ByteVector.fromBase64(compact == encoded.data() ? encoded : new ByteVector(compact));
         if (bytes.isEmpty()) {
           LOG.log(DEBUG, "Discarding a picture field with invalid Base64 data.");
           continue;
