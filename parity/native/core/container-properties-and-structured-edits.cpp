@@ -8,6 +8,7 @@
 #include "asffile.h"
 #include "asftag.h"
 #include "asfattribute.h"
+#include "asfpicture.h"
 #include "mp4file.h"
 #include "mp4tag.h"
 #include "mp4item.h"
@@ -55,6 +56,24 @@ int main(int argc, char **argv) {
       file.tag()->addAttribute("Scoped", language);
       file.tag()->addAttribute("WM/Track", TagLib::ASF::Attribute(42U));
       if (!file.save()) throw std::runtime_error("ASF scoped write failed");
+    } else if (command == "asf-scoped-picture") {
+      if (argc != 5) throw std::runtime_error("Missing picture scope");
+      TagLib::ASF::File file(argv[2], false);
+      if (!file.isValid()) throw std::runtime_error("Invalid ASF fixture");
+      TagLib::ASF::Picture picture;
+      picture.setType(TagLib::ASF::Picture::FrontCover);
+      picture.setMimeType("image/jpeg");
+      picture.setDescription(TagLib::String("Front é音", TagLib::String::UTF8));
+      picture.setPicture("data");
+      TagLib::ASF::Attribute original(picture);
+      TagLib::ASF::Attribute scoped(original);
+      scoped.setStream(std::stoi(argv[3]));
+      scoped.setLanguage(std::stoi(argv[4]));
+      auto edited = scoped.toPicture();
+      edited.setDescription(TagLib::String("Scoped é音", TagLib::String::UTF8));
+      edited.setPicture("new image");
+      file.tag()->setAttribute("WM/Picture", scoped);
+      if (!file.save()) throw std::runtime_error("ASF scoped picture write failed");
     } else if (command == "asf-attributes") {
       TagLib::ASF::File file(argv[2]);
       if (!file.isValid()) throw std::runtime_error("Invalid ASF fixture");

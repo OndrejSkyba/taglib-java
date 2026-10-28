@@ -512,6 +512,35 @@ class AsfMutableTest {
   }
 
   @Test
+  void scopedCopiesPreserveIndependentlyEditablePictures() {
+    var original = new Attribute(front()).named("WM/Picture");
+    var scoped = original.withScope(43, 56);
+    assertEquals("WM/Picture", scoped.name());
+    assertEquals(43, scoped.stream());
+    assertEquals(56, scoped.language());
+    assertPicture(scoped.toPicture(), true);
+    assertArrayEquals(original.data(), scoped.data());
+
+    scoped.toPicture().setDescription("scoped cover");
+    scoped.toPicture().setPicture(new ByteVector("new image"));
+    var decoded = new Picture(new ByteVector(scoped.data()));
+    assertTrue(decoded.isValid());
+    assertEquals("scoped cover", decoded.description());
+    assertEquals(new ByteVector("new image"), decoded.picture());
+    assertPicture(original.toPicture(), true);
+    assertEquals(0, original.stream());
+    assertEquals(0, original.language());
+  }
+
+  @Test
+  void scopedCopiesRejectInvalidDescriptorIdentity() {
+    var attribute = new Attribute("value");
+    assertThrows(IllegalArgumentException.class, () -> attribute.withScope(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> attribute.withScope(0, 65536));
+    assertThrows(IllegalArgumentException.class, () -> attribute.named("bad\0name").withScope(0, 0));
+  }
+
+  @Test
   void nativeCrossTypeConversionsAndQwordSizeQuirk() {
     var a = new Attribute(-1L);
     assertEquals(5, a.dataSize());

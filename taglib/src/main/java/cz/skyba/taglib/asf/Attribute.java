@@ -142,9 +142,7 @@ public final class Attribute {
   public Attribute(String name, int type, int stream, int language, byte[] data) {
     this();
     this.name = Objects.requireNonNull(name);
-    if (name.indexOf('\0') >= 0 || type < 0 || type > 65535 || stream < 0 || stream > 65535 || language < 0 || language > 65535) {
-      throw new IllegalArgumentException("Invalid named ASF attribute identity");
-    }
+    requireDescriptorIdentity(name, type, stream, language);
     state.type = type;
     state.stream = stream;
     state.language = language;
@@ -167,6 +165,12 @@ public final class Attribute {
       }
     } else {
       state.bytes = bytes;
+    }
+  }
+
+  private static void requireDescriptorIdentity(String name, int type, int stream, int language) {
+    if (name.indexOf('\0') >= 0 || type < 0 || type > 65535 || stream < 0 || stream > 65535 || language < 0 || language > 65535) {
+      throw new IllegalArgumentException("Invalid named ASF attribute identity");
     }
   }
 
@@ -467,11 +471,16 @@ public final class Attribute {
 
   /// Creates an independent attribute copy with replacement stream and language scope.
   ///
-  /// @param stream   the stream index
-  /// @param language the language index
+  /// @param stream   the stream index from 0 to 65535
+  /// @param language the language index from 0 to 65535
   /// @return the new attribute
+  /// @throws IllegalArgumentException if the name contains NUL or the type or scope is outside its range
   public Attribute withScope(int stream, int language) {
-    return new Attribute(name, type(), stream, language, data());
+    requireDescriptorIdentity(name, type(), stream, language);
+    var copy = new Attribute(this);
+    copy.setStream(stream);
+    copy.setLanguage(language);
+    return copy;
   }
 
   /// {@return the Unicode text}
